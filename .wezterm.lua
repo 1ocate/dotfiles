@@ -2,7 +2,7 @@ local wezterm = require 'wezterm'
 local wsl_domains = wezterm.default_wsl_domains()
 
 for idx, dom in ipairs(wsl_domains) do
-    dom.default_prog = { 'zsh', '-1' }
+    dom.default_prog = { 'bash' }
     dom.default_cwd = "/home/locate"
 end
 
