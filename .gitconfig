@@ -1,0 +1,29 @@
+[credential]
+	helper = store
+[user]
+	email = msyeo@enliple.com
+	name = yeominsoo
+[difftool]
+    prompt = true
+[diff]
+    tool = nvimdiff
+[difftool "nvimdiff"]
+    cmd = "nvim -d \"$LOCAL\" \"$REMOTE\""
+[merge]
+	tool = vimdiff
+
+[mergetool]
+	keepBackup = false
+    
+[mergetool "vimdiff"]
+	cmd = nvim -d $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'
+[core]
+	excludesfile = /home/locate/.gitignore_global
+	editor = nvim
+[safe]
+	directory = %(prefix)///wsl$/Ubuntu-20.04/home/ubuntu/mobon/admin/v1
+	directory = %(prefix)///wsl$/Ubuntu20.04LTS/home/locate/mobon/admin/v1
+	directory = %(prefix)///wsl$/Ubuntu20.04LTS/home/locate/mobon/admin/v2
+	directory = *
+[merge "ours"]
+	driver = true
