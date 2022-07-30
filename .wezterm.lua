@@ -8,8 +8,8 @@ end
 
 local act = wezterm.action
 return {
-    wsl_domains = wsl_domains,
-    default_domain = 'WSL:Ubuntu20.04LTS',
+   -- wsl_domains = wsl_domains,
+   -- default_domain = 'WSL:Ubuntu20.04LTS',
     font_rules = {
         {
             italic = false,
@@ -35,7 +35,6 @@ return {
       action = wezterm.action.Paste,
     },
   },    
-  color_scheme = "SeaShells"
-
+  color_scheme = "Gruvbox dark, hard (base16)",
 
 }

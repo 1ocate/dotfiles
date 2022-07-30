@@ -76,7 +76,9 @@ colorscheme gruvbox
 nnoremap <F7> :e ++enc=euc-kr<Cr>
 
 "FZF 설정
-let $FZF_DEFAULT_COMMAND='find . \! \( -type d -path ./.git -prune \) \! -type d \! -name ''*.tags'' -printf ''%P\n'''
+"let $FZF_DEFAULT_COMMAND='find . \! \( -type d -path ./.git -prune \) \! -type d \! -name ''*.tags'' -printf ''%P\n'''
+let FZF_DEFAULT_COMMAND='rg --hidden -l ""'
+
 nnoremap <C-p> :Files<Cr>
 "nnoremap <S-S> :Files<Cr>
 
