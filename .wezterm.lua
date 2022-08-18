@@ -15,26 +15,26 @@ for idx, dom in ipairs(wsl_domains) do
 end
 
 local scheme = wezterm.get_builtin_color_schemes()['Matrix (terminal.sexy)']
- -- scheme.brights = {
- --     '#688060',
- --     '#2fc079',
- --     '#90d762',
- --     '#faff00',
- --     '#4f7e7e',
- --     '#11ff25',
- --     '#c1ff8a',
- --     '#ffffff',
- -- }
- -- scheme.ansi = {
- --     "#000000",
- --     "#454545",
- --     "#00cc00",
- --     "#00cc00",
- --     "#026302",
- --     "#55ff55",
- --     "#00cc00",
- --     "#00cc00",
- -- }
+ scheme.brights = {
+     '#688061',
+     '#2fc079',
+     '#90d762',
+     '#faff00',
+     '#4f7e7e',
+     '#11ff25',
+     '#c1ff8a',
+     '#ffffff',
+ }
+ scheme.ansi = {
+     "#000000",
+     "#454545",
+     "#00cc00",
+     "#00cc00",
+     "#026302",
+     "#55ff55",
+     "#00cc00",
+     "#00cc00",
+ }
  --scheme.ansi = {
  --    "#688060",
  --    "#55ff55",
