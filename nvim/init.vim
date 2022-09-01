@@ -14,7 +14,7 @@ Plug 'junegunn/fzf.vim'
 
 call plug#end()
 nnoremap <F9>t :call <SID>WSLYank_toggle()<CR>
-augroup a   
+
 " WSL에서 클립보드에 복사
 augroup WSLYank_autocmd
 
@@ -56,7 +56,7 @@ autocmd BufEnter * syntax sync fromstart
 " gutentags 상태
 set statusline+=%{gutentags#statusline()}
 
-set nu
+set nu!
 set showmatch        " 일치하는 괄호 하이라이팅
 set cursorline       " highlight current line
 set tabstop=4 softtabstop=4 shiftwidth=4 expandtab smarttab
@@ -83,6 +83,7 @@ let FZF_DEFAULT_COMMAND='rg --hidden -l ""'
 
 nnoremap <C-p> :Files<Cr>
 "nnoremap <S-S> :Files<Cr>
+nnoremap <silent> <Leader>rg :Rg <C-R><C-W><CR>
 
 " NERDTree 설정
 let g:NERDTreeShowHidden = 1
