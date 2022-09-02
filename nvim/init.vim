@@ -56,7 +56,7 @@ autocmd BufEnter * syntax sync fromstart
 " gutentags 상태
 set statusline+=%{gutentags#statusline()}
 
-set nu!
+set nu
 set showmatch        " 일치하는 괄호 하이라이팅
 set cursorline       " highlight current line
 set tabstop=4 softtabstop=4 shiftwidth=4 expandtab smarttab
@@ -70,6 +70,7 @@ let g:gruvbox_italic = 1
 set background=dark
 set termguicolors
 colorscheme gruvbox
+
 
 "EucKr 설정
 nnoremap <F7> :e ++enc=euc-kr <Cr>
@@ -193,6 +194,9 @@ let g:EasyMotion_use_smartsign_us = 1
 "let g:choosewin_label = 'ASDFQWERZXCV'
 
 "COC 관련 설정
+
+"메뉴창 색상변경
+hi CocMenuSel ctermbg=109 guibg=#13354A
 
 " Set internal encoding of vim, not needed on neovim, since coc.nvim using some
 " unicode characters in the file autoload/float.vim
