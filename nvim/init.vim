@@ -13,7 +13,7 @@ Plug 'junegunn/fzf', { 'dir': '~/opt/fzf' }
 Plug 'junegunn/fzf.vim'
 
 call plug#end()
-nnoremap <F9>t :call <SID>WSLYank_toggle()<CR>
+nnoremap <F9> :call <SID>WSLYank_toggle()<CR>
 
 " WSL에서 클립보드에 복사
 augroup WSLYank_autocmd
@@ -41,7 +41,7 @@ augroup WSLYank_autocmd
             if ! v:true == g:wsl_clipboard_enble
                 return
             endif
-            if s:global_yank_cache_0 !=# @0
+            if s:global_yank_cache_0 != @0
                 call system('echo '.shellescape(join(v:event.regcontents, "\<CR>")).' | '.s:clip)
                 call s:save_cache()
                 return
@@ -79,8 +79,10 @@ nnoremap <F7> :e ++enc=euc-kr <Cr>
 nnoremap <F5> :source % <Cr>
 
 "FZF 설정
-"let $FZF_DEFAULT_COMMAND='find . \! \( -type d -path ./.git -prune \) \! -type d \! -name ''*.tags'' -printf ''%P\n'''
-let FZF_DEFAULT_COMMAND='rg --hidden -l ""'
+let $FZF_DEFAULT_COMMAND='find . \! \( -type d -path ./.git -prune \) \! -type d \! -name ''*.tags'' -printf ''%P\n'''
+"let FZF_DEFAULT_COMMAND='rg --hidden -l ""'
+"let FZF_DEFAULT_COMMAND="rg --files --hidden --glob '!.git/**' --encoding=euc-kr"
+
 
 nnoremap <C-p> :Files<Cr>
 "nnoremap <S-S> :Files<Cr>
