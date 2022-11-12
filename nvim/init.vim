@@ -21,12 +21,23 @@ augroup WSLYank_autocmd
     " 초기화
     let g:wsl_clipboard_enble = 1
     let s:global_yank_cache_0 = @0
-    let s:clip = '/mnt/c/Windows/System32/clip.exe' 
 
-    if executable(s:clip)
-            autocmd TextYankPost * :call s:WSLYank()
+    " OS 확인
+    if has("mac")
+        let s:clip = @+
+        let s:flag_able= 1
+    elseif has("wsl")
+        " WSL의 경우는 클립보드 위치 확인
+        let s:clip = '/mnt/c/Windows/System32/clip.exe' 
+        if executable(s:clip)
+            let s:flag_able= 1
+        end
     end
-    
+
+    if  s:flag_able
+        autocmd TextYankPost * :call s:WSLYank()
+    end
+
     function! s:WSLYank_toggle()
         let g:wsl_clipboard_enble = ! g:wsl_clipboard_enble
         echom "시스템 클립보드 사용 여부 " . g:wsl_clipboard_enble
@@ -42,7 +53,10 @@ augroup WSLYank_autocmd
                 return
             endif
             if s:global_yank_cache_0 != @0
-                call system('echo '.shellescape(join(v:event.regcontents, "\<CR>")).' | '.s:clip)
+                if has("wsl")
+                    call system('echo '.shellescape(join(v:event.regcontents, "\<CR>")).' | '.s:clip)
+                endif
+                let @+ = expand(@0)
                 call s:save_cache()
                 return
             endif
