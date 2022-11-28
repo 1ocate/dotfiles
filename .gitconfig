@@ -1,8 +1,15 @@
 [credential]
 	helper = store
 [user]
-	email = msyeo@enliple.com
-	name = yeominsoo
+	email = integrityms@gmail.com
+	name = locate
+
+[includeIf "gitdir:~/admin/v1/"]
+    path = ~/admin/v1/.account.config
+
+[includeIf "gitdir:~/admin/v2/"]
+    path = ~/admin/v2/.account.config
+
 [difftool]
     prompt = true
 [diff]
