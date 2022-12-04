@@ -25,7 +25,7 @@
 [mergetool "vimdiff"]
 	cmd = nvim -d $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'
 [core]
-	excludesfile = /home/locate/.gitignore_global
+	excludesfile = ~/.gitignore_global
 	editor = nvim
 [safe]
 	directory = %(prefix)///wsl$/Ubuntu-20.04/home/ubuntu/mobon/admin/v1
