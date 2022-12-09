@@ -74,7 +74,7 @@ wezterm.on('update-right-status', function(window, pane)
 end)
 return {
     wsl_domains = wsl_domains,
-    default_domain = 'WSL:Ubuntu20.04LTS',
+    --default_domain = 'WSL:Ubuntu20.04LTS',
     --default_prog = {'bash'},
     default_cwd = "/home/locate",
     font_rules = {
@@ -91,6 +91,8 @@ return {
         -- For Mac
         { key = 'C', mods = 'CMD', action = wezterm.action.Copy },
         { key = 'v', mods = 'CMD', action = wezterm.action.Paste},
+        { key = 'q', mods = 'CTRL', action=wezterm.action{ SendString="\x11" } },
+
     },
 
   -- Middle mouse button pastes the clipboard.
