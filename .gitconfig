@@ -4,11 +4,14 @@
 	email = integrityms@gmail.com
 	name = locate
 
-[includeIf "gitdir:~/admin/v1/"]
-    path = ~/admin/v1/.account.config
+[includeIf "gitdir:~/mobon/admin/v1/"]
+    path = ~/.git_company_account
 
-[includeIf "gitdir:~/admin/v2/"]
-    path = ~/admin/v2/.account.config
+[includeIf "gitdir:~/mobon/admin/v2/"]
+    path = ~/.git_company_account
+
+[includeIf "gitdir:~/mobon/docker/docker_img/"]
+    path = ~/.git_company_account
 
 [difftool]
     prompt = true
@@ -34,3 +37,40 @@
 	directory = *
 [merge "ours"]
 	driver = true
+
+[alias]
+    s = status -s
+    l = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%C(bold blue)<%an>%Creset' --abbrev-commit
+    b0 = "!git branch | awk '/^\\*/{print $2}'"
+    sync = "!f() { git fetch $1 && git reset --hard $1/$(git b0); }; f"
+    bb = "! # Branch tools. Type 'git bb help' ; \n\
+        f() { \n\
+            if [ $# = 0 ]; then \
+                git checkout $(git branch -vv | grep -v '^\\*' | fzf | awk '{print $1}'); \
+            elif [ $1 = 'help' ]; then \
+                echo 'git bb           : Select and checkout branch'; \
+                echo 'git bb c, clean  : Clean all merged branches'; \
+                echo 'git bb d, D      : Delete seleted branches(D: force)'; \
+                echo 'git bb l, list   : List branches excluding the current branch'; \
+                echo 'git bb m, merged : List merged branches excluding the current and master branches'; \
+            elif [ $1 = 'd' -o $1 = 'D' ]; then \
+                git branch -$1 $(git bb list | fzf -m); \
+            elif [ $1 = 'clean' -o $1 = 'c' ]; then \
+                git branch -d $(git bb merged); \
+            elif [ $1 = 'list' -o $1 = 'l' ]; then \
+                git branch | grep -v '^\\*'; \
+            elif [ $1 = 'merged' -o $1 = 'm' ]; then \
+                git branch --merged | grep -v '^\\*\\|\\<master$'; \
+            else \
+                git bb help; \
+            fi; \
+        }; f"
+    back = "!git branch backup-`git b0`"
+    ch = "!git checkout $(git bselect)"
+    bselect = "! # select branch with preview; \n\
+        f() { \
+            _height=$(stty size | awk '{print $1}');\
+            git branch | egrep -v '^\\*' | fzf --preview \"git l {1} | head -n $_height\"; \
+        }; f"
+            alias = "!git config --list | egrep '^alias.+'"
+
