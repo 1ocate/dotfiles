@@ -7,10 +7,15 @@ Plug 'mattn/emmet-vim'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'tpope/vim-fugitive'
+Plug 'tpope/vim-dispatch'
 Plug 'easymotion/vim-easymotion'
 Plug 'ludovicchabant/vim-gutentags'
 Plug 'junegunn/fzf', { 'dir': '~/opt/fzf' }
 Plug 'junegunn/fzf.vim'
+Plug 'johngrib/vim-game-code-break'
+Plug '1ocate/yankclip.vim'
+Plug 'vim-test/vim-test'
+Plug 'preservim/tagbar'
 
 call plug#end()
 nnoremap <F9> :call <SID>WSLYank_toggle()<CR>
@@ -64,6 +69,13 @@ augroup WSLYank_autocmd
 
 augroup END
 
+"tagbar
+nmap <F8> :TagbarToggle<CR>
+
+"dispatch test
+let g:dispatch_phpunit_command = './vendor/bin/phpunit'
+
+
 " 스크롤 할때 구문강조 풀리는 문제 방지 
 autocmd BufEnter * syntax sync fromstart
 
@@ -101,6 +113,15 @@ let $FZF_DEFAULT_COMMAND='find . \! \( -type d -path ./.git -prune \) \! -type d
 nnoremap <C-p> :Files<Cr>
 "nnoremap <S-S> :Files<Cr>
 nnoremap <silent> <Leader>rg :Rg <C-R><C-W><CR>
+nnoremap <silent> <Leader>tg :Tags <C-R><C-W><CR>
+
+"test 설정
+let test#php#phpunit#executable = 'phpunit --stderr'
+nmap <silent> <leader>t :TestNearest<CR>
+nmap <silent> <leader>T :TestFile<CR>
+nmap <silent> <leader>a :TestSuite<CR>
+nmap <silent> <leader>l :TestLast<CR>
+nmap <silent> <leader>g :TestVisit<CR>
 
 " NERDTree 설정
 let g:NERDTreeShowHidden = 1
