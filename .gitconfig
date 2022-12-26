@@ -65,7 +65,7 @@
                 git bb help; \
             fi; \
         }; f"
-    back = "!git branch backup-`git b0`"
+    back = "!git branch `git b0`-bak"
     ch = "!git checkout $(git bselect)"
     bselect = "! # select branch with preview; \n\
         f() { \
@@ -73,4 +73,4 @@
             git branch | egrep -v '^\\*' | fzf --preview \"git l {1} | head -n $_height\"; \
         }; f"
             alias = "!git config --list | egrep '^alias.+'"
-
+    master = "!git checkout master . && git diff master `git b0` | git apply"
