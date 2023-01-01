@@ -1,5 +1,14 @@
+
 local wezterm = require 'wezterm'
 local wsl_domains = wezterm.default_wsl_domains()
+
+local homePwd = os.getenv('HOME')
+local osName =''
+if string.match(homePwd, "homePwd") then
+    osName = 'Mac' 
+else
+    osName = 'Linux' 
+end
 
  --for idx, dom in ipairs(wsl_domains) do
  --    dom.default_prog = { 'zsh' }
@@ -58,7 +67,9 @@ local scheme = wezterm.get_builtin_color_schemes()['Matrix (terminal.sexy)']
 
 --local act = wezterm.action
 --
-wezterm.log_info (scheme)
+
+--wezterm.log_info (scheme)
+--wezterm.log_info (os_name)
 wezterm.on('update-right-status', function(window, pane)
   -- "Wed Mar 3 08:14"
   local date = wezterm.strftime '%a %b %-d %H:%M '
@@ -85,12 +96,12 @@ return {
         },
     },
     keys = {
-        { key = 'C', mods = 'CTRL', action = wezterm.action.Copy },
-        { key = 'v', mods = 'CTRL', action = wezterm.action.Paste },
+        --{ key = 'C', mods = 'CTRL', action = wezterm.action.CopyTo },
+        --{ key = 'v', mods = 'CTRL', action = wezterm.action.Paste },
 
         -- For Mac
-        { key = 'C', mods = 'CMD', action = wezterm.action.Copy },
-        { key = 'v', mods = 'CMD', action = wezterm.action.Paste},
+        { key = 'C', mods = 'CMD', action = wezterm.action.CopyTo},
+        { key = 'v', mods = 'CMD', action = wezterm.action.PasteFrom},
         { key = 'q', mods = 'CTRL', action=wezterm.action{ SendString="\x11" } },
 
     },
@@ -101,7 +112,7 @@ return {
     {
       event = { Up = { streak = 1, button = 'Middle' } },
       mods = 'NONE',
-      action = wezterm.action.Paste,
+      action = wezterm.action.PasteFrom
     },
   },    
   color_schemes = {
