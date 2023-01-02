@@ -1,6 +1,10 @@
-# !/usr/bin/env bash
+#!/usr/bin/env sh
 
-DOTFILE=$(dirname "${BASH_SOURCE[0]}")
+DOTFILES=$(dirname "${BASH_SOURCE[0]}")
 
 rm ~/.tmux.conf
-ln -s $DOTFILE/tmux/tmux.conf ~/.tmux.conf
+ln -s $DOTFILES/tmux/tmux.conf ~/.tmux.conf
+
+mkdir -p $HOME/.local/bin
+
+ln -sf $DOTFILES/scripts/t $HOME/.local/bin/t
