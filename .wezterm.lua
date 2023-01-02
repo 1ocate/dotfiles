@@ -96,25 +96,25 @@ return {
         },
     },
     keys = {
-        --{ key = 'C', mods = 'CTRL', action = wezterm.action.CopyTo },
-        --{ key = 'v', mods = 'CTRL', action = wezterm.action.Paste },
+         { key = 'C', mods = 'CTRL', action = wezterm.action.CopyTo 'ClipboardAndPrimarySelection' },
+         { key = 'v', mods = 'CTRL', action = wezterm.action.PasteFrom 'Clipboard' },
 
-        -- For Mac
-        { key = 'C', mods = 'CMD', action = wezterm.action.CopyTo},
-        { key = 'v', mods = 'CMD', action = wezterm.action.PasteFrom},
-        { key = 'q', mods = 'CTRL', action=wezterm.action{ SendString="\x11" } },
+         -- For Mac
+         { key = 'C', mods = 'CMD', action = wezterm.action.CopyTo 'ClipboardAndPrimarySelection' },
+         { key = 'v', mods = 'CMD', action = wezterm.action.PasteFrom 'Clipboard' },
+         { key = 'q', mods = 'CTRL', action = wezterm.action{ SendString="\x11" } },
 
     },
 
   -- Middle mouse button pastes the clipboard.
   -- Note that this is the default so you needn't copy this.
-  mouse_bindings = {
-    {
-      event = { Up = { streak = 1, button = 'Middle' } },
-      mods = 'NONE',
-      action = wezterm.action.PasteFrom
-    },
-  },    
+  -- mouse_bindings = {
+  --   {
+  --     event = { Up = { streak = 1, button = 'Middle' } },
+  --     mods = 'NONE',
+  --     action = wezterm.action.PasteFrom
+  --   },
+  -- },    
   color_schemes = {
     -- Override the builtin Gruvbox Light scheme with our modification.
     ['test'] = scheme,
