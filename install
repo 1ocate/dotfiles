@@ -1,10 +1,11 @@
 #!/usr/bin/env sh
 
-DOTFILES=$(dirname "${BASH_SOURCE[0]}")
+DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-rm ~/.tmux.conf
+rm -rf $HOME/.tmux.conf
 ln -s $DOTFILES/tmux/tmux.conf ~/.tmux.conf
 
 mkdir -p $HOME/.local/bin
 
+rm -rf $HOME/.local/bin/t
 ln -sf $DOTFILES/scripts/t $HOME/.local/bin/t
