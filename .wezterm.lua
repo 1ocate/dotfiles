@@ -1,27 +1,39 @@
-
 local wezterm = require 'wezterm'
-local wsl_domains = wezterm.default_wsl_domains()
 
+-- OS Check
 local homePwd = os.getenv('HOME')
 local osName =''
-if string.match(homePwd, "homePwd") then
-    osName = 'Mac' 
+if homePwd then
+    if string.match(homePwd, "homePwd") then
+        osName = 'Mac' 
+    else
+        osName = 'Linux' 
+    end
+else 
+    osName = 'WSL'
+end
+
+local default_domain = ''
+local wsl_domains = ''
+if osName == 'WSL' then
+    wsl_domains = wezterm.default_wsl_domains()
+    for idx, dom in ipairs(wsl_domains) do
+       dom.default_prog = {"fish", "-l"}
+       dom.default_cwd = '/home/locate'
+    end
+    default_domain = 'WSL:Ubuntu20.04LTS'
 else
-    osName = 'Linux' 
 end
 
- --for idx, dom in ipairs(wsl_domains) do
- --    dom.default_prog = { 'zsh' }
- --    dom.default_cwd = "/home/locate"
- --end
+local keybind = {
+    { key = 'C', mods = 'CTRL', action = wezterm.action.CopyTo 'ClipboardAndPrimarySelection' },
+    { key = 'v', mods = 'CTRL', action = wezterm.action.PasteFrom 'Clipboard' },
 
-local wsl_domains = wezterm.default_wsl_domains()
-
--- Always use zsh in my WSL.  but really: I recommend running `chsh` inside WSL to make it the default!
-for idx, dom in ipairs(wsl_domains) do
-   dom.default_prog = {"zsh", "-l"}
-   dom.default_cwd = "/home/locate"
-end
+    -- For Mac
+    { key = 'C', mods = 'CMD', action = wezterm.action.CopyTo 'ClipboardAndPrimarySelection' },
+    { key = 'v', mods = 'CMD', action = wezterm.action.PasteFrom 'Clipboard' },
+    { key = 'q', mods = 'CTRL', action = wezterm.action{ SendString="\x11" } },
+}
 
 local scheme = wezterm.get_builtin_color_schemes()['Matrix (terminal.sexy)']
  scheme.brights = {
@@ -44,39 +56,18 @@ local scheme = wezterm.get_builtin_color_schemes()['Matrix (terminal.sexy)']
      "#00cc00",
      "#00cc00",
  }
- --scheme.ansi = {
- --    "#688060",
- --    "#55ff55",
- --    "#00cc00",
- --    "#00cc00",
- --    "#005500",
- --    "#55ff55",
- --    "#00cc00",
- --    "#00cc00",
- --}
---scheme.brights = {
---    '#688060',
---    "#55ff55",
---    "#55ff55",
---    "#55ff55",
---    "#005500",
---    "#55ff55",
---    "#55ff55",
---    "#00cc00",
---}
-
 --local act = wezterm.action
---
-
---wezterm.log_info (scheme)
---wezterm.log_info (os_name)
+--wezterm.log_info (wsl_domains)
 wezterm.on('update-right-status', function(window, pane)
-  -- "Wed Mar 3 08:14"
+  -- "format Wed Mar 3 08:14"
   local date = wezterm.strftime '%a %b %-d %H:%M '
 
+  -- battery info
   local bat = ''
-  for _, b in ipairs(wezterm.battery_info()) do
-    bat = '🔋 ' .. string.format('%.0f%%', b.state_of_charge * 100)
+  if osName == 'Mac' then
+      for _, b in ipairs(wezterm.battery_info()) do
+        bat = '🔋 ' .. string.format('%.0f%%', b.state_of_charge * 100)
+      end
   end
 
   window:set_right_status(wezterm.format {
@@ -85,26 +76,19 @@ wezterm.on('update-right-status', function(window, pane)
 end)
 return {
     wsl_domains = wsl_domains,
+    default_domain = default_domain,
+    --default_cwd = '',
     --default_domain = 'WSL:Ubuntu20.04LTS',
     --default_prog = {'bash'},
-    default_cwd = "/home/locate",
+    --default_cwd = "/home/locate",
     font_rules = {
         {
             italic = false,
-            bold = false,
+            --bold = false,
             font = wezterm.font("MesloLGS NF"),
         },
     },
-    keys = {
-         { key = 'C', mods = 'CTRL', action = wezterm.action.CopyTo 'ClipboardAndPrimarySelection' },
-         { key = 'v', mods = 'CTRL', action = wezterm.action.PasteFrom 'Clipboard' },
-
-         -- For Mac
-         { key = 'C', mods = 'CMD', action = wezterm.action.CopyTo 'ClipboardAndPrimarySelection' },
-         { key = 'v', mods = 'CMD', action = wezterm.action.PasteFrom 'Clipboard' },
-         { key = 'q', mods = 'CTRL', action = wezterm.action{ SendString="\x11" } },
-
-    },
+    keys = keybind,
 
   -- Middle mouse button pastes the clipboard.
   -- Note that this is the default so you needn't copy this.
@@ -112,14 +96,14 @@ return {
   --   {
   --     event = { Up = { streak = 1, button = 'Middle' } },
   --     mods = 'NONE',
-  --     action = wezterm.action.PasteFrom
+  --     action = wezterm.action.Paste,
   --   },
   -- },    
   color_schemes = {
     -- Override the builtin Gruvbox Light scheme with our modification.
-    ['test'] = scheme,
+    ['locate'] = scheme,
   },
 
-  color_scheme = "test",
+  color_scheme = "locate",
 
 }
