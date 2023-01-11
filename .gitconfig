@@ -66,11 +66,27 @@
             fi; \
         }; f"
     back = "!git branch `git b0`-bak"
-    ch = "!git checkout $(git bselect)"
+    trashFile = "!git status -s | awk '/M / { print $2 }' | grep phpunit"
+    rmTrashFile = "! # rmTrashFile ; \n\
+        f() { \
+            trashFile=$(git trashFile);\
+            if [ ! -z $trashFile ]; then \
+                git rm -f $(git trashFile); \
+            fi; \
+        }; f"
+
+    ch = "! # checkout ; \n\
+        f() { \
+            if [ -z "$1" ]; then \
+                git rmTrashFile && git checkout $(git bselect);\
+            else \
+                git rmTrashFile && git checkout $1; \
+            fi; \
+        }; f"
     bselect = "! # select branch with preview; \n\
         f() { \
             _height=$(stty size | awk '{print $1}');\
             git branch | egrep -v '^\\*' | fzf --preview \"git l {1} | head -n $_height\"; \
         }; f"
-            alias = "!git config --list | egrep '^alias.+'"
+    alias = "!git config --list | egrep '^alias.+'"
     master = "!git checkout master . && git diff master `git b0` | git apply"
