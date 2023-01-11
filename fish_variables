@@ -13,11 +13,11 @@ SETUVAR _tide_prompt_74302:\x1b\x28B\x1b\x5bm\x1b\x28B\x1b\x5bm\x1b\x5b38\x3b2\x
 SETUVAR _tide_right_items:status\x1ecmd_duration\x1econtext\x1ejobs\x1enode\x1evirtual_env\x1ephp\x1ekubectl\x1etime
 SETUVAR fish_color_autosuggestion:555\x1ebrblack
 SETUVAR fish_color_cancel:\x2dr
-SETUVAR fish_color_command:blue
+SETUVAR fish_color_command:white
 SETUVAR fish_color_comment:red
-SETUVAR fish_color_cwd:\x2322b455
+SETUVAR fish_color_cwd:green
 SETUVAR fish_color_cwd_root:red
-SETUVAR fish_color_end:\x2392e5a1
+SETUVAR fish_color_end:green
 SETUVAR fish_color_error:brred
 SETUVAR fish_color_escape:brcyan
 SETUVAR fish_color_history_current:\x2d\x2dbold
@@ -31,7 +31,7 @@ SETUVAR fish_color_redirection:cyan\x1e\x2d\x2dbold
 SETUVAR fish_color_search_match:\x2d\x2dbackground\x3d111
 SETUVAR fish_color_selection:white\x1e\x2d\x2dbold\x1e\x2d\x2dbackground\x3dbrblack
 SETUVAR fish_color_status:red
-SETUVAR fish_color_user:\x2322b455
+SETUVAR fish_color_user:brgreen
 SETUVAR fish_color_valid_path:\x2d\x2dunderline
 SETUVAR fish_key_bindings:fish_default_key_bindings
 SETUVAR fish_pager_color_completion:normal
