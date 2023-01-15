@@ -1,73 +1,20 @@
 call plug#begin('~/.config/nvim/plugged')
 
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
-Plug 'morhetz/gruvbox'
-Plug 'preservim/nerdtree'
 Plug 'mattn/emmet-vim'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
-Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-dispatch'
 Plug 'easymotion/vim-easymotion'
 Plug 'ludovicchabant/vim-gutentags'
-Plug 'junegunn/fzf', { 'dir': '~/opt/fzf' }
-Plug 'junegunn/fzf.vim'
-Plug 'johngrib/vim-game-code-break'
-Plug '1ocate/yankclip.vim'
-Plug 'vim-test/vim-test'
+Plug 'robertrosman/vim-bible'
+Plug 'fannheyward/telescope-coc.nvim'
 Plug 'preservim/tagbar'
 
 call plug#end()
-nnoremap <F9> :call <SID>WSLYank_toggle()<CR>
 
-" WSL에서 클립보드에 복사
-augroup WSLYank_autocmd
+nnoremap <C-]> :only<bar>vsplit<CR>:execute "tselect " . expand('<cword>')<CR>
 
-    " 초기화
-    let g:wsl_clipboard_enble = 1
-    let s:global_yank_cache_0 = @0
-
-    " OS 확인
-    if has("mac")
-        let s:clip = @+
-        let s:flag_able= 1
-    elseif has("wsl")
-        " WSL의 경우는 클립보드 위치 확인
-        let s:clip = '/mnt/c/Windows/System32/clip.exe' 
-        if executable(s:clip)
-            let s:flag_able= 1
-        end
-    end
-
-    if  s:flag_able
-        autocmd TextYankPost * :call s:WSLYank()
-    end
-
-    function! s:WSLYank_toggle()
-        let g:wsl_clipboard_enble = ! g:wsl_clipboard_enble
-        echom "시스템 클립보드 사용 여부 " . g:wsl_clipboard_enble
-        let s:clip = ''
-    endfunction
-
-    function! s:save_cache()
-        let s:global_yank_cache_0 = @0
-    endfunction
-
-    function! s:WSLYank()
-            if ! v:true == g:wsl_clipboard_enble
-                return
-            endif
-            if s:global_yank_cache_0 != @0
-                if has("wsl")
-                    call system('echo '.shellescape(join(v:event.regcontents, "\<CR>")).' | '.s:clip)
-                endif
-                let @+ = expand(@0)
-                call s:save_cache()
-                return
-            endif
-    endfunction
-
-augroup END
 
 "tagbar
 nmap <F8> :TagbarToggle<CR>
@@ -82,21 +29,6 @@ autocmd BufEnter * syntax sync fromstart
 " gutentags 상태
 set statusline+=%{gutentags#statusline()}
 
-set nu
-set showmatch        " 일치하는 괄호 하이라이팅
-set cursorline       " highlight current line
-set tabstop=4 softtabstop=4 shiftwidth=4 expandtab smarttab
-autocmd FileType javascript setlocal ts=2 sts=2 sw=2 
-autocmd FileType typescriptreact setlocal ts=2 sts=2 sw=2
-set cindent autoindent smartindent
-
-"테마 변경
-let g:gruvbox_contrast_dark = 'hard'
-let g:gruvbox_italic = 1
-set background=dark
-set termguicolors
-colorscheme gruvbox
-
 
 "EucKr 설정
 nnoremap <F7> :e ++enc=euc-kr <Cr>
@@ -104,36 +36,7 @@ nnoremap <F7> :e ++enc=euc-kr <Cr>
 "설정 새로 불러오기
 nnoremap <F5> :source % <Cr>
 
-"FZF 설정
-let $FZF_DEFAULT_COMMAND='find . \! \( -type d -path ./.git -prune \) \! -type d \! -name ''*.tags'' -printf ''%P\n'''
-"let FZF_DEFAULT_COMMAND='rg --hidden -l ""'
-"let FZF_DEFAULT_COMMAND="rg --files --hidden --glob '!.git/**' --encoding=euc-kr"
 
-
-nnoremap <C-p> :Files<Cr>
-"nnoremap <S-S> :Files<Cr>
-nnoremap <silent> <Leader>rg :Rg <C-R><C-W><CR>
-nnoremap <silent> <Leader>tg :Tags <C-R><C-W><CR>
-
-"test 설정
-let test#php#phpunit#executable = 'phpunit --stderr'
-nmap <silent> <leader>t :TestNearest<CR>
-nmap <silent> <leader>T :TestFile<CR>
-nmap <silent> <leader>a :TestSuite<CR>
-nmap <silent> <leader>l :TestLast<CR>
-nmap <silent> <leader>g :TestVisit<CR>
-
-" NERDTree 설정
-let g:NERDTreeShowHidden = 1
-let g:NERDTreeMinimalUI = 1
-let g:NERDTreeIgnore = []
-let g:NERDTreeStatusline = ''
-
-" Automaticaly close nvim if NERDTree is only thing left open
-autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
-
-" NERDTree 단축키
-nnoremap <silent> <C-b> :NERDTreeToggle %<CR>
 
 " Terminal
 set splitbelow
