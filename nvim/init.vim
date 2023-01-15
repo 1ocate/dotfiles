@@ -1,5 +1,4 @@
 call plug#begin('~/.config/nvim/plugged')
-
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'morhetz/gruvbox'
 Plug 'preservim/nerdtree'
@@ -18,56 +17,11 @@ Plug 'vim-test/vim-test'
 Plug 'preservim/tagbar'
 
 call plug#end()
-nnoremap <F9> :call <SID>WSLYank_toggle()<CR>
+"플러그인 활성화 여부 0: 비활성 1: 활성
+let g:os_clipboard_enble = 1
 
-" WSL에서 클립보드에 복사
-augroup WSLYank_autocmd
-
-    " 초기화
-    let g:wsl_clipboard_enble = 1
-    let s:global_yank_cache_0 = @0
-
-    " OS 확인
-    if has("mac")
-        let s:clip = @+
-        let s:flag_able= 1
-    elseif has("wsl")
-        " WSL의 경우는 클립보드 위치 확인
-        let s:clip = '/mnt/c/Windows/System32/clip.exe' 
-        if executable(s:clip)
-            let s:flag_able= 1
-        end
-    end
-
-    if  s:flag_able
-        autocmd TextYankPost * :call s:WSLYank()
-    end
-
-    function! s:WSLYank_toggle()
-        let g:wsl_clipboard_enble = ! g:wsl_clipboard_enble
-        echom "시스템 클립보드 사용 여부 " . g:wsl_clipboard_enble
-        let s:clip = ''
-    endfunction
-
-    function! s:save_cache()
-        let s:global_yank_cache_0 = @0
-    endfunction
-
-    function! s:WSLYank()
-            if ! v:true == g:wsl_clipboard_enble
-                return
-            endif
-            if s:global_yank_cache_0 != @0
-                if has("wsl")
-                    call system('echo '.shellescape(join(v:event.regcontents, "\<CR>")).' | '.s:clip)
-                endif
-                let @+ = expand(@0)
-                call s:save_cache()
-                return
-            endif
-    endfunction
-
-augroup END
+"단축키 설정 
+nnoremap <F9> :OsYankToggle <CR>
 
 "tagbar
 nmap <F8> :TagbarToggle<CR>
@@ -105,9 +59,9 @@ nnoremap <F7> :e ++enc=euc-kr <Cr>
 nnoremap <F5> :source % <Cr>
 
 "FZF 설정
-let $FZF_DEFAULT_COMMAND='find . \! \( -type d -path ./.git -prune \) \! -type d \! -name ''*.tags'' -printf ''%P\n'''
+"let $FZF_DEFAULT_COMMAND='find . \! \( -type d -path ./.git -prune \) \! -type d \! -name ''*.tags'' -printf ''%P\n'''
 "let FZF_DEFAULT_COMMAND='rg --hidden -l ""'
-"let FZF_DEFAULT_COMMAND="rg --files --hidden --glob '!.git/**' --encoding=euc-kr"
+let FZF_DEFAULT_COMMAND="rg --files --hidden --glob '!.git/**' --encoding=euc-kr"
 
 
 nnoremap <C-p> :Files<Cr>
