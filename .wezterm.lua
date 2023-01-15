@@ -103,5 +103,6 @@ setting['font_rules'] = font_rules
 setting['keys'] = keybind
 setting['color_schemes'] = color_schemes
 setting['color_scheme'] = color_scheme
+setting['term'] = 'wezterm'
 
 return setting
