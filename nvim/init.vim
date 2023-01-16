@@ -17,7 +17,12 @@ Plug 'vim-test/vim-test'
 Plug 'preservim/tagbar'
 
 call plug#end()
-"플러그인 활성화 여부 0: 비활성 1: 활성
+
+"자동으로 들어가는 마지막 개행 사용하지 않기
+set noeol
+set nofixeol
+
+"yankclip 플러그인 활성화 여부 0: 비활성 1: 활성
 let g:os_clipboard_enble = 1
 
 "단축키 설정 
