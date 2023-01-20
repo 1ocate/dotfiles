@@ -135,9 +135,11 @@ set hidden
 nmap <leader>T :enew<cr>
 
 " 다음 버퍼로 이동
+nmap b] :bnext<CR>
 nmap <leader>l :bnext<CR>
 
 " 이전 버퍼로 이동
+nmap b[ :bprevious<CR>
 nmap <leader>h :bprevious<CR>
 
 " 현재 버퍼를 닫고 이전 버퍼로 이동
