@@ -75,8 +75,9 @@
             fi; \
         }; f"
 
-    ch = "! # checkout ; \n\
-        f() { \
+    ch = "!f() { \
+            : git branch ; \
+            echo $1;       \
             if [ -z "$1" ]; then \
                 git rmTrashFile && git checkout $(git bselect);\
             else \
@@ -90,3 +91,7 @@
         }; f"
     alias = "!git config --list | egrep '^alias.+'"
     master = "!git checkout master . && git diff master `git b0` | git apply"
+    echo = " f() {   \
+              !bash -c git branch : ; \
+              echo $1;       \
+            }; f"

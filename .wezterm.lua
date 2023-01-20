@@ -91,6 +91,10 @@ wezterm.on('update-right-status', function(window, pane)
   })
 end)
 
+local wsl_terminal_val = {
+    TERMINFO_DIRS = '/home/locate/.terminfo/w',
+    WSLENV = 'TERMINFO_DIRS',
+}
 local setting = {}
 
 -- only Wsl use domain
@@ -103,5 +107,7 @@ setting['font_rules'] = font_rules
 setting['keys'] = keybind
 setting['color_schemes'] = color_schemes
 setting['color_scheme'] = color_scheme
+setting['set_environment_variables'] = wsl_terminal_val
+setting['term'] = 'wezterm'
 
 return setting
