@@ -151,14 +151,9 @@ use({
   config = function()
     vim.g.BibleTranslation = 'KorRv'
     vim.g.BibleLocale = 'en'
-    -- vim.keymap.set('v', '<Leader>y', ':call bible#insert_quote(@")<CR>')
-    -- vim.keymap.set('v', '<Leader>y', ':d <bar> :call bible#insert_quote(substitute(@", "\n$", "", ""))<CR>')
-    -- vim.keymap.set('v', '<Leader>y', ':d <bar> :call bible#insert_quote(@")<CR>')
-    -- vnoremap <Leader>y :call bible#insert_quote(substitute("창1:1", '\n$', '', ''))<CR>
-    -- vnoremap <Leader>y :call bible#insert_quote("창10:1")<CR>
     vim.cmd([[
-      noremap <Leader>b y :d_ <bar> :call bible#insert_quote(substitute(@", '\n$', '', ''))<CR>
-      "vnoremap <Leader>b y :d <bar> :call bible#insert_quote(substitute(@", '\n$', '', ''))<CR>
+      "noremap <Leader>b y :d_ <bar> :call bible#insert_quote(substitute(@", '\n$', '', ''))<CR>
+      vnoremap <Leader>b y :d_ <bar> :call bible#insert_quote(substitute(@", '\n$', '', ''))<CR>
     ]])
   end,
 })
@@ -186,11 +181,40 @@ use({
   end,
 })
 
+-- Git integration.
+use({
+  'lewis6991/gitsigns.nvim',
+  config = function()
+    require('gitsigns').setup()
+    vim.keymap.set('n', ']h', ':Gitsigns next_hunk<CR>')
+    vim.keymap.set('n', '[h', ':Gitsigns prev_hunk<CR>')
+    vim.keymap.set('n', 'gs', ':Gitsigns stage_hunk<CR>')
+    vim.keymap.set('n', 'gS', ':Gitsigns undo_stage_hunk<CR>')
+    vim.keymap.set('n', 'gp', ':Gitsigns preview_hunk<CR>')
+    vim.keymap.set('n', 'gb', ':Gitsigns blame_line<CR>')
+  end,
+})
+
 -- Vim Fugitive
 use({
   'tpope/vim-fugitive',
   requires = 'tpope/vim-rhubarb',
   cmd = 'G',
+})
+
+--- Floating terminal.
+use({
+  'voldikss/vim-floaterm',
+  config = function()
+    vim.g.floaterm_width = 0.8
+    vim.g.floaterm_height = 0.8
+    vim.keymap.set('n', '<F1>', ':FloatermToggle<CR>')
+    vim.keymap.set('t', '<F1>', '<C-\\><C-n>:FloatermToggle<CR>')
+    vim.cmd([[
+      highlight link Floaterm CursorLine
+      highlight link FloatermBorder CursorLineBg
+    ]])
+  end
 })
 
 -- Vim Test
@@ -205,7 +229,11 @@ use({
 use({
   'neovim/nvim-lspconfig',
   requires = {
+    'williamboman/mason.nvim',
+    'williamboman/mason-lspconfig.nvim',
     'b0o/schemastore.nvim',
+    'jose-elias-alvarez/null-ls.nvim',
+    'jayp0521/mason-null-ls.nvim',
     'folke/lsp-colors.nvim',
   },
   config = function()
@@ -235,6 +263,59 @@ use({
   },
   config = function()
     require('user.plugins.cmp')
+  end,
+})
+
+use({
+  'akinsho/bufferline.nvim',
+  requires = 'kyazdani42/nvim-web-devicons',
+  after = 'gruvbox',
+  config = function()
+    require('user.plugins.bufferline')
+  end,
+})
+
+-- Improved syntax highlighting
+use({
+  'nvim-treesitter/nvim-treesitter',
+  run = function()
+    require('nvim-treesitter.install').update({ with_sync = true })
+  end,
+  requires = {
+    'JoosepAlviste/nvim-ts-context-commentstring',
+    'nvim-treesitter/nvim-treesitter-textobjects',
+  },
+  config = function()
+    require('user/plugins/treesitter')
+  end,
+})
+
+
+-- use({
+--   'nvim-lualine/lualine.nvim',
+--   requires = 'kyazdani42/nvim-web-devicons',
+--   config = function()
+--   end,
+--     require('user.plugins.lualine')
+-- })
+
+use({
+  'vim-airline/vim-airline',
+  requires = 'vim-airline/vim-airline-themes',
+  config = function()
+    vim.cmd([[
+        let g:airline_left_sep = ''
+        let g:airline_right_sep = ''
+        let g:airline#extensions#branch#enabled = 1
+        let base16colorspace=256
+        let g:airline_theme='base16_horizon_dark'
+        let g:airline_powerline_fonts = 1
+        let g:airline#extensions#wordcount#enabled = 0
+        let g:airline_detect_iminsert=1
+        " let g:airline_skip_empty_sections = 1
+        let g:airline#extensions#syntastic#enabled = 0
+        let g:airline#extensions#tmuxline#enabled = 0
+      ]])
   end,
 })
 

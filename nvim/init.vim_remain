@@ -8,7 +8,6 @@ Plug 'tpope/vim-dispatch'
 Plug 'easymotion/vim-easymotion'
 Plug 'ludovicchabant/vim-gutentags'
 Plug 'robertrosman/vim-bible'
-Plug 'fannheyward/telescope-coc.nvim'
 Plug 'preservim/tagbar'
 
 call plug#end()
@@ -38,19 +37,6 @@ nnoremap <F5> :source % <Cr>
 
 
 
-" Terminal
-set splitbelow
-command! -nargs=* T split | set nonu | resize 5 | term <args>
-" turn terminal to normal mode with escape
-tnoremap <Esc> <C-\><C-n>
-
-" 하단 바 관련 설정
-let g:airline_left_sep = ''
-let g:airline_right_sep = ''
-let g:airline#extensions#branch#enabled = 1
-let g:airline#extensions#tabline#enabled = 1           " enable airline tabline                                                           
-let base16colorspace=256  " Access colors present in 256 colorspace
-
 " AIRLINE SETTINGS
 let g:airline#extensions#tabline#show_close_button = 0
 let g:airline#extensions#tabline#buffer_nr_show = 1
@@ -65,28 +51,12 @@ let g:airline#extensions#tabline#show_buffers = 1
 let g:airline#extensions#tabline#tab_nr_type = 1 " tab number
 let g:airline#extensions#tabline#show_splits = 1
 let g:airline#extensions#wordcount#enabled = 0
-let g:airline_theme='base16_horizon_dark'
-let g:airline_powerline_fonts = 1
 let g:airline#extensions#tagbar#enabled = 1
 " END AIRLINE SETTINGS
 "
 " 이 옵션은 버퍼를 수정한 직후 버퍼를 감춰지도록 한다.
 " 이 방법으로 버퍼를 사용하려면 거의 필수다.
 set hidden
-
-" 버퍼 새로 열기
-" 원래 이 단축키로 바인딩해 두었던 :tabnew를 대체한다.
-nmap <leader>T :enew<cr>
-
-" 다음 버퍼로 이동
-nmap <leader>l :bnext<CR>
-
-" 이전 버퍼로 이동
-nmap <leader>h :bprevious<CR>
-
-" 현재 버퍼를 닫고 이전 버퍼로 이동
-" 탭 닫기 단축키를 대체한다.
-nmap <leader>bq :bp <BAR> bd #<CR>
 
 " 모든 버퍼와 각 버퍼 상태 출력
 nmap <leader>bl :ls<CR>
@@ -138,13 +108,6 @@ let g:EasyMotion_use_smartsign_us = 1
 "메뉴창 색상변경
 hi CocMenuSel ctermbg=109 guibg=#13354A
 
-" Set internal encoding of vim, not needed on neovim, since coc.nvim using some
-" unicode characters in the file autoload/float.vim
-"set encoding=utf-8
-set fileencodings=utf-8,euc-kr
-
-" TextEdit might fail if hidden is not set.
-set hidden
 
 " Some servers have issues with backup files, see #649.
 set nobackup
@@ -153,9 +116,6 @@ set nowritebackup
 " Give more space for displaying messages.
 set cmdheight=2
 
-" Having longer updatetime (default is 4000 ms = 4 s) leads to noticeable
-" delays and poor user experience.
-set updatetime=4000
 
 " Don't pass messages to |ins-completion-menu|.
 set shortmess+=c

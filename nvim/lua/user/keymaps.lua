@@ -34,5 +34,25 @@ vim.keymap.set('i', '<A-k>', '<Esc>:move .-2<CR>==gi')
 vim.keymap.set('i', '<A-j>', '<Esc>:move .+1<CR>==gi')
 vim.keymap.set('n', '<A-k>', ':move .-2<CR>==')
 vim.keymap.set('n', '<A-j>', ':move .+1<CR>==')
-vim.keymap.set('v', '<A-j>', ":move '>+1<CR>gv=gv")
 vim.keymap.set('v', '<A-k>', ":move '<-2<CR>gv=gv")
+vim.keymap.set('v', '<A-j>', ":move '>+1<CR>gv=gv")
+
+-- For Buffer Control
+-- :tabnew 대체
+-- vim.keymap.set('n', '<leader>T', ':enew<CR>')
+
+-- 현재 버퍼를 닫고 이전 버퍼로 이동
+-- 탭 닫기 단축키를 대체한다.
+vim.keymap.set('n', '<leader>bq', ':bp <BAR> bd #<CR>')
+
+
+-- EucKr 설정
+vim.keymap.set('n', '<F7>', ':e ++enc=euc-kr')
+
+-- 설정 새로 불러오기
+vim.keymap.set('n', '<F5>', ':source % <Cr>')
+
+
+
+
+
