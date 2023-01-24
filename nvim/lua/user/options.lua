@@ -1,15 +1,3 @@
-local homePwd = os.getenv('HOME')
-local osName =''
-if homePwd then
-    if string.match(homePwd, "/Users") then
-        osName = 'Mac'
-    else
-        osName = 'Linux'
-    end
-else
-    osName = 'WSL'
-end
-
 vim.opt.expandtab = true
 vim.opt.shiftwidth = 4
 vim.opt.tabstop = 4
@@ -59,5 +47,5 @@ if (osName == "WSL") then
     vim.opt.nofixeol= true
 end
 
--- vim.opt.hidden = true
 -- for buffer
+-- vim.opt.hidden = true
