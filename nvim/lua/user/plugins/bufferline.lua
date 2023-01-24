@@ -24,7 +24,6 @@ require('bufferline').setup({
       end,
     },
   },
-  
   highlights = {
     -- fill = {
     --    bg = { attribute = 'bg', highlight = 'Normal' },
@@ -73,11 +72,14 @@ require('bufferline').setup({
     modified_selected = {
       fg = { attribute = 'fg', highlight = 'GruvboxRed' },
     },
-    duplicate = {
-      bg = { attribute = 'fg', highlight = 'GruvboxYellow' },
-    },
+    -- duplicate = {
+    --   fg = { attribute = 'fg', highlight = 'GruvboxYellow' },
+    -- },
     duplicate_visible = {
-      bg = { attribute = 'fg', highlight = 'GruvboxGreen' },
+      fg = { attribute = 'fg', highlight = 'GruvboxGreen' },
+      duplicate_selected= {
+    },
+      fg = { attribute = 'fg', highlight = 'GruvboxGreen' },
     },
    --    separator = {
    --       fg = { attribute = 'bg', highlight = 'Tabline' },
