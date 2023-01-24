@@ -1,3 +1,15 @@
+local homePwd = os.getenv('HOME')
+local osName =''
+if homePwd then
+    if string.match(homePwd, "/Users") then
+        osName = 'Mac'
+    else
+        osName = 'Linux'
+    end
+else
+    osName = 'WSL'
+end
+
 vim.opt.expandtab = true
 vim.opt.shiftwidth = 4
 vim.opt.tabstop = 4
@@ -41,5 +53,11 @@ vim.opt.undofile = true -- persistent undo
 vim.opt.backupdir:remove('.') -- keep backups out of the current directory
 vim.opt.backup = true -- automatically save a backup file
 
--- for buffer
+-- For WSL
+if (osName == "WSL") then
+    vim.opt.noeol= true
+    vim.opt.nofixeol= true
+end
+
 -- vim.opt.hidden = true
+-- for buffer

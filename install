@@ -12,3 +12,14 @@ ln -sf $DOTFILES/scripts/t $HOME/.local/bin/t
 
 rm -rf $HOME/.config/nvim
 ln -s $DOTFILES/nvim $HOME/.config/nvim
+
+terminfo="~/.terminfo/"
+[ ! -d $terminfo ] && echo "Directory  DOES NOT exists."
+
+if [ ! -d $terminfo ]; then
+    tempfile=$(mktemp) \
+    && curl -o $tempfile https://raw.githubusercontent.com/wez/wezterm/master/termwiz/data/wezterm.terminfo \
+    && tic -x -o ~/.terminfo $tempfile \
+    && rm $tempfile
+fi
+

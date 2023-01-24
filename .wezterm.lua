@@ -5,11 +5,11 @@ local homePwd = os.getenv('HOME')
 local osName =''
 if homePwd then
     if string.match(homePwd, "/Users") then
-        osName = 'Mac' 
+        osName = 'Mac'
     else
-        osName = 'Linux' 
+        osName = 'Linux'
     end
-else 
+else
     osName = 'WSL'
 end
 

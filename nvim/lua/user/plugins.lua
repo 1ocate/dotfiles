@@ -59,6 +59,9 @@ use('nelstrom/vim-visual-star-search')
 -- Automatically create parent dirs when saving.
 use('jessarcher/vim-heritage')
 
+-- Check Vim start time.
+use('dstein64/vim-startuptime')
+
 -- Text objects for HTML attributes.
 use({
   'whatyouhide/vim-textobj-xmlattr',
@@ -199,7 +202,6 @@ use({
 use({
   'tpope/vim-fugitive',
   requires = 'tpope/vim-rhubarb',
-  cmd = 'G',
 })
 
 --- Floating terminal.
@@ -290,34 +292,33 @@ use({
   end,
 })
 
-
--- use({
---   'nvim-lualine/lualine.nvim',
---   requires = 'kyazdani42/nvim-web-devicons',
---   config = function()
---   end,
---     require('user.plugins.lualine')
--- })
-
 use({
-  'vim-airline/vim-airline',
-  requires = 'vim-airline/vim-airline-themes',
+  'nvim-lualine/lualine.nvim',
+  requires = 'kyazdani42/nvim-web-devicons',
   config = function()
-    vim.cmd([[
-        let g:airline_left_sep = ''
-        let g:airline_right_sep = ''
-        let g:airline#extensions#branch#enabled = 1
-        let base16colorspace=256
-        let g:airline_theme='base16_horizon_dark'
-        let g:airline_powerline_fonts = 1
-        let g:airline#extensions#wordcount#enabled = 0
-        let g:airline_detect_iminsert=1
-        " let g:airline_skip_empty_sections = 1
-        let g:airline#extensions#syntastic#enabled = 0
-        let g:airline#extensions#tmuxline#enabled = 0
-      ]])
+    require('user.plugins.lualine')
   end,
 })
+
+-- use({
+--   'vim-airline/vim-airline',
+--   requires = 'vim-airline/vim-airline-themes',
+--   config = function()
+--     vim.cmd([[
+--         let g:airline_left_sep = ''
+--         let g:airline_right_sep = ''
+--         let g:airline#extensions#branch#enabled = 1
+--         let base16colorspace=256
+--         let g:airline_theme='base16_horizon_dark'
+--         let g:airline_powerline_fonts = 1
+--         let g:airline#extensions#wordcount#enabled = 0
+--         let g:airline_detect_iminsert=1
+--         " let g:airline_skip_empty_sections = 1
+--         let g:airline#extensions#syntastic#enabled = 0
+--         let g:airline#extensions#tmuxline#enabled = 0
+--       ]])
+--   end,
+-- })
 
 -- Put this at the end after all plugins
 if packer_bootstrap then
