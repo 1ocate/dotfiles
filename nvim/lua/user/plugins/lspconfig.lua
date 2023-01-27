@@ -27,25 +27,25 @@ require('lspconfig').jsonls.setup({
   },
 })
 
--- null-ls
-require('null-ls').setup({
-  sources = {
-    require('null-ls').builtins.diagnostics.eslint_d.with({
-      condition = function(utils)
-        return utils.root_has_file({ '.eslintrc.js' })
-      end,
-    }),
-    require('null-ls').builtins.diagnostics.trail_space.with({ disabled_filetypes = { 'NvimTree' } }),
-    require('null-ls').builtins.formatting.eslint_d.with({
-      condition = function(utils)
-        return utils.root_has_file({ '.eslintrc.js' })
-      end,
-    }),
-    require('null-ls').builtins.formatting.prettierd,
-  },
-})
+-- -- null-ls
+-- require('null-ls').setup({
+--   sources = {
+--     require('null-ls').builtins.diagnostics.eslint_d.with({
+--       condition = function(utils)
+--         return utils.root_has_file({ '.eslintrc.js' })
+--       end,
+--     }),
+--     require('null-ls').builtins.diagnostics.trail_space.with({ disabled_filetypes = { 'NvimTree' } }),
+--     require('null-ls').builtins.formatting.eslint_d.with({
+--       condition = function(utils)
+--         return utils.root_has_file({ '.eslintrc.js' })
+--       end,
+--     }),
+--     require('null-ls').builtins.formatting.prettierd,
+--   },
+-- })
 
-require('mason-null-ls').setup({ automatic_installation = true })
+-- require('mason-null-ls').setup({ automatic_installation = true })
 
 -- Keymaps
 vim.keymap.set('n', '<Leader>d', '<cmd>lua vim.diagnostic.open_float()<CR>')

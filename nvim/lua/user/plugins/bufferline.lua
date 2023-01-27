@@ -47,40 +47,40 @@ require('bufferline').setup({
    --    -- bg = { attribute = 'bg', highlight = 'Tabline' },
    --    -- fg = { attribute = 'fg', highlight = 'StatusLineNonText' },
    -- },
-  close_button_selected = {
-     -- bg = { attribute = 'bg', highlight = 'StatusLine' },
-     -- fg = { attribute = 'fg', highlight = 'StatusLine' },
-     fg = '#ffffff'
+   close_button_selected = {
+      -- bg = { attribute = 'bg', highlight = 'StatusLine' },
+      -- fg = { attribute = 'fg', highlight = 'StatusLine' },
+      fg = '#ffffff'
 
-  },
-    buffer_visible = {
-       bg = { attribute = 'bg', highlight = 'normal' },
-    },
-    buffer_selected = {
-        -- bg = '#999999',
-        -- fg = { attribute = 'fg', highlight = 'StatusLine' },
-        fg = '#ffffff',
-        bold = true,
-        italic = true,
-    },
-     modified = {
-        fg = { attribute = 'fg', highlight = 'GruvboxRed' },
-    },
-    modified_visible = {
+   },
+   buffer_visible = {
+      bg = { attribute = 'bg', highlight = 'normal' },
+   },
+   buffer_selected = {
+       -- bg = '#999999',
+       -- fg = { attribute = 'fg', highlight = 'StatusLine' },
+       fg = '#ffffff',
+       bold = true,
+       italic = true,
+   },
+    modified = {
        fg = { attribute = 'fg', highlight = 'GruvboxRed' },
-    },
-    modified_selected = {
+   },
+   modified_visible = {
       fg = { attribute = 'fg', highlight = 'GruvboxRed' },
-    },
-    -- duplicate = {
-    --   fg = { attribute = 'fg', highlight = 'GruvboxYellow' },
-    -- },
-    duplicate_visible = {
-      fg = { attribute = 'fg', highlight = 'GruvboxGreen' },
-      duplicate_selected= {
-    },
-      fg = { attribute = 'fg', highlight = 'GruvboxGreen' },
-    },
+   },
+   modified_selected = {
+     fg = { attribute = 'fg', highlight = 'GruvboxRed' },
+   },
+   -- duplicate = {
+   --   fg = { attribute = 'fg', highlight = 'GruvboxYellow' },
+   -- },
+   duplicate_visible = {
+     fg = { attribute = 'fg', highlight = 'GruvboxGreen' },
+   },
+   duplicate_selected= {
+     fg = { attribute = 'fg', highlight = 'GruvboxGreen' },
+   },
    --    separator = {
    --       fg = { attribute = 'bg', highlight = 'Tabline' },
    --       bg = { attribute = 'bg', highlight = 'Tabline' },
