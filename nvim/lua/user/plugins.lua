@@ -59,9 +59,6 @@ use('nelstrom/vim-visual-star-search')
 -- Automatically create parent dirs when saving.
 use('jessarcher/vim-heritage')
 
--- Check Vim start time.
-use('dstein64/vim-startuptime')
-
 -- Text objects for HTML attributes.
 use({
   'whatyouhide/vim-textobj-xmlattr',
@@ -269,6 +266,7 @@ use({
   end,
 })
 
+-- bufferline
 use({
   'akinsho/bufferline.nvim',
   requires = 'kyazdani42/nvim-web-devicons',
@@ -293,6 +291,7 @@ use({
   end,
 })
 
+-- Lualine
 use({
   'nvim-lualine/lualine.nvim',
   requires = 'kyazdani42/nvim-web-devicons',
@@ -300,6 +299,16 @@ use({
     require('user.plugins.lualine')
   end,
 })
+
+
+--fzf
+use { 'junegunn/fzf', run = ":call fzf#install()" }
+use ({ 
+    'junegunn/fzf.vim',
+    config = function()
+      require('user.plugins.fzf')
+    end,
+  })
 
 -- use({
 --   'vim-airline/vim-airline',
