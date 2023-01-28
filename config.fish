@@ -6,9 +6,7 @@ if status is-interactive
     set fzf_fd_opts --hidden --exclude=.git
     set -U fish_greeting "🐟"
     fish_vi_key_bindings
-    set -x PATH $PATH ~/bin
-    set -x PATH $PATH ~/.local/bin/
-    set -x PATH $PATH /opt/homebrew/bin
+    set -x PATH $PATH ~/bin ~/.local/bin/ /opt/homebrew/bin /opt/local/bin /opt/local/sbin
 end
 
 function fish_user_key_bindings
