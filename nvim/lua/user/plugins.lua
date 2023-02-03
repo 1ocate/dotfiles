@@ -226,45 +226,45 @@ use({
 })
 
 -- nvim Lsp
-use({
-  'neovim/nvim-lspconfig',
-  requires = {
-    'williamboman/mason.nvim',
-    'williamboman/mason-lspconfig.nvim',
-    'b0o/schemastore.nvim',
-    'jose-elias-alvarez/null-ls.nvim',
-    'jayp0521/mason-null-ls.nvim',
-    'folke/lsp-colors.nvim',
-  },
-  config = function()
-    require('user.plugins.lspconfig')
-  end,
-})
+-- use({
+--   'neovim/nvim-lspconfig',
+--   requires = {
+--     'williamboman/mason.nvim',
+--     'williamboman/mason-lspconfig.nvim',
+--     'b0o/schemastore.nvim',
+--     'jose-elias-alvarez/null-ls.nvim',
+--     'jayp0521/mason-null-ls.nvim',
+--     'folke/lsp-colors.nvim',
+--   },
+--   config = function()
+--     require('user.plugins.lspconfig')
+--   end,
+-- })
 
-use({
-  'L3MON4D3/LuaSnip',
-  config = function()
-    require('user.plugins.luasnip')
-  end,
-})
+-- use({
+--   'L3MON4D3/LuaSnip',
+--   config = function()
+--     require('user.plugins.luasnip')
+--   end,
+-- })
 
-use({
-  'hrsh7th/nvim-cmp',
-  requires = {
-    'L3MON4D3/LuaSnip',
-    'hrsh7th/cmp-buffer',
-    'hrsh7th/cmp-cmdline',
-    'hrsh7th/cmp-nvim-lsp',
-    'hrsh7th/cmp-nvim-lsp-signature-help',
-    'hrsh7th/cmp-nvim-lua',
-    'jessarcher/cmp-path',
-    'onsails/lspkind-nvim',
-    'saadparwaiz1/cmp_luasnip',
-  },
-  config = function()
-    require('user.plugins.cmp')
-  end,
-})
+-- use({
+--   'hrsh7th/nvim-cmp',
+--   requires = {
+--     'L3MON4D3/LuaSnip',
+--     'hrsh7th/cmp-buffer',
+--     'hrsh7th/cmp-cmdline',
+--     'hrsh7th/cmp-nvim-lsp',
+--     'hrsh7th/cmp-nvim-lsp-signature-help',
+--     'hrsh7th/cmp-nvim-lua',
+--     'jessarcher/cmp-path',
+--     'onsails/lspkind-nvim',
+--     'saadparwaiz1/cmp_luasnip',
+--   },
+--   config = function()
+--     require('user.plugins.cmp')
+--   end,
+-- })
 
 -- bufferline
 use({
@@ -309,6 +309,25 @@ use ({
       require('user.plugins.fzf')
     end,
   })
+
+--COC
+use ({
+    'neoclide/coc.nvim', branch = 'release',
+    config = function()
+      require('user.plugins.coc')
+    end,
+  })
+use ('lervag/vimtex')
+
+-- Automatically add closing brackets, quotes, etc.
+-- use({
+--   'windwp/nvim-autopairs',
+--   config = function()
+--     require('nvim-autopairs').setup()
+--   end,
+-- })
+
+
 
 -- use({
 --   'vim-airline/vim-airline',
