@@ -81,7 +81,9 @@ use({
 use({
   'windwp/nvim-autopairs',
   config = function()
-    require('nvim-autopairs').setup()
+    require('nvim-autopairs').setup{
+      map_cr = false,
+    }
   end,
 })
 
@@ -317,37 +319,6 @@ use ({
       require('user.plugins.coc')
     end,
   })
-use ('lervag/vimtex')
-
--- Automatically add closing brackets, quotes, etc.
--- use({
---   'windwp/nvim-autopairs',
---   config = function()
---     require('nvim-autopairs').setup()
---   end,
--- })
-
-
-
--- use({
---   'vim-airline/vim-airline',
---   requires = 'vim-airline/vim-airline-themes',
---   config = function()
---     vim.cmd([[
---         let g:airline_left_sep = ''
---         let g:airline_right_sep = ''
---         let g:airline#extensions#branch#enabled = 1
---         let base16colorspace=256
---         let g:airline_theme='base16_horizon_dark'
---         let g:airline_powerline_fonts = 1
---         let g:airline#extensions#wordcount#enabled = 0
---         let g:airline_detect_iminsert=1
---         " let g:airline_skip_empty_sections = 1
---         let g:airline#extensions#syntastic#enabled = 0
---         let g:airline#extensions#tmuxline#enabled = 0
---       ]])
---   end,
--- })
 
 -- Put this at the end after all plugins
 if packer_bootstrap then
