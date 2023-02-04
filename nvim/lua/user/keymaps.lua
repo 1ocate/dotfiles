@@ -47,10 +47,10 @@ vim.keymap.set('n', '<leader>bq', ':bp <BAR> bd #<CR>')
 
 
 -- EucKr 설정
-vim.keymap.set('n', '<F7>', ':e ++enc=euc-kr')
+vim.keymap.set('n', '<F7>', ':e ++enc=euc-kr <CR>')
 
 -- 설정 새로 불러오기
-vim.keymap.set('n', '<F5>', ':source % <Cr>')
+vim.keymap.set('n', '<F5>', ':source % <CR>')
 
 
 
