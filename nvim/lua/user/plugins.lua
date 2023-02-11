@@ -280,7 +280,6 @@ use ({
   })
 
 -- Rainbow bracket
---
 use({
     'luochen1990/rainbow',
   config = function()
