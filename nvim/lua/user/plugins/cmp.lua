@@ -43,14 +43,14 @@ cmp.setup({
       behavior = cmp.ConfirmBehavior.Replace,
       select = true,
     },
-    -- ['<CR>'] = cmp.mapping(function(fallback)
-    --   if not cmp.confirm(option) then
-    --     fallback()
-    --   end
-    --   -- .confirm {
-    --   -- behavior = cmp.ConfirmBehavior.Replace,
-    --   -- select = false,
-    -- end, { 'i', 's' }),
+     -- ['<CR>'] = cmp.mapping(function(fallback)
+     --   if not cmp.confirm(option) then
+     --     fallback()
+     --   end
+     --   -- .confirm {
+     --   -- behavior = cmp.ConfirmBehavior.Replace,
+     --   -- select = false,
+     -- end, { 'i', 's' }),
     ['<Tab>'] = cmp.mapping(function(fallback)
       if luasnip.jumpable(1) then
         luasnip.jump(1)
@@ -101,11 +101,21 @@ cmp.setup({
         keyword_length = 2,
         keyword_pattern = [[\k\+]],
         get_bufnrs = function()
-          return vim.api.nvim_list_bufs()
+          local bufs = {}
+          for _, value in ipairs(vim.api.nvim_list_bufs()) do
+            local buf = value
+            local byte_size = vim.api.nvim_buf_get_offset(buf, vim.api.nvim_buf_line_count(buf))
+            if not (byte_size > 1024 * 1024) then -- 1 Megabyte max
+              table.insert(bufs, buf)
+            end
+          end
+          return bufs 
         end
       }
     },
-    -- { name = 'fuzzy_path' },
+    experimental = {
+      ghost_text = true,
+    }
   },
 })
 

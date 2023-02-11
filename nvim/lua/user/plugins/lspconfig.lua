@@ -1,6 +1,7 @@
 -- Setup Mason to automatically install LSP servers
 require('mason').setup()
 require('mason-lspconfig').setup({ automatic_installation = true })
+
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
 -- PHP

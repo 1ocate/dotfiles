@@ -257,7 +257,7 @@ use({
     'hrsh7th/cmp-nvim-lsp',
     'hrsh7th/cmp-nvim-lsp-signature-help',
     'hrsh7th/cmp-nvim-lua',
-    'jessarcher/cmp-path',
+    'hrsh7th/cmp-path',
     'onsails/lspkind-nvim',
     'saadparwaiz1/cmp_luasnip',
   },
