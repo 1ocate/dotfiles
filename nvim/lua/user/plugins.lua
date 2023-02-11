@@ -308,27 +308,16 @@ use ({
     config = function()
       require('user.plugins.fzf')
     end,
-  })
+})
 
--- use({
---   'vim-airline/vim-airline',
---   requires = 'vim-airline/vim-airline-themes',
---   config = function()
---     vim.cmd([[
---         let g:airline_left_sep = ''
---         let g:airline_right_sep = ''
---         let g:airline#extensions#branch#enabled = 1
---         let base16colorspace=256
---         let g:airline_theme='base16_horizon_dark'
---         let g:airline_powerline_fonts = 1
---         let g:airline#extensions#wordcount#enabled = 0
---         let g:airline_detect_iminsert=1
---         " let g:airline_skip_empty_sections = 1
---         let g:airline#extensions#syntastic#enabled = 0
---         let g:airline#extensions#tmuxline#enabled = 0
---       ]])
---   end,
--- })
+-- Rainbow bracket
+use({
+    'luochen1990/rainbow',
+  config = function()
+    vim.g.rainbow_active = 1
+    vim.api.nvim_set_hl(0, "@punctuation.bracket", { link = "" })
+  end,
+})
 
 -- Put this at the end after all plugins
 if packer_bootstrap then
