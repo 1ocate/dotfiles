@@ -310,7 +310,7 @@ use ({
     config = function()
       require('user.plugins.fzf')
     end,
-  })
+})
 
 --COC
 use ({
@@ -319,6 +319,16 @@ use ({
       require('user.plugins.coc')
     end,
   })
+
+-- Rainbow bracket
+--
+use({
+    'luochen1990/rainbow',
+  config = function()
+    vim.g.rainbow_active = 1
+    vim.api.nvim_set_hl(0, "@punctuation.bracket", { link = "" })
+  end,
+})
 
 -- Put this at the end after all plugins
 if packer_bootstrap then
