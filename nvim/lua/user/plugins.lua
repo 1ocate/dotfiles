@@ -165,7 +165,7 @@ use({
   'nvim-telescope/telescope.nvim',
   requires = {
     'nvim-lua/plenary.nvim',
-    'nvim-tree/nvim-web-devicons',
+    'kyazdani42/nvim-web-devicons',
     'nvim-telescope/telescope-live-grep-args.nvim',
     { 'nvim-telescope/telescope-fzf-native.nvim', run = 'make' },
   },
@@ -176,8 +176,8 @@ use({
 
 -- File tree sidebar
 use({
-  'nvim-tree/nvim-tree.lua',
-  requires = 'nvim-tree/nvim-web-devicons',
+  'kyazdani42/nvim-tree.lua',
+  requires = 'kyazdani42/nvim-web-devicons',
   config = function()
     require('user/plugins/nvim-tree')
   end,
@@ -230,7 +230,7 @@ use({
 -- bufferline
 use({
   'akinsho/bufferline.nvim',
-  requires = 'nvim-tree/nvim-web-devicons',
+  requires = 'kyazdani42/nvim-web-devicons',
   after = 'gruvbox',
   config = function()
     require('user.plugins.bufferline')
@@ -255,17 +255,12 @@ use({
 -- Lualine
 use({
   'nvim-lualine/lualine.nvim',
-  requires = 'nvim-tree/nvim-web-devicons',
+  requires = 'kyazdani42/nvim-web-devicons',
   config = function()
     require('user.plugins.lualine')
   end,
 })
 
-use({'nvim-tree/nvim-web-devicons', 
-    config = function()
-      require('user/plugins/nvim-web-devicons')
-    end
-})
 
 --fzf
 use { 'junegunn/fzf', run = ":call fzf#install()" }
