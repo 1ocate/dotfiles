@@ -1,5 +1,7 @@
 {
   "coc.preferences.extensionUpdateCheck": "daily",
   "php-cs-fixer.enable": true,
-  "php-cs-fixer.rules": "@PSR12,@Symfony"
+  "php-cs-fixer.rules": "@PSR12,@Symfony",
+  "html.filetypes": ["html","handlebars","htmldjango","blade","php"],
+  "phpls.filetypes": ["php"],
 }
