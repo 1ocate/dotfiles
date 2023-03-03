@@ -40,7 +40,7 @@ local font_rules = {
     {
         italic = false,
         --bold = false,
-        font = wezterm.font("MesloLGS NF"),
+        font = wezterm.font("MesloLGM NF"),
     },
 }
 
