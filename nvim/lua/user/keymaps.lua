@@ -30,8 +30,8 @@ vim.keymap.set('n', '<Leader>k', ':nohlsearch<CR>')
 vim.keymap.set('n', '<Leader>x', ':!xdg-open %<CR><CR>')
 
  -- Move lines up and down.
-vim.keymap.set('i', '<A-k>', '<Esc>:move .-2<CR>==gi')
-vim.keymap.set('i', '<A-j>', '<Esc>:move .+1<CR>==gi')
+-- vim.keymap.set('i', '<A-k>', '<Esc>:move .-2<CR>==gi')
+-- vim.keymap.set('i', '<A-j>', '<Esc>:move .+1<CR>==gi')
 -- vim.keymap.set('n', '<A-j>', ':move .+1<CR>==')
 -- vim.keymap.set('n', '<A-k>', ':move .-2<CR>==')
 vim.keymap.set('v', '<A-k>', ":move '<-2<CR>gv=gv")
@@ -52,7 +52,33 @@ vim.keymap.set('n', '<F7>', ':e ++enc=euc-kr <CR>')
 -- 설정 새로 불러오기
 vim.keymap.set('n', '<F5>', ':source % <CR>')
 
+-- 성경 열기
+vim.keymap.set('n', '<F8>', function()
+  local bible_bufnr = nil
+  for _, bufinfo in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
+    local bufname = vim.fn.bufname(bufinfo.bufnr)
+    if bufname and bufname:find('bible%.txt$') then
+      bible_bufnr = bufinfo.bufnr
+      break
+    end
+  end
 
+  if bible_bufnr then
+    vim.cmd(string.format(':bd! %d', bible_bufnr))
+  else
+    vim.cmd(':leftabove vs')
+    vim.cmd(':e ~/bible.txt')
+    vim.cmd(':set wrap')
+    vim.cmd(':vertical resize 40')
+  end
 
+end)
 
-
+-- 설정 새로 불러오기
+vim.keymap.set('n', '<F4>', function()
+    vim.opt.splitbelow = false
+    vim.opt.splitright = false
+    vim.cmd(':MerginalToggle')
+    vim.opt.splitbelow = true
+    vim.opt.splitright = true
+end)
