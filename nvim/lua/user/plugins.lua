@@ -197,6 +197,11 @@ use({
   end,
 })
 
+-- Merginal
+use({
+  'idanarye/vim-merginal'
+})
+
 -- Vim Fugitive
 use({
   'tpope/vim-fugitive',
