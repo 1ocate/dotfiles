@@ -155,7 +155,7 @@ use({
     vim.g.BibleLocale = 'en'
     vim.cmd([[
       "noremap <Leader>b y :d_ <bar> :call bible#insert_quote(substitute(@", '\n$', '', ''))<CR>
-      vnoremap <Leader>b y :d_ <bar> :call bible#insert_quote(substitute(@", '\n$', '', ''))<CR>
+      " vnoremap <Leader>b y :d_ <bar> :call bible#insert_quote(substitute(@", '\n$', '', ''))<CR>
     ]])
   end,
 })
@@ -214,9 +214,9 @@ use({
   config = function()
     vim.g.floaterm_width = 0.8
     vim.g.floaterm_height = 0.8
-    vim.keymap.set('n', '<F1>', ':FloatermToggle<CR>')
-    vim.keymap.set('t', '<F1>', '<C-\\><C-n>:FloatermToggle<CR>')
-    vim.keymap.set('t', '<F2>', '<C-\\><C-n>')
+    vim.keymap.set('n', '<F2>', ':FloatermToggle<CR>')
+    vim.keymap.set('t', '<F2>', '<C-\\><C-n>:FloatermToggle<CR>')
+    vim.keymap.set('t', '<F3>', '<C-\\><C-n>')
     vim.cmd([[
       highlight link Floaterm CursorLine
       highlight link FloatermBorder CursorLineBg
@@ -251,6 +251,8 @@ use({
   requires = {
     'JoosepAlviste/nvim-ts-context-commentstring',
     'nvim-treesitter/nvim-treesitter-textobjects',
+    -- 'mrjones2014/nvim-ts-rainbow'
+    -- 'HiPhish/nvim-ts-rainbow2'
   },
   config = function()
     require('user/plugins/treesitter')
@@ -266,10 +268,12 @@ use({
   end,
 })
 
-use({'nvim-tree/nvim-web-devicons', 
-    config = function()
-      require('user/plugins/nvim-web-devicons')
-    end
+-- devicons
+use({
+  'nvim-tree/nvim-web-devicons',
+  config = function()
+    require('user.plugins.nvim-web-devicons')
+  end,
 })
 
 --fzf

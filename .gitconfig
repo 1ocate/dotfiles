@@ -89,9 +89,9 @@
     ch = "! # checkout ; \n\
         f() { \
             if [ -z "$1" ]; then \
-                git rmTrashFile && git checkout $(git bselect);\
+                git checkout $(git bselect);\
             else \
-                git rmTrashFile && git checkout $1; \
+                git checkout $1; \
             fi; \
         }; f"
     bselect = "! # select branch with preview; \n\
