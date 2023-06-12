@@ -26,14 +26,13 @@ else
 end
 
 local keybind = {
-    { key = 'C', mods = 'CTRL', action = wezterm.action.CopyTo 'ClipboardAndPrimarySelection' },
+    -- { key = 'C', mods = 'CTRL', action = wezterm.action.CopyTo 'ClipboardAndPrimarySelection' },
     { key = 'v', mods = 'CTRL', action = wezterm.action.PasteFrom 'Clipboard' },
     { key = 'q', mods = 'CTRL', action = wezterm.action{ SendString="\x11" } },
 
     -- For Mac
     { key = 'C', mods = 'CMD', action = wezterm.action.CopyTo 'ClipboardAndPrimarySelection' },
     { key = 'v', mods = 'CMD', action = wezterm.action.PasteFrom 'Clipboard' },
-    { key = 'q', mods = 'CTRL', action = wezterm.action{ SendString="\x11" } },
 }
 
 local font_rules = {
