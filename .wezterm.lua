@@ -21,7 +21,7 @@ if osName == 'WSL' then
        dom.default_prog = {"fish", "-l"}
        dom.default_cwd = '/home/locate'
     end
-    default_domain = 'WSL:Ubuntu20.04LTS'
+    default_domain = 'WSL:Ubuntu-22.04'
 else
 end
 
