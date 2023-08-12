@@ -81,7 +81,9 @@ use({
 use({
   'windwp/nvim-autopairs',
   config = function()
-    require('nvim-autopairs').setup()
+    require('nvim-autopairs').setup{
+      map_cr = false,
+    }
   end,
 })
 
@@ -153,7 +155,7 @@ use({
     vim.g.BibleLocale = 'en'
     vim.cmd([[
       "noremap <Leader>b y :d_ <bar> :call bible#insert_quote(substitute(@", '\n$', '', ''))<CR>
-      vnoremap <Leader>b y :d_ <bar> :call bible#insert_quote(substitute(@", '\n$', '', ''))<CR>
+      " vnoremap <Leader>b y :d_ <bar> :call bible#insert_quote(substitute(@", '\n$', '', ''))<CR>
     ]])
   end,
 })
@@ -212,9 +214,9 @@ use({
   config = function()
     vim.g.floaterm_width = 0.8
     vim.g.floaterm_height = 0.8
-    vim.keymap.set('n', '<F1>', ':FloatermToggle<CR>')
-    vim.keymap.set('t', '<F1>', '<C-\\><C-n>:FloatermToggle<CR>')
-    vim.keymap.set('t', '<F2>', '<C-\\><C-n>')
+    vim.keymap.set('n', '<F2>', ':FloatermToggle<CR>')
+    vim.keymap.set('t', '<F2>', '<C-\\><C-n>:FloatermToggle<CR>')
+    vim.keymap.set('t', '<F3>', '<C-\\><C-n>')
     vim.cmd([[
       highlight link Floaterm CursorLine
       highlight link FloatermBorder CursorLineBg
@@ -227,47 +229,6 @@ use({
   'vim-test/vim-test',
   config = function()
     require('user.plugins.vim-test')
-  end,
-})
-
--- nvim Lsp
-use({
-  'neovim/nvim-lspconfig',
-  requires = {
-    'williamboman/mason.nvim',
-    'williamboman/mason-lspconfig.nvim',
-    'b0o/schemastore.nvim',
-    'jose-elias-alvarez/null-ls.nvim',
-    'jayp0521/mason-null-ls.nvim',
-    'folke/lsp-colors.nvim',
-  },
-  config = function()
-    require('user.plugins.lspconfig')
-  end,
-})
-
-use({
-  'L3MON4D3/LuaSnip',
-  config = function()
-    require('user.plugins.luasnip')
-  end,
-})
-
-use({
-  'hrsh7th/nvim-cmp',
-  requires = {
-    'L3MON4D3/LuaSnip',
-    'hrsh7th/cmp-buffer',
-    'hrsh7th/cmp-cmdline',
-    'hrsh7th/cmp-nvim-lsp',
-    'hrsh7th/cmp-nvim-lsp-signature-help',
-    'hrsh7th/cmp-nvim-lua',
-    'jessarcher/cmp-path',
-    'onsails/lspkind-nvim',
-    'saadparwaiz1/cmp_luasnip',
-  },
-  config = function()
-    require('user.plugins.cmp')
   end,
 })
 
@@ -290,6 +251,8 @@ use({
   requires = {
     'JoosepAlviste/nvim-ts-context-commentstring',
     'nvim-treesitter/nvim-treesitter-textobjects',
+    -- 'mrjones2014/nvim-ts-rainbow'
+    -- 'HiPhish/nvim-ts-rainbow2'
   },
   config = function()
     require('user/plugins/treesitter')
@@ -305,10 +268,12 @@ use({
   end,
 })
 
-use({'nvim-tree/nvim-web-devicons', 
-    config = function()
-      require('user/plugins/nvim-web-devicons')
-    end
+-- devicons
+use({
+  'nvim-tree/nvim-web-devicons',
+  config = function()
+    require('user.plugins.nvim-web-devicons')
+  end,
 })
 
 --fzf
@@ -319,6 +284,14 @@ use ({
       require('user.plugins.fzf')
     end,
 })
+
+--COC
+use ({
+    'neoclide/coc.nvim', branch = 'release',
+    config = function()
+      require('user.plugins.coc')
+    end,
+  })
 
 -- Rainbow bracket
 use({

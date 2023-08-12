@@ -13,6 +13,15 @@ ln -sf $DOTFILES/scripts/t $HOME/.local/bin/t
 rm -rf $HOME/.config/nvim
 ln -s $DOTFILES/nvim $HOME/.config/nvim
 
+rm -rf $HOME/.config/fish/config.fish
+ln -s $DOTFILES/config.fish $HOME/.config/fish/config.fish
+
+rm -rf $HOME/.gitconfig
+ln -s $DOTFILES/.gitconfig $HOME/.gitconfig
+
+rm -rf $HOME/.gitignore
+ln -s $DOTFILES/.gitignore $HOME/.gitignore
+
 terminfo="~/.terminfo/"
 [ ! -d $terminfo ] && echo "Directory  DOES NOT exists."
 

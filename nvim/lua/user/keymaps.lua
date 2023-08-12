@@ -11,7 +11,7 @@ vim.keymap.set('v', '>', '>gv')
 
 -- Maintain the cursor position when yanking a visual selection.
 -- http://ddrscott.github.io/blog/2016/yank-without-jank/
-vim.keymap.set('v', 'y', 'myy`y')
+-- vim.keymap.set('v', 'y', 'myy`y')
 
 -- Disable annoying command line typo.
 vim.keymap.set('n', 'q:', ':q')
