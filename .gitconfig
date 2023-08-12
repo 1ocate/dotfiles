@@ -31,9 +31,9 @@
 	excludesfile = ~/.gitignore_global
 	editor = nvim
 [safe]
-	directory = %(prefix)///wsl$/Ubuntu-20.04/home/ubuntu/mobon/admin/v1
-	directory = %(prefix)///wsl$/Ubuntu20.04LTS/home/locate/mobon/admin/v1
-	directory = %(prefix)///wsl$/Ubuntu20.04LTS/home/locate/mobon/admin/v2
+	; directory = %(prefix)///wsl$/Ubuntu-20.04/home/ubuntu/mobon/admin/v1
+	; directory = %(prefix)///wsl$/Ubuntu20.04LTS/home/locate/mobon/admin/v1
+	; directory = %(prefix)///wsl$/Ubuntu20.04LTS/home/locate/mobon/admin/v2
 	directory = *
 [merge "ours"]
 	driver = true
@@ -66,6 +66,17 @@
             fi; \
         }; f"
     back = "!git branch `git b0`-bak"
+    copy = "! # CopyBranch and Checkout; \n\
+        f() { \
+            if [ -z "$1" -a -z "$2"  ]; then \
+                echo 'need arguments'; \
+            elif [ -z "$2" ]; then \
+                git checkout -b $1; \
+            else \
+                git checkout -b $2 $1; \
+            fi; \
+        }; f"
+
     trashFile = "!git status -s | awk '/M / { print $2 }' | grep phpunit"
     rmTrashFile = "! # rmTrashFile ; \n\
         f() { \

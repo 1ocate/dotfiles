@@ -5,11 +5,11 @@ local homePwd = os.getenv('HOME')
 local osName =''
 if homePwd then
     if string.match(homePwd, "/Users") then
-        osName = 'Mac' 
+        osName = 'Mac'
     else
-        osName = 'Linux' 
+        osName = 'Linux'
     end
-else 
+else
     osName = 'WSL'
 end
 
@@ -40,7 +40,7 @@ local font_rules = {
     {
         italic = false,
         --bold = false,
-        font = wezterm.font("MesloLGS NF"),
+        font = wezterm.font("MesloLGM NF"),
     },
 }
 
@@ -103,5 +103,6 @@ setting['font_rules'] = font_rules
 setting['keys'] = keybind
 setting['color_schemes'] = color_schemes
 setting['color_scheme'] = color_scheme
+setting['term'] = 'wezterm'
 
 return setting
