@@ -17,6 +17,8 @@ else
     osName ='Other'
 end
 
+autocomplete = 'cmp'
+
 require('user.options')
 require('user.plugins')
 require('user.keymaps')
