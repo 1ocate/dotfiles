@@ -9,9 +9,22 @@ vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true })
 vim.keymap.set('v', '<', '<gv')
 vim.keymap.set('v', '>', '>gv')
 
+-- visual 모드에서 yank시 커서 제자리로 설정(설정되면 register로 복사 안되는 문제로 토글 생성)
 -- Maintain the cursor position when yanking a visual selection.
 -- http://ddrscott.github.io/blog/2016/yank-without-jank/
--- vim.keymap.set('v', 'y', 'myy`y')
+local function updateVisualSelectMapping()
+    local mapping = visualSelectMode and 'myy`y' or 'y'
+    vim.keymap.set('v', 'y', mapping)
+end
+
+local function toggleVisualSelectMode()
+    visualSelectMode = not visualSelectMode
+    updateVisualSelectMapping()
+    print("Visual select mode: " .. (visualSelectMode and "true" or "false"))
+end
+
+updateVisualSelectMapping()
+vim.keymap.set('n', '<F6>', toggleVisualSelectMode)
 
 -- Disable annoying command line typo.
 vim.keymap.set('n', 'q:', ':q')
