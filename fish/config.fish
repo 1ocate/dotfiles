@@ -9,6 +9,7 @@ if status is-interactive
     fish_vi_key_bindings
     set -gx FZF_DEFAULT_COMMAND "fd --hidden --no-ignore --follow --exclude='**/.git/'"
     set -x PATH $PATH ~/bin ~/.local/bin/ /opt/homebrew/bin /opt/local/bin /opt/local/sbin ~/.cargo/bin 
+    set -x KIND_EXPERIMENTAL_PROVIDER podman
 end
 
 function fish_user_key_bindings
