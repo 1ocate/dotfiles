@@ -14,7 +14,7 @@ rm -rf $HOME/.config/nvim
 ln -s $DOTFILES/nvim $HOME/.config/nvim
 
 rm -rf $HOME/.config/fish/config.fish
-ln -s $DOTFILES/config.fish $HOME/.config/fish/config.fish
+ln -s $DOTFILES/fish/config.fish $HOME/.config/fish/config.fish
 
 rm -rf $HOME/.gitconfig
 ln -s $DOTFILES/.gitconfig $HOME/.gitconfig
