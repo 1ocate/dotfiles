@@ -39,7 +39,7 @@ local font_rules = {
     {
         italic = false,
         --bold = false,
-        font = wezterm.font("MesloLGM NF"),
+        font = wezterm.font("MesloLGMDZ Nerd Font"),
     },
 }
 
