@@ -5,13 +5,13 @@ if status is-interactive
     alias apt-get='sudo apt-get'
     fzf_configure_bindings --directory=\ct --variables=\ch --git_log=\cg
     set fzf_fd_opts --hidden --exclude=.git
-    set -U fish_greeting "🐟"
+    set -x fish_greeting "🐟"
     fish_vi_key_bindings
-    set -U FZF_DEFAULT_COMMAND "fd --hidden --no-ignore --follow --exclude='**/.git/'"
-    set -U PATH $PATH ~/bin ~/.local/bin/ /opt/homebrew/bin /opt/local/bin /opt/local/sbin ~/.cargo/bin 
-    set -U KIND_EXPERIMENTAL_PROVIDER podman
+    set -x FZF_DEFAULT_COMMAND "fd --hidden --no-ignore --follow --exclude='**/.git/'"
+    set -x PATH $PATH ~/bin ~/.local/bin/ /opt/homebrew/bin /opt/local/bin /opt/local/sbin ~/.cargo/bin 
+    set -x KIND_EXPERIMENTAL_PROVIDER podman
     # for xsel, yankclip.vim 
-    set -U DISPLAY :0
+    set -x DISPLAY :0
 end
 
 function fish_user_key_bindings
