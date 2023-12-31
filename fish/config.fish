@@ -8,7 +8,7 @@ if status is-interactive
     set -x fish_greeting "🐟"
     fish_vi_key_bindings
     set -x FZF_DEFAULT_COMMAND "fd --hidden --no-ignore --follow --exclude='**/.git/'"
-    set -x PATH $PATH ~/bin ~/.local/bin/ /opt/homebrew/bin /opt/local/bin /opt/local/sbin ~/.cargo/bin 
+    set -x PATH  ~/bin ~/.local/bin/ /opt/homebrew/bin /opt/local/bin /opt/local/sbin ~/.cargo/bin $PATH
     set -x KIND_EXPERIMENTAL_PROVIDER podman
     # for xsel, yankclip.vim 
     set -x DISPLAY :0
