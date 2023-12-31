@@ -159,7 +159,7 @@ use({
     vim.g.BibleLocale = 'en'
     vim.cmd([[
       "noremap <Leader>b y :d_ <bar> :call bible#insert_quote(substitute(@", '\n$', '', ''))<CR>
-      " vnoremap <Leader>b y :d_ <bar> :call bible#insert_quote(substitute(@", '\n$', '', ''))<CR>
+      vnoremap <silent> <Leader>b y :d_ <bar> :call bible#insert_quote(substitute(@", '\n$', '', ''))<CR>
     ]])
   end,
 })
@@ -235,6 +235,23 @@ use({
     require('user.plugins.vim-test')
   end,
 })
+
+-- Neotest
+use {
+  "nvim-neotest/neotest",
+  requires = {
+    "nvim-lua/plenary.nvim",
+    "antoinemadec/FixCursorHold.nvim",
+    "nvim-treesitter/nvim-treesitter",
+    "nvim-neotest/neotest-python"
+  },
+  config = function()
+    require('user.plugins.neotest')
+  end,
+}
+
+-- nvim-notify
+use 'rcarriga/nvim-notify'
 
 if autocomplete == 'coc' then
   --coc
