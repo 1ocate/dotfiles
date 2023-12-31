@@ -92,7 +92,7 @@ cmp.setup({
   },
   sources = {
     { name = 'nvim_lsp' },
-    { name = 'nvim_lsp_signature_help' },
+    -- { name = 'nvim_lsp_signature_help' },
     { name = 'nvim_lua' },
     { name = 'luasnip' },
     { name = 'path' },
@@ -112,9 +112,6 @@ cmp.setup({
           return bufs 
         end
       }
-    },
-    experimental = {
-      ghost_text = true,
     }
   },
 })
