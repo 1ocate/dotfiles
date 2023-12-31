@@ -39,7 +39,10 @@ local font_rules = {
     {
         italic = false,
         --bold = false,
-        font = wezterm.font("MesloLGMDZ Nerd Font"),
+        font = wezterm.font_with_fallback {
+          'MesloLGMDZ Nerd Font',
+          'D2Coding',
+        }
     },
 }
 
