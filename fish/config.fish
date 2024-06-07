@@ -3,6 +3,12 @@ if status is-interactive
     alias vi='nvim'
     alias vim='nvim'
     alias apt-get='sudo apt-get'
+    alias k8s-up='ssh -fNTML 6443:localhost:6443 k8s'
+    alias k8s-status='ssh -TO check k8s'
+    alias k8s-down='ssh -TO exit k8s'
+    alias proxmox-up='ssh -fNTMD 9000 proxmox'
+    alias proxmox-status='ssh -TO check proxmox'
+    alias proxmox-down='ssh -TO exit proxmox'
     fzf_configure_bindings --directory=\ct --variables=\ch --git_log=\cg
     set fzf_fd_opts --hidden --exclude=.git
     set -x fish_greeting "🐟"
