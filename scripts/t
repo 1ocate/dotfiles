@@ -5,9 +5,24 @@
 if [[ $# -eq 1 ]]; then
     selected=$1
 else
-    items=`find $HOME/WEB -maxdepth 2 -mindepth 1 -type d`
-    items+=`echo -e "\n/tmp"`
-    selected=`echo "$items" | fzf`
+    if [[ ! -z $PROJECT_PATH ]]; then
+        IFS=':' read -r -a path_array <<< "$PROJECT_PATH"
+
+        items=""
+        for path in "${path_array[@]}"
+        do
+            found_items=$(find "$path" -maxdepth 1 -mindepth 1 -type d 2>/dev/null)
+            if [[ ! -z "$found_items" ]]; then
+                items+="$found_items\n"
+            fi
+        done  
+        items+="/tmp"
+        selected=$(echo -e "$items" | fzf)
+        echo "Selected: $selected"
+    else
+        read -p "PROJECT_PATH is empty please set value."
+        exit
+    fi
 fi
 
 dirname=`basename $selected | sed 's/\./_/g'`
