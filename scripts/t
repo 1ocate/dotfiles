@@ -1,26 +1,27 @@
 #!/usr/bin/env bash
 
-# Credit to ThePrimeagen
+project_path_file=$HOME/.project_path
+
 
 if [[ $# -eq 1 ]]; then
     selected=$1
 else
-    if [[ ! -z $PROJECT_PATH ]]; then
-        IFS=':' read -r -a path_array <<< "$PROJECT_PATH"
-
-        items=""
+    if [[ -f $project_path_file ]]; then
+        IFS=' ' read -r -a path_array <<< "$(cat $project_path_file)"
         for path in "${path_array[@]}"
         do
-            found_items=$(find "$path" -maxdepth 1 -mindepth 1 -type d 2>/dev/null)
-            if [[ ! -z "$found_items" ]]; then
-                items+="$found_items\n"
-            fi
+            expanded_path=$(eval echo "$path")
+            found_items=$(find $expanded_path -maxdepth 1 -mindepth 1 -type d 2>/dev/null)
+            echo $found_items
+             if [[ ! -z "$found_items" ]]; then
+                 items+="$found_items\n"
+             fi
         done  
         items+="/tmp"
         selected=$(echo -e "$items" | fzf)
         echo "Selected: $selected"
     else
-        read -p "PROJECT_PATH is empty please set value."
+        read -p "$project_path_file is not exsist."
         exit
     fi
 fi
