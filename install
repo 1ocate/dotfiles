@@ -9,6 +9,7 @@ mkdir -p $HOME/.local/bin
 
 rm -rf $HOME/.local/bin/t
 ln -sf $DOTFILES/scripts/t $HOME/.local/bin/t
+ln -s $DOTFILES/scripts/.project_path.example $HOME/.project_path.example
 
 rm -rf $HOME/.config/nvim
 ln -s $DOTFILES/nvim $HOME/.config/nvim
