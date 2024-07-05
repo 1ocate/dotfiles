@@ -237,18 +237,18 @@ use({
 })
 
 -- Neotest
-use {
-  "nvim-neotest/neotest",
-  requires = {
-    "nvim-lua/plenary.nvim",
-    "antoinemadec/FixCursorHold.nvim",
-    "nvim-treesitter/nvim-treesitter",
-    "nvim-neotest/neotest-python"
-  },
-  config = function()
-    require('user.plugins.neotest')
-  end,
-}
+-- use {
+--   "nvim-neotest/neotest",
+--   requires = {
+--     "nvim-lua/plenary.nvim",
+--     "antoinemadec/FixCursorHold.nvim",
+--     "nvim-treesitter/nvim-treesitter",
+--     "nvim-neotest/neotest-python"
+--   },
+--   config = function()
+--     require('user.plugins.neotest')
+--   end,
+-- }
 
 -- nvim-notify
 use 'rcarriga/nvim-notify'
@@ -332,6 +332,29 @@ use({
   end,
 })
 
+-- Html autotag
+use({
+  'windwp/nvim-ts-autotag',
+  config = function()
+    require('nvim-ts-autotag').setup({
+      opts = {
+        -- Defaults
+        enable_close = true, -- Auto close tags
+        enable_rename = true, -- Auto rename pairs of tags
+        enable_close_on_slash = false -- Auto close on trailing </
+      },
+      -- Also override individual filetype configs, these take priority.
+      -- Empty by default, useful if one of the "opts" global settings
+      -- doesn't work well in a specific filetype
+      per_filetype = {
+        ["php"] = {
+          enable_close = false
+        }
+      }
+    })
+  end,
+})
+
 -- Lualine
 use({
   'nvim-lualine/lualine.nvim',
@@ -366,6 +389,10 @@ use({
     vim.api.nvim_set_hl(0, "@punctuation.bracket", { link = "" })
   end,
 })
+
+-- Live Server
+use { 'wolandark/vim-live-server'}
+--
 
 -- Put this at the end after all plugins
 if packer_bootstrap then
