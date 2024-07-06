@@ -29,7 +29,9 @@ require('lspconfig').jsonls.setup({
 })
 
 -- Python
-require'lspconfig'.pyright.setup{}
+require'lspconfig'.pyright.setup{
+  capabilities = capabilities
+}
 
 -- Lua
 require'lspconfig'.lua_ls.setup{

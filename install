@@ -26,6 +26,8 @@ ln -s $DOTFILES/.gitignore $HOME/.gitignore
 rm -rf $HOME/.config/alacritty/alacritty.toml
 ln -s $DOTFILES/alacritty.toml $HOME/.config/alacritty.toml
 
+ln -s $DOTFILES/pyrightconfig.json $HOME/pyrightconfig.json
+
 terminfo="~/.terminfo/"
 [ ! -d $terminfo ] && echo "Directory  DOES NOT exists."
 
