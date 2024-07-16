@@ -41,7 +41,7 @@ fi
 # fish 관련 패키지 추가
 curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source && fisher install jorgebucaran/fisher                                                                                                                                                                │
 
-fisher install PatrickF1/fzf.fish                                                                                                                                                                                                                                                                       │
-fisher install IlanCosman/tide@v5                                                                                                                                                                                                                                                                       │
-fisher install jorgebucaran/nvm.fish                                                                                                                                                                                                                                                                    │
-fisher install edc/bass                                                                                                                                                                                                                                                                                 │
+fisher install PatrickF1/fzf.fish
+fisher install IlanCosman/tide@v5
+fisher install jorgebucaran/nvm.fish
+fisher install edc/bass
