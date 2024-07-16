@@ -28,7 +28,7 @@ ln -s $DOTFILES/alacritty.toml $HOME/.config/alacritty.toml
 
 ln -s $DOTFILES/pyrightconfig.json $HOME/pyrightconfig.json
 
-rm -rf $HOME/.hammerspoon/
+rm -rf $HOME/.hammerspoon
 ln -s $DOTFILES/.hammerspoon/ $HOME/.hammerspoon
 
 terminfo="~/.terminfo/"
