@@ -39,7 +39,12 @@ use('tpope/vim-eunuch')
 use('tpope/vim-unimpaired')
 
 -- Indent autodetection with editorconfig support.
-use('tpope/vim-sleuth')
+use({
+  'tpope/vim-sleuth',
+  config = function()
+    vim.b.sleuth_automatic = 0
+  end,
+})
 
 -- Allow plugins to enable repeating of commands.
 use('tpope/vim-repeat')
