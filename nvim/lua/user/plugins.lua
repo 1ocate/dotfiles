@@ -324,8 +324,6 @@ use({
   requires = {
     'JoosepAlviste/nvim-ts-context-commentstring',
     'nvim-treesitter/nvim-treesitter-textobjects',
-    -- 'mrjones2014/nvim-ts-rainbow'
-    -- 'HiPhish/nvim-ts-rainbow2'
   },
   config = function()
     require('user/plugins/treesitter')
@@ -349,6 +347,37 @@ parser_config.blade = {
   },
   filetype = "blade"
 }
+
+-- rainbow delimiters
+use({
+  'HiPhish/rainbow-delimiters.nvim',
+  config = function()
+      local rainbow_delimiters = require 'rainbow-delimiters'
+      require('rainbow-delimiters.setup').setup {
+       strategy = {
+            [''] = rainbow_delimiters.strategy['global'],
+            vim = rainbow_delimiters.strategy['local'],
+        },
+        query = {
+            [''] = 'rainbow-delimiters',
+            lua = 'rainbow-blocks',
+        },
+        priority = {
+            [''] = 110,
+            lua = 210,
+        },
+        highlight = {
+            'RainbowDelimiterRed',
+            'RainbowDelimiterYellow',
+            'RainbowDelimiterBlue',
+            'RainbowDelimiterOrange',
+            'RainbowDelimiterGreen',
+            'RainbowDelimiterViolet',
+            'RainbowDelimiterCyan',
+        },
+    }
+  end,
+})
 
 -- Html autotag
 use({
@@ -397,15 +426,6 @@ use ({
     config = function()
       require('user.plugins.fzf')
     end,
-})
-
--- Rainbow bracket
-use({
-    'luochen1990/rainbow',
-  config = function()
-    vim.g.rainbow_active = 1
-    vim.api.nvim_set_hl(0, "@punctuation.bracket", { link = "" })
-  end,
 })
 
 -- Live Server
