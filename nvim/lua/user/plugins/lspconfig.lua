@@ -5,7 +5,19 @@ require('mason-lspconfig').setup({ automatic_installation = true })
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
 -- PHP
-require('lspconfig').intelephense.setup({ capabilities = capabilities })
+require('lspconfig').intelephense.setup({ 
+  capabilities = capabilities,
+  settings = {
+    intelephense = {
+      environment = {
+        phpVersion = '7.4',
+      },
+      formatting = {
+        enable = true, -- Enable formatting
+      },
+    },
+  },
+})
 
 -- Vue, JavaScript, TypeScript
 require('lspconfig').volar.setup({
