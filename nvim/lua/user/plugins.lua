@@ -474,14 +474,14 @@ use {
         },
       },
       filetypes = {
-        yaml = false,
-        markdown = false,
-        help = false,
-        gitcommit = false,
-        gitrebase = false,
-        hgcommit = false,
-        svn = false,
-        cvs = false,
+        -- yaml = false,
+        -- markdown = false,
+        -- help = false,
+        -- gitcommit = false,
+        -- gitrebase = false,
+        -- hgcommit = false,
+        -- svn = false,
+        -- cvs = false,
         ["."] = false,
       },
       copilot_node_command = 'node', -- Node.js version must be > 18.x
@@ -503,6 +503,35 @@ use {
       debug = false,  -- Enable debugging
     }
   end
+}
+
+-- noice.nvim plugin with dependencies
+use {
+  'folke/noice.nvim',
+  config = function()
+    require("noice").setup({
+      lsp = {
+        -- Override markdown rendering so that **cmp** and other plugins use **Treesitter**
+        override = {
+          ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
+          ["vim.lsp.util.stylize_markdown"] = true,
+          ["cmp.entry.get_documentation"] = true, -- Requires hrsh7th/nvim-cmp
+        },
+      },
+      -- Enable presets for easier configuration
+      presets = {
+        bottom_search = true, -- Use a classic bottom cmdline for search
+        command_palette = true, -- Position the cmdline and popupmenu together
+        long_message_to_split = true, -- Long messages will be sent to a split
+        inc_rename = false, -- Enables an input dialog for inc-rename.nvim
+        lsp_doc_border = false, -- Add a border to hover docs and signature help
+      },
+    })
+  end,
+  requires = {
+    'MunifTanjim/nui.nvim',
+    'rcarriga/nvim-notify', -- Optional
+  }
 }
 
 -- Put this at the end after all plugins
