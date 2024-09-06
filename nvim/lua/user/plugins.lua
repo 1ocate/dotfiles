@@ -435,7 +435,32 @@ use ({
 
 -- Live Server
 use { 'wolandark/vim-live-server'}
---
+
+
+-- Cofilot
+use {
+  "zbirenbaum/copilot.lua",
+  cmd = "Copilot",
+  event = "InsertEnter",
+  config = function()
+    require("copilot").setup({})
+  end,
+}
+
+use {
+  "CopilotC-Nvim/CopilotChat.nvim",
+  branch = "canary",
+  requires = {
+    { "zbirenbaum/copilot.lua" },  -- or github/copilot.vim
+    { "nvim-lua/plenary.nvim" },   -- for curl, log wrapper
+  },
+  run = "make tiktoken",  -- Only on MacOS or Linux
+  config = function()
+    require("CopilotChat").setup {
+      debug = true,  -- Enable debugging
+    }
+  end
+}
 
 -- Put this at the end after all plugins
 if packer_bootstrap then
