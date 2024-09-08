@@ -499,11 +499,75 @@ use {
   },
   run = "make tiktoken",  -- Only on MacOS or Linux
   config = function()
+    local select = require('CopilotChat.select')
     require("CopilotChat").setup {
       debug = false,  -- Enable debugging
+      show_folds = true, -- Shows folds for sections in chat
+      show_help = true, -- Shows help message as virtual lines when waiting for user input
+      auto_follow_cursor = false, -- Auto-follow cursor in chat
+      auto_insert_mode = false, -- Automatically enter insert mode when opening window and on new prompt
+      insert_at_end = false, -- Move cursor to end of buffer when inserting text
+      clear_chat_on_new_prompt = false, -- Clears chat on every new prompt
+      highlight_selection = true, -- Highlight selection in the source buffer when in the chat window
+
+      -- default selection (visual or line)
+      selection = function(source)
+        return select.visual(source)
+        -- return nil
+      end,
+
+       -- default prompts
+      prompts = {
+        Explain = {
+          prompt = '/COPILOT_EXPLAIN Write an explanation for the active selection as paragraphs of text in korean.',
+        },
+        Review = {
+          prompt = '/COPILOT_REVIEW Review the selected code.',
+          callback = function(response, source)
+            -- see config.lua for implementation
+          end,
+        },
+        Fix = {
+          prompt = '/COPILOT_GENERATE There is a problem in this code. Rewrite the code to show it with the bug fixed.',
+        },
+        Optimize = {
+          prompt = '/COPILOT_GENERATE Optimize the selected code to improve performance and readability.',
+        },
+        Docs = {
+          prompt = '/COPILOT_GENERATE Please add documentation comment for the selection.',
+        },
+        Tests = {
+          prompt = '/COPILOT_GENERATE Please generate tests for my code.',
+        },
+        FixDiagnostic = {
+          prompt = 'Please assist with the following diagnostic issue in file:',
+          selection = select.diagnostics,
+        },
+        Commit = {
+          prompt = 'Write commit message for the change with commitizen convention. Make sure the title has maximum 50 characters and message is wrapped at 72 characters. Wrap the whole message in code block with language gitcommit.',
+          selection = select.gitdiff,
+        },
+        CommitStaged = {
+          prompt = 'Write commit message for the change with commitizen convention. Make sure the title has maximum 50 characters and message is wrapped at 72 characters. Wrap the whole message in code block with language gitcommit with korean.',
+          selection = function(source)
+            return select.gitdiff(source, true)
+          end,
+        },
+      },
     }
+    setup_copilot_chat_keymaps()
   end
 }
+ -- default prompts
+function setup_copilot_chat_keymaps()
+  -- Quick chat with Copilot
+  vim.api.nvim_set_keymap("n", "<leader>ccq", ":lua copilot_chat()<CR>", { noremap = true, silent = true })
+
+  function copilot_chat()
+    local input = vim.fn.input("Quick Chat: ")
+      require("CopilotChat").ask(input)
+  end
+end
 
 -- noice.nvim plugin with dependencies
 use {
@@ -521,7 +585,7 @@ use {
       -- Enable presets for easier configuration
       presets = {
         bottom_search = true, -- Use a classic bottom cmdline for search
-        command_palette = true, -- Position the cmdline and popupmenu together
+        command_palette = false, -- Position the cmdline and popupmenu together
         long_message_to_split = true, -- Long messages will be sent to a split
         inc_rename = false, -- Enables an input dialog for inc-rename.nvim
         lsp_doc_border = false, -- Add a border to hover docs and signature help
@@ -542,6 +606,6 @@ end
 vim.cmd([[
   augroup packer_user_config
     autocmd!
-    autocmd BufWritePost plugins.lua source <afile>
+    autocmd BufWritePost plugins.lua source <afile> | PackerCompile
   augroup end
 ]])
