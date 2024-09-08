@@ -87,7 +87,7 @@ vim.keymap.set('n', '<F8>', function()
 
 end)
 
--- 설정 새로 불러오기
+-- git MerginalToggle
 vim.keymap.set('n', '<F4>', function()
     vim.opt.splitbelow = false
     vim.opt.splitright = false
