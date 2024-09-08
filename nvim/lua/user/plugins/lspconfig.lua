@@ -47,7 +47,14 @@ require'lspconfig'.pyright.setup{
 
 -- Lua
 require'lspconfig'.lua_ls.setup{
-    capabilities = capabilities
+    capabilities = capabilities,
+    settings = {
+      Lua = {
+        diagnostics = {
+          globals = { 'vim' },
+        },
+      },
+    },
 }
 -- -- null-ls
 -- require('null-ls').setup({
