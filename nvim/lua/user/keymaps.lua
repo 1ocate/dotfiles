@@ -95,3 +95,5 @@ vim.keymap.set('n', '<F4>', function()
     vim.opt.splitbelow = true
     vim.opt.splitright = true
 end)
+
+vim.keymap.set('n', '<leader>c', ':CopilotChatToggle <CR>')

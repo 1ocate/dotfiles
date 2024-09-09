@@ -502,13 +502,13 @@ use {
     local select = require('CopilotChat.select')
     require("CopilotChat").setup {
       debug = false,  -- Enable debugging
-      show_folds = true, -- Shows folds for sections in chat
-      show_help = true, -- Shows help message as virtual lines when waiting for user input
-      auto_follow_cursor = false, -- Auto-follow cursor in chat
-      auto_insert_mode = false, -- Automatically enter insert mode when opening window and on new prompt
-      insert_at_end = false, -- Move cursor to end of buffer when inserting text
-      clear_chat_on_new_prompt = false, -- Clears chat on every new prompt
-      highlight_selection = true, -- Highlight selection in the source buffer when in the chat window
+      -- show_folds = true, -- Shows folds for sections in chat
+      -- show_help = true, -- Shows help message as virtual lines when waiting for user input
+      -- auto_follow_cursor = false, -- Auto-follow cursor in chat
+      -- auto_insert_mode = false, -- Automatically enter insert mode when opening window and on new prompt
+      -- insert_at_end = false, -- Move cursor to end of buffer when inserting text
+      -- clear_chat_on_new_prompt = false, -- Clears chat on every new prompt
+      -- highlight_selection = true, -- Highlight selection in the source buffer when in the chat window
 
       -- default selection (visual or line)
       selection = function(source)
