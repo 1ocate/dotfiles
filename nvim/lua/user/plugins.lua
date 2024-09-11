@@ -519,39 +519,75 @@ use {
        -- default prompts
       prompts = {
         Explain = {
-          prompt = '/COPILOT_EXPLAIN Write an explanation for the active selection as paragraphs of text in korean.',
+          prompt = '/COPILOT_EXPLAIN 활성 선택에 대한 설명을 텍스트 단락으로 한글을 사용하여 작성하세요',
         },
         Review = {
-          prompt = '/COPILOT_REVIEW Review the selected code.',
+          prompt = '/COPILOT_REVIEW 선택한 코드를 검토하세요.',
           callback = function(response, source)
-            -- see config.lua for implementation
+            -- config.lua에서 구현을 참조하세요
           end,
         },
         Fix = {
-          prompt = '/COPILOT_GENERATE There is a problem in this code. Rewrite the code to show it with the bug fixed.',
+          prompt = '/COPILOT_GENERATE 이 코드에 문제가 있습니다. 버그가 수정된 코드를 다시 작성하세요.',
         },
         Optimize = {
-          prompt = '/COPILOT_GENERATE Optimize the selected code to improve performance and readability.',
+          prompt = '/COPILOT_GENERATE 선택한 코드를 성능과 가독성을 향상시키기 위해 최적화하세요.',
         },
         Docs = {
-          prompt = '/COPILOT_GENERATE Please add documentation comment for the selection.',
+          prompt = '/COPILOT_GENERATE 선택한 코드에 대한 문서 주석을 한글로 추가하세요.',
         },
         Tests = {
-          prompt = '/COPILOT_GENERATE Please generate tests for my code.',
+          prompt = '/COPILOT_GENERATE 내 코드에 대한 테스트를 생성하세요.',
         },
         FixDiagnostic = {
-          prompt = 'Please assist with the following diagnostic issue in file:',
+          prompt = '파일의 다음 진단 문제를 해결하는 데 도움을 주세요:',
           selection = select.diagnostics,
         },
         Commit = {
-          prompt = 'Write commit message for the change with commitizen convention. Make sure the title has maximum 50 characters and message is wrapped at 72 characters. Wrap the whole message in code block with language gitcommit.',
+          prompt = '한글로 변경 사항에 대한 커밋 메시지를 commitizen 규칙에 따라 작성하세요. 제목은 최대 50자, 메시지는 72자에서 줄바꿈하세요. 전체 메시지를 gitcommit 언어의 코드 블록으로 감싸세요.',
           selection = select.gitdiff,
         },
         CommitStaged = {
-          prompt = 'Write commit message for the change with commitizen convention. Make sure the title has maximum 50 characters and message is wrapped at 72 characters. Wrap the whole message in code block with language gitcommit with korean.',
+          prompt = '한글로 변경 사항에 대한 커밋 메시지를 commitizen 규칙에 따라 작성하세요. 제목은 최대 50자, 메시지는 72자에서 줄바꿈하세요. 전체 메시지를 gitcommit 언어의 코드 블록으로 감싸세요.',
           selection = function(source)
             return select.gitdiff(source, true)
           end,
+        },
+      },
+       -- default mappings
+      mappings = {
+        complete = {
+          detail = 'Use @<Tab> or /<Tab> for options.',
+          insert ='<Tab>',
+        },
+        close = {
+          normal = 'q',
+          insert = '<C-c>'
+        },
+        reset = {
+          normal ='<C-r>',
+          insert = '<C-r>'
+        },
+        submit_prompt = {
+          normal = '<CR>',
+          insert = '<C-s>'
+        },
+        accept_diff = {
+          normal = '<C-y>',
+          insert = '<C-y>'
+        },
+        yank_diff = {
+          normal = 'gy',
+          register = '"',
+        },
+        show_diff = {
+          normal = 'gd'
+        },
+        show_system_prompt = {
+          normal = 'gp'
+        },
+        show_user_selection = {
+          normal = 'gs'
         },
       },
     }
