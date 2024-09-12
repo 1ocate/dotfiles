@@ -570,7 +570,7 @@ use {
         },
         submit_prompt = {
           normal = '<CR>',
-          insert = '<C-s>'
+          insert = '<C-L>'
         },
         accept_diff = {
           normal = '<C-y>',
