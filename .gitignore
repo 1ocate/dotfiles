@@ -1,2 +1,5 @@
 ./nvim/plugged
 ./scripts/project_path.example
+./node_modules/
+./package.json
+./package-lock.json
