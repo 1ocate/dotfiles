@@ -1,10 +1,11 @@
--- Lua
 return {
   {
-    selection = function(source)
-      return select.visual(source)
-    end,
+    -- selection = function(source)
+    --   return select.visual(source)
+    -- end,
     "CopilotC-Nvim/CopilotChat.nvim",
+    -- event = "VeryLazy",
+    event = "BufNewFile",
     branch = "canary",
     dependencies = {
       { "zbirenbaum/copilot.lua" }, -- or github/copilot.vim
