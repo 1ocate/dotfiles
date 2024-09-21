@@ -1,10 +1,10 @@
 return {
   {
     "folke/which-key.nvim",
-    enabled = false,
+    enabled = true,
   },
   {
     "echasnovski/mini.icons",
-    enabled = false,
+    enabled = true,
   },
 }
