@@ -52,11 +52,3 @@ require("lazy").setup({
     },
   },
 })
-
--- Git 커밋 메시지 버퍼가 열릴 때 특정 명령 실행
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = "gitcommit",
-  callback = function()
-    vim.cmd("CopilotChatCommitStage")
-  end,
-})
