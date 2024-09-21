@@ -1,11 +1,8 @@
 return {
   {
-    -- selection = function(source)
-    --   return select.visual(source)
-    -- end,
     "CopilotC-Nvim/CopilotChat.nvim",
     -- event = "VeryLazy",
-    event = "BufNewFile",
+    event = "VimEnter",
     branch = "canary",
     dependencies = {
       { "zbirenbaum/copilot.lua" }, -- or github/copilot.vim
@@ -22,6 +19,10 @@ return {
       -- clear_chat_on_new_prompt = false, -- Clears chat on every new prompt
       -- highlight_selection = true, -- Highlight selection in the source buffer when in the chat window
       -- default prompts
+      selection = function(source)
+        local select = require("CopilotChat.select")
+        return select.visual(source) or select.buffer(source)
+      end,
       prompts = {
         Explain = {
           prompt = "/COPILOT_EXPLAIN 활성 선택에 대한 설명을 텍스트 단락으로 한글을 사용하여 작성하세요",
@@ -44,21 +45,12 @@ return {
         },
         FixDiagnostic = {
           prompt = "파일의 다음 진단 문제를 해결하는 데 도움을 주세요:",
-          selection = function(source)
-            -- Here you should implement the function to select diagnostics
-          end,
         },
         Commit = {
           prompt = "한글로 변경 사항에 대한 커밋 메시지를 commitizen 규칙에 따라 작성하세요. 제목은 최대 50자, 메시지는 72자에서 줄바꿈하세요. 전체 메시지를 gitcommit 언어의 코드 블록으로 감싸세요.",
-          selection = function(source)
-            -- Here you should implement the function to select gitdiff
-          end,
         },
         CommitStaged = {
           prompt = "한글로 변경 사항에 대한 커밋 메시지를 commitizen 규칙에 따라 작성하세요. 제목은 최대 50자, 메시지는 72자에서 줄바꿈하세요. 전체 메시지를 gitcommit 언어의 코드 블록으로 감싸세요.",
-          selection = function(source)
-            -- Here you should implement the function to select gitdiff
-          end,
         },
       },
       -- default mappings
