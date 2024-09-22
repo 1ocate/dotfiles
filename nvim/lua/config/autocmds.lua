@@ -35,14 +35,14 @@ vim.api.nvim_create_autocmd("BufWritePost", {
         vim.cmd("Git commit -F " .. temp_file) -- 임시 파일을 사용하여 커밋
         vim.fn.delete(temp_file) -- 임시 파일 삭제
 
-        local bufnr = vim.fn.bufnr("%") -- 현재 버퍼 번호 가져오기
-        local bufname = vim.fn.bufname(bufnr) -- 현재 버퍼 이름 가져오기
-
-        -- 현재 버퍼가 fugitive 버퍼가 아닌 경우에만 닫기
-        if not string.match(bufname, "^fugitive:///") then
-          vim.cmd("bwipeout " .. bufnr) -- 현재 버퍼 제거
-          vim.cmd("Git") -- 다시실행
-        end
+        -- local bufnr = vim.fn.bufnr("%") -- 현재 버퍼 번호 가져오기
+        -- local bufname = vim.fn.bufname(bufnr) -- 현재 버퍼 이름 가져오기
+        --
+        -- -- 현재 버퍼가 fugitive 버퍼가 아닌 경우에만 닫기
+        -- if not string.match(bufname, "^fugitive:///") then
+        --   vim.cmd("bwipeout " .. bufnr) -- 현재 버퍼 제거
+        --   vim.cmd("Git") -- 다시실행
+        -- end
       end
     end
   end,
