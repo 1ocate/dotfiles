@@ -11,7 +11,11 @@ vim.api.nvim_create_autocmd("BufReadPost", {
   pattern = "*.git/COMMIT_EDITMSG",
   callback = function()
     if vim.bo.filetype == "gitcommit" then
+      -- CopilotChatCommitStage 명령어 실행
       vim.cmd("CopilotChatCommitStage")
+      -- CopilotChatCommitStage 명령어의 출력을 가져와서 커밋 메시지 파일에 삽입
+      local output = vim.fn.systemlist("CopilotChatCommitStage")
+      vim.api.nvim_buf_set_lines(0, 0, -1, false, output)
     end
   end,
 })
