@@ -22,7 +22,7 @@ vim.api.nvim_create_autocmd("BufWritePost", {
         vim.cmd("Git commit -F %") -- 커밋 메시지 파일을 사용하여 커밋
         local bufnr = vim.fn.bufnr("%") -- 현재 버퍼 번호 가져오기
         local bufname = vim.fn.bufname(bufnr) -- 현재 버퍼 이름 가져오기
-        print("Current buffer name: " .. bufname) -- 버퍼 이름 출력
+        -- print("Current buffer name: " .. bufname) -- 버퍼 이름 출력
 
         -- 현재 버퍼가 fugitive 버퍼가 아닌 경우에만 닫기
         -- if not string.match(bufname, "^fugitive://") then
