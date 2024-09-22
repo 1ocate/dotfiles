@@ -41,6 +41,7 @@ vim.api.nvim_create_autocmd("BufWritePost", {
         -- 현재 버퍼가 fugitive 버퍼가 아닌 경우에만 닫기
         if not string.match(bufname, "^fugitive:///") then
           vim.cmd("bwipeout " .. bufnr) -- 현재 버퍼 제거
+          vim.cmd("Git") -- 다시실행
         end
       end
     end
