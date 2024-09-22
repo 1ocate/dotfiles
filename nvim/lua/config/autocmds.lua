@@ -36,11 +36,10 @@ vim.api.nvim_create_autocmd("BufWritePost", {
         vim.cmd("Git commit -F " .. temp_file) -- 임시 파일을 사용하여 커밋
         vim.fn.delete(temp_file) -- 임시 파일 삭제
 
+        vim.cmd("Git")
+
         -- 버퍼 지우기
         vim.cmd("bwipeout")
-
-        -- vim-fugitive 플러그인 다시 실행
-        vim.cmd("Git")
       end
     end
   end,
