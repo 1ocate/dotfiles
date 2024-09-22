@@ -39,6 +39,8 @@ return {
 
           return should_show
         end,
+        -- 버퍼가 1개일때도 표시
+        always_show_bufferline = true,
       },
       highlights = {
         -- fill = {
