@@ -1,14 +1,14 @@
-local separator = {
-  '"▏"',
-  color = "StatusLineNonText",
-}
+-- local separator = {
+--   '"▏"',
+--   color = "StatusLineNonText",
+-- }
 
 return {
   {
     "nvim-lualine/lualine.nvim",
     opts = {
+      component_separators = { left = "", right = "" },
       options = {
-        component_separators = { left = "", right = "" },
         section_separators = { left = "", right = "" },
         globalstatus = false,
         theme = "auto",
