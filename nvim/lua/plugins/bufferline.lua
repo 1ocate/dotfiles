@@ -28,7 +28,7 @@ return {
         },
         custom_filter = function(bufnr)
           -- This is the recommended code in the bufferline document
-          local exclude_ft = { "fugitive", "git" }
+          local exclude_ft = { "fugitive", "gitcommit" }
           local cur_ft = vim.bo[bufnr].filetype
           local should_show = not vim.tbl_contains(exclude_ft, cur_ft)
 
