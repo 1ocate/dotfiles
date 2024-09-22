@@ -1,10 +1,14 @@
 return {
   {
     "folke/which-key.nvim",
-    enabled = true,
-  },
-  {
-    "echasnovski/mini.icons",
-    enabled = true,
+    opts = {
+      spec = {
+        {
+          "<leader>sf",
+          desc = "Search for the selected word within the directory",
+          mode = "v",
+        },
+      },
+    },
   },
 }
