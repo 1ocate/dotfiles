@@ -25,9 +25,9 @@ vim.api.nvim_create_autocmd("BufWritePost", {
         print("Current buffer name: " .. bufname) -- 버퍼 이름 출력
 
         -- 현재 버퍼가 fugitive 버퍼가 아닌 경우에만 닫기
-        if not string.match(bufname, "^fugitive://") then
-          vim.cmd("bwipeout " .. bufnr) -- 현재 버퍼 제거
-        end
+        -- if not string.match(bufname, "^fugitive://") then
+        --   vim.cmd("bwipeout " .. bufnr) -- 현재 버퍼 제거
+        -- end
       end
     end
   end,
