@@ -23,3 +23,9 @@ vim.keymap.set("n", "<F8>", function()
     vim.cmd(":vertical resize 40")
   end
 end)
+
+-- 오동작으로 인한 라인이동 키맵 해제
+vim.api.nvim_del_keymap("n", "<A-j>")
+vim.api.nvim_del_keymap("n", "<A-k>")
+vim.api.nvim_del_keymap("i", "<A-j>")
+vim.api.nvim_del_keymap("i", "<A-k>")
