@@ -29,3 +29,8 @@ vim.api.nvim_del_keymap("n", "<A-j>")
 vim.api.nvim_del_keymap("n", "<A-k>")
 vim.api.nvim_del_keymap("i", "<A-j>")
 vim.api.nvim_del_keymap("i", "<A-k>")
+
+vim.keymap.set("n", "<C-h>", "<Cmd>NvimTmuxNavigateLeft<CR>", { silent = true })
+vim.keymap.set("n", "<C-j>", "<Cmd>NvimTmuxNavigateDown<CR>", { silent = true })
+vim.keymap.set("n", "<C-k>", "<Cmd>NvimTmuxNavigateUp<CR>", { silent = true })
+vim.keymap.set("n", "<C-l>", "<Cmd>NvimTmuxNavigateRight<CR>", { silent = true })
