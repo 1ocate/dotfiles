@@ -5,7 +5,7 @@ return {
     optional = true,
     opts = {
       formatters_by_ft = {
-        php = { intelephense }, -- Use intelephense for PHP formatting
+        php = { "intelephense" }, -- Use intelephense for PHP formatting
       },
     },
   },
@@ -15,7 +15,20 @@ return {
     optional = true,
     opts = {
       linters_by_ft = {
-        php = { intelephense }, -- Use intelephense for PHP linting
+        php = { "php" }, -- Use intelephense for PHP linting
+      },
+    },
+  },
+  {
+    "nvim-treesitter/nvim-treesitter",
+    opts = { ensure_installed = { "php" } },
+  },
+  {
+    "williamboman/mason.nvim",
+    opts = {
+      ensure_installed = {
+        "phpcs",
+        "php-cs-fixer",
       },
     },
   },
