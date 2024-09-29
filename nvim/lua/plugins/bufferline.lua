@@ -9,16 +9,6 @@ return {
         show_close_icon = false,
         tab_size = 0,
         max_name_length = 25,
-        offsets = {
-          -- {
-          --   filetype = "NvimTree",
-          --   text = "  Files",
-          --   highlight = "StatusLine",
-          --   text_align = "left",
-          -- },
-        },
-        separator_style = "slant",
-        modified_icon = "",
         custom_areas = {
           left = function()
             return {
@@ -26,19 +16,35 @@ return {
             }
           end,
         },
-        custom_filter = function(bufnr)
-          -- This is the recommended code in the bufferline document
-          local exclude_ft = { "fugitive" }
-          local cur_ft = vim.bo[bufnr].filetype
-          local should_show = not vim.tbl_contains(exclude_ft, cur_ft)
-
-          -- This is my custom code
-          if vim.g.show_file_buffer_only then
-            should_show = should_show and vim.fn.bufname(buffnr) ~= ""
-          end
-
-          return should_show
-        end,
+        offsets = {
+          -- {
+          --   filetype = "NvimTree",
+          --   text = "  Files",
+          --   highlight = "StatusLine",
+          --   text_align = "left",
+          -- },
+          {
+            filetype = "neo-tree",
+            text = "  Files",
+            highlight = "Directory",
+            text_align = "left",
+          },
+        },
+        separator_style = "slant",
+        modified_icon = "",
+        -- custom_filter = function(bufnr)
+        --   -- This is the recommended code in the bufferline document
+        --   local exclude_ft = { "fugitive" }
+        --   local cur_ft = vim.bo[bufnr].filetype
+        --   local should_show = not vim.tbl_contains(exclude_ft, cur_ft)
+        --
+        --   -- This is my custom code
+        --   if vim.g.show_file_buffer_only then
+        --     should_show = should_show and vim.fn.bufname(buffnr) ~= ""
+        --   end
+        --
+        --   return should_show
+        -- end,
         -- 버퍼가 1개일때도 표시
         always_show_bufferline = true,
       },
