@@ -68,3 +68,15 @@ vim.g.lazyvim_php_lsp = "intelephense"
 
 vim.opt.encoding = "utf-8"
 vim.opt.fileencoding = "utf-8"
+
+-- DiffAdd: 추가된 줄에 대한 녹색 배경과 흰색 텍스트
+vim.cmd("highlight DiffAdd guibg=#006400 guifg=#FFFFFF")
+
+-- DiffChange: 변경된 줄에 대한 진한 파란색 배경과 흰색 텍스트
+vim.cmd("highlight DiffChange guibg=#00008B guifg=#FFFFFF")
+
+-- DiffDelete: 삭제된 줄에 대한 진한 빨간색 배경과 흰색 텍스트
+vim.cmd("highlight DiffDelete guibg=#8B0000 guifg=#FFFFFF")
+
+-- Visual: 비주얼 모드 선택에 대한 녹색 배경과 흰색 텍스트
+vim.cmd("highlight Visual guibg=#006400 guifg=#FFFFFF")
