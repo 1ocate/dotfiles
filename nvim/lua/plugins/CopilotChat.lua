@@ -21,7 +21,11 @@ return {
       -- default prompts
       selection = function(source)
         local select = require("CopilotChat.select")
-        return select.visual(source) or select.buffer(source)
+        local selected_text = select.visual(source)
+        if selected_text == nil or selected_text == "" then
+          return ""
+        end
+        return selected_text
       end,
       prompts = {
         Explain = {
