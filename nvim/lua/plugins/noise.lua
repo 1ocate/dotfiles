@@ -4,6 +4,11 @@ return {
     commit = "8c6a02438f869e79e4d343683bc198ebf4b10d49", -- 특정 커밋 해시
     event = "VeryLazy",
     opts = {
+      cmdline = {
+        enabled = true, -- enables the Noice cmdline UI
+        view = "cmdline", -- view for rendering the cmdline. Change to `cmdline` to get a classic cmdline at the bottom
+        opts = {}, -- global options for the cmdline. See section on views
+      },
       lsp = {
         override = {
           ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
@@ -17,8 +22,8 @@ return {
             event = "msg_show",
             any = {
               { find = "%d+L, %d+B" },
-              { find = "; after #%d+" },
-              { find = "; before #%d+" },
+              -- { find = "; after #%d+" },
+              -- { find = "; before #%d+" },
             },
           },
           view = "mini",
