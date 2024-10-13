@@ -1,26 +1,22 @@
--- OS Check
-local homePwd = os.getenv('HOME')
-local wslEnv = os.getenv('WSLENV')
+-- bootstrap lazy.nvim, LazyVim and your plugins
+local homePwd = os.getenv("HOME")
+local wslEnv = os.getenv("WSLENV")
 
-osName =''
+osName = ""
 if homePwd then
-    if string.match(homePwd, "/Users") then
-        osName = 'Mac'
-    else
-        osName = 'Linux'
+  if string.match(homePwd, "/Users") then
+    osName = "Mac"
+  else
+    osName = "Linux"
 
-        if wslEnv then
-            osName = 'WSL'
-        end
+    if wslEnv then
+      osName = "WSL"
     end
+  end
 else
-    osName ='Other'
+  osName = "Other"
 end
 
-autocomplete = 'cmp'
+autocomplete = "cmp"
 visualSelectMode = true
-
-
-require('user.options')
-require('user.plugins')
-require('user.keymaps')
+require("config.lazy")
