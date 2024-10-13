@@ -3,6 +3,11 @@ return {
   keys = {
     { "<leader>sw", LazyVim.pick("grep_string"), mode = "v", desc = "Selection (Root Dir)" },
     { "<leader>sW", LazyVim.pick("grep_string", { root = false }), mode = "v", desc = "Selection (cwd)" },
+    {
+      "<leader>fa",
+      LazyVim.pick("find_files", { no_ignore = true, prompt_title = "Find Files All" }),
+      desc = "All Files (Including .gitignore)",
+    },
   },
   opts = function()
     local actions = require("telescope.actions")
