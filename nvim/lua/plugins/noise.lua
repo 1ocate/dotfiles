@@ -1,7 +1,7 @@
 return {
   {
     "folke/noice.nvim",
-    commit = "8c6a02438f869e79e4d343683bc198ebf4b10d49", -- 특정 커밋 해시
+    -- commit = "8c6a02438f869e79e4d343683bc198ebf4b10d49", -- 특정 커밋 해시
     event = "VeryLazy",
     opts = {
       cmdline = {
