@@ -34,3 +34,12 @@ vim.keymap.set("n", "<C-h>", "<Cmd>NvimTmuxNavigateLeft<CR>", { silent = true })
 vim.keymap.set("n", "<C-j>", "<Cmd>NvimTmuxNavigateDown<CR>", { silent = true })
 vim.keymap.set("n", "<C-k>", "<Cmd>NvimTmuxNavigateUp<CR>", { silent = true })
 vim.keymap.set("n", "<C-l>", "<Cmd>NvimTmuxNavigateRight<CR>", { silent = true })
+
+-- git MerginalToggle
+vim.keymap.set("n", "<F4>", function()
+  vim.opt.splitbelow = false
+  vim.opt.splitright = false
+  vim.cmd(":MerginalToggle")
+  vim.opt.splitbelow = true
+  vim.opt.splitright = true
+end)
