@@ -2,7 +2,7 @@ return {
   -- Better text-objects
   {
     "echasnovski/mini.ai",
-    enabled = true,
+    enabled = false,
     event = "VeryLazy",
     opts = function()
       local ai = require("mini.ai")
