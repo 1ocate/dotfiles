@@ -1,31 +1,20 @@
 return {
   {
     "CopilotC-Nvim/CopilotChat.nvim",
-    -- event = "VeryLazy",
     event = "VimEnter",
     branch = "canary",
     dependencies = {
-      { "zbirenbaum/copilot.lua" }, -- or github/copilot.vim
-      { "nvim-lua/plenary.nvim" }, -- for curl, log wrapper
+      { "zbirenbaum/copilot.lua" },
+      { "nvim-lua/plenary.nvim" },
     },
-    build = "make tiktoken", -- Only on MacOS or Linux
+    build = "make tiktoken",
     opts = {
-      debug = false, -- Enable debugging
-      -- show_folds = true, -- Shows folds for sections in chat
-      -- show_help = true, -- Shows help message as virtual lines when waiting for user input
-      -- auto_follow_cursor = false, -- Auto-follow cursor in chat
-      -- auto_insert_mode = false, -- Automatically enter insert mode when opening window and on new prompt
-      -- insert_at_end = false, -- Move cursor to end of buffer when inserting text
-      -- clear_chat_on_new_prompt = false, -- Clears chat on every new prompt
-      -- highlight_selection = true, -- Highlight selection in the source buffer when in the chat window
-      -- default prompts
+      model = "gpt-4o-2024-11-20",
+      debug = false,
       selection = function(source)
         local select = require("CopilotChat.select")
         local selected_text = select.visual(source)
-        if selected_text == nil or selected_text == "" then
-          return ""
-        end
-        return selected_text
+        return selected_text or ""
       end,
       prompts = {
         Explain = {
@@ -52,48 +41,59 @@ return {
         },
         Commit = {
           prompt = "한글로 변경 사항에 대한 커밋 메시지를 commitizen 규칙에 따라 작성하세요. 제목은 최대 50자, 메시지는 72자에서 줄바꿈하세요. 전체 메시지를 gitcommit 언어의 코드 블록으로 감싸세요.",
+          options = {}, -- ✅ 오류 방지를 위한 기본값 추가
         },
         CommitStaged = {
           prompt = "한글로 변경 사항에 대한 커밋 메시지를 commitizen 규칙에 따라 작성하세요. 제목은 최대 50자, 메시지는 72자에서 줄바꿈하세요. 전체 메시지를 gitcommit 언어의 코드 블록으로 감싸세요.",
+          options = {}, -- ✅ 오류 방지를 위한 기본값 추가
         },
       },
-      -- default mappings
       mappings = {
-        complete = {
-          -- detail = "Use @<Tab> or /<Tab> for options.",
-          detail = "",
-          -- insert = "<Tab>",
-        },
-        close = {
-          normal = "q",
-          insert = "<C-c>",
-        },
-        reset = {
-          normal = "<C-r>",
-          insert = "<C-r>",
-        },
-        submit_prompt = {
-          normal = "<CR>",
-          insert = "<C-L>",
-        },
-        accept_diff = {
-          normal = "<C-y>",
-          insert = "<C-y>",
-        },
-        yank_diff = {
-          normal = "gy",
-          register = '"',
-        },
-        show_diff = {
-          normal = "gd",
-        },
-        show_system_prompt = {
-          normal = "gp",
-        },
-        show_user_selection = {
-          normal = "gs",
-        },
+        complete = { detail = "" },
+        close = { normal = "q", insert = "<C-c>" },
+        reset = { normal = "<C-r>", insert = "<C-r>" },
+        submit_prompt = { normal = "<CR>", insert = "<C-L>" },
+        accept_diff = { normal = "<C-y>", insert = "<C-y>" },
+        yank_diff = { normal = "gy", register = '"' },
+        show_diff = { normal = "gd" },
+        show_system_prompt = { normal = "gp" },
+        show_user_selection = { normal = "gs" },
       },
     },
+    config = function(_, opts)
+      require("CopilotChat").setup(opts)
+
+      -- ✅ 커밋 메시지 자동 생성 명령어 등록
+      vim.api.nvim_create_user_command("CreateCommit", function()
+        local diff_summary = vim.fn.system("git diff --staged")
+
+        if diff_summary == "" then
+          print("스테이징된 변경사항이 없습니다.")
+          return
+        end
+
+        local prompt = [[
+다음은 git 스테이지에 있는 변경 요약입니다. 이를 기반으로 한글로 commitizen 규칙에 따라 커밋 메시지를 작성해 주세요.
+- 제목은 최대 50자 이내로 작성하세요.
+- 본문 메시지는 72자에서 줄바꿈하세요.
+- 전체 메시지를 ```gitcommit``` 코드 블록으로 감싸주세요.
+
+변경 요약:
+]] .. diff_summary
+
+        require("CopilotChat").ask(prompt, {})
+      end, {})
+      -- ✅ 커밋 편집창 열릴 때 자동 실행
+      vim.api.nvim_create_autocmd("BufRead", {
+        pattern = "COMMIT_EDITMSG",
+        callback = function()
+          if vim.bo.filetype == "gitcommit" then
+            vim.defer_fn(function()
+              vim.cmd("CreateCommit")
+            end, 100)
+          end
+        end,
+      })
+    end,
   },
 }
