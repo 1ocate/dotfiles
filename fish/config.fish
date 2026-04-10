@@ -9,6 +9,8 @@ if status is-interactive
     alias proxmox-up='ssh -fNTMD 9000 proxmox'
     alias proxmox-status='ssh -TO check proxmox'
     alias proxmox-down='ssh -TO exit proxmox'
+    alias k='kubectl'
+    complete -c k -w kubectl
     fzf_configure_bindings --directory=\ct --variables=\ch --git_log=\cg
     set fzf_fd_opts --hidden --exclude=.git
     set -x fish_greeting "🐟"
@@ -18,6 +20,8 @@ if status is-interactive
     set -x KIND_EXPERIMENTAL_PROVIDER podman
     # for xsel, yankclip.vim 
     set -x DISPLAY :0
+    set -gx FNM_DIR $HOME/.fnm
+    fnm env --use-on-cd | source
 end
 
 function fish_user_key_bindings
@@ -36,3 +40,10 @@ function nvim
     set TERM wezterm
     command nvim $argv
 end
+
+# pnpm
+set -gx PNPM_HOME /Users/locate/Library/pnpm
+if not string match -q -- $PNPM_HOME $PATH
+    set -gx PATH "$PNPM_HOME" $PATH
+end
+# pnpm end
