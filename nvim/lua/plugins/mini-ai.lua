@@ -1,7 +1,7 @@
 return {
   -- Better text-objects
   {
-    "echasnovski/mini.ai",
+    "nviom-mini/mini.ai",
     enabled = false,
     event = "VeryLazy",
     opts = function()
