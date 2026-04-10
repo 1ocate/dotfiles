@@ -43,3 +43,9 @@ vim.keymap.set("n", "<F4>", function()
   vim.opt.splitbelow = true
   vim.opt.splitright = true
 end)
+
+vim.keymap.set("n", "<leader>ft", function()
+  local dir = vim.fn.expand("%:p:h")
+  -- LazyVim의 플로팅 터미널 호출
+  Snacks.terminal.open(nil, { cwd = dir })
+end, { desc = "Terminal (Current File Dir)" })
