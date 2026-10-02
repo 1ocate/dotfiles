@@ -4,3 +4,9 @@ node_modules
 package.json
 package-lock.json
 nvim/lazy-lock.json
+
+# Local credentials and generated files
+.local/
+.DS_Store
+.nvimlog
+__pycache__/
