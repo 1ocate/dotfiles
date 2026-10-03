@@ -1,8 +1,19 @@
 local wezterm = require 'wezterm'
 
--- Detect the OS independently of HOME; Windows uses a native PowerShell shell.
+-- OS detection is separate from the user's saved environment selection.
 local is_windows = wezterm.target_triple:find('windows', 1, true) ~= nil
 local is_macos = wezterm.target_triple:find('apple', 1, true) ~= nil
+local selected_environment
+if is_windows then
+    local source = debug.getinfo(1, 'S').source:sub(2):gsub('\\', '/')
+    local repo = source:match('^(.*)/[^/]+$') or '.'
+    local state_path = repo .. '/.local/environment.json'
+    wezterm.add_to_config_reload_watch_list(state_path)
+    local reason
+    selected_environment, reason = dofile(repo .. '/environment.lua').windows_selection(
+        repo, wezterm.json_parse, os.getenv('COMPUTERNAME'))
+    if reason then wezterm.log_warn(reason) end
+end
 
 local keybind = {
     -- { key = 'C', mods = 'CTRL', action = wezterm.action.CopyTo 'ClipboardAndPrimarySelection' },
@@ -76,7 +87,7 @@ end)
 
 local setting = {}
 
-if is_windows then
+if selected_environment == 'windows-powershell' then
     -- Prefer PowerShell 7 when available, otherwise use Windows PowerShell 5.1.
     local found_pwsh, pwsh_path = wezterm.run_child_process { 'where.exe', 'pwsh.exe' }
     local executable_path = found_pwsh and pwsh_path:match('[^\r\n]+')

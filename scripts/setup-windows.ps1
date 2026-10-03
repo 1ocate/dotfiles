@@ -33,7 +33,9 @@ $packages = @(
 )
 
 if ($Plan) {
-    Write-Output "Native Windows setup from: $repoPath"
+    . (Join-Path $PSScriptRoot 'windows-environment.ps1')
+    Write-WindowsSelectionStatus -RepoPath $repoPath
+    Write-Output "windows-powershell setup from: $repoPath"
     Write-Output 'First setup requires -ApprovePowerShell; later runs reuse the local host selection.'
     if (-not $SkipPackages) { Write-Output ('Install missing winget packages: ' + ($packages -join ', ')) }
     Write-Output 'Connect WezTerm and Neovim to this checkout, backing up previous settings.'
@@ -47,7 +49,7 @@ if ($Plan) {
 }
 
 if ($env:OS -ne 'Windows_NT') { throw 'This temporary setup is for native Windows only.' }
-foreach ($relativePath in @('.wezterm.lua', 'autoHotKey.ahk', 'nvim/init.lua', 'nvim/lazy-lock.json', 'scripts/use-wezterm.ps1', 'scripts/use-neovim.ps1', 'scripts/setup-neovim.lua', 'scripts/windows-environment.ps1')) {
+foreach ($relativePath in @('.wezterm.lua', 'environment.lua', 'autoHotKey.ahk', 'nvim/init.lua', 'nvim/lazy-lock.json', 'scripts/use-wezterm.ps1', 'scripts/use-neovim.ps1', 'scripts/setup-neovim.lua', 'scripts/windows-environment.ps1')) {
     if (-not (Test-Path -LiteralPath (Join-Path $repoPath $relativePath) -PathType Leaf)) {
         throw "Required file not found: $relativePath"
     }
@@ -89,6 +91,8 @@ if ([System.IO.Path]::GetFullPath((Join-Path $repoPath '.wezterm.lua')) -eq [Sys
     throw 'WezTerm source and target must differ; move the checkout outside the user profile root.'
 }
 if ($Check) {
+    . (Join-Path $PSScriptRoot 'windows-environment.ps1')
+    Write-WindowsSelectionStatus -RepoPath $repoPath
     Update-SetupPath
     Test-SetupPrerequisites
     return

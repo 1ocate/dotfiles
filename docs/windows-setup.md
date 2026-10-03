@@ -30,6 +30,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 
 
 ## 적용하는 내용과 확인한 버전
 
+### 이전 선택 확인과 재사용
+
+설치 대상의 정확한 이름은 `windows-powershell`입니다. Windows OS 감지만으로 이 환경을 승인하지 않습니다. `-Plan`과 `-Check`도 `.local/environment.json`의 기존 선택을 표시하며 상태를 생성하지 않습니다.
+
+최초 설치는 `-ApprovePowerShell`로 선택을 승인하고 로컬 파일에 환경·호스트·승인 여부·시각을 기록합니다. 재실행은 같은 호스트의 승인된 `windows-powershell` 값을 먼저 확인해 재사용합니다. 기록이 없거나 다른 호스트의 기록이면 변경 전에 중단합니다. `windows-wsl`이 저장되어 있으면 이를 PowerShell로 자동 덮어쓰지 않습니다. 명시적으로 환경을 변경할 때만 다시 승인하며 기존 상태는 백업합니다.
+
+Neovim과 WezTerm은 읽기 전용 `environment.lua`로 같은 상태 파일을 확인합니다. OS 판별과 선택값을 구분하며, 승인된 현재 호스트의 `windows-powershell` 선택에만 PowerShell 셸·도메인·Windows 클립보드 처리를 적용합니다. 선택이 없거나 손상되면 안내를 표시하고 공통 설정만 사용합니다. 저장된 WSL 선택에서도 네이티브 PowerShell 처리를 적용하지 않으며, WSL 설치/도메인 전환은 별도 구현 범위입니다. Unix 프로세스는 Windows 선택 파일을 읽지 않습니다.
+
+`.local/`은 Git 추적에서 제외합니다. 이 파일과 토큰을 포함한 폴더를 다른 장비로 복제하지 않습니다.
+
 아래 버전은 현재 장비에서 확인한 기록입니다. winget 설치는 설치된 패키지를 유지하고,
 없는 패키지는 저장소에서 제공하는 버전을 설치합니다. 아래 숫자로 버전을 고정하지는 않습니다.
 

@@ -17,6 +17,7 @@ if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) {
     throw "WezTerm configuration not found: $sourcePath"
 }
 . (Join-Path $PSScriptRoot 'windows-environment.ps1')
+if (-not (Test-Path -LiteralPath (Join-Path $repoPath 'environment.lua') -PathType Leaf)) { throw 'Shared environment.lua is missing.' }
 Assert-WindowsPowerShellSelection -RepoPath $repoPath -ApprovePowerShell:$ApprovePowerShell
 
 # A small loader works without Windows symlink privileges and follows repo edits.

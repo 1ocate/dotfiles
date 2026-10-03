@@ -10,6 +10,7 @@ if (-not (Test-Path -LiteralPath $sourcePath -PathType Container)) {
     throw "Neovim configuration not found: $sourcePath"
 }
 if (-not (Test-Path -LiteralPath (Join-Path $sourcePath 'init.lua') -PathType Leaf)) { throw 'Neovim init.lua is missing.' }
+if (-not (Test-Path -LiteralPath (Join-Path (Split-Path -Parent $PSScriptRoot) 'environment.lua') -PathType Leaf)) { throw 'Shared environment.lua is missing.' }
 $sourceFull = [System.IO.Path]::GetFullPath($sourcePath).TrimEnd('\')
 $targetFull = [System.IO.Path]::GetFullPath($targetPath).TrimEnd('\')
 if ($sourceFull -eq $targetFull -or $sourceFull.StartsWith($targetFull + '\', [StringComparison]::OrdinalIgnoreCase) -or $targetFull.StartsWith($sourceFull + '\', [StringComparison]::OrdinalIgnoreCase)) {

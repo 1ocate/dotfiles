@@ -6,7 +6,7 @@
 vim.cmd("set clipboard=")
 
 -- Use the same native PowerShell shell as WezTerm on Windows.
-if vim.fn.has("win32") == 1 then
+if vim.fn.has("win32") == 1 and vim.g.dotfiles_environment == "windows-powershell" then
   local has_pwsh = vim.fn.executable("pwsh") == 1
   -- Microsoft Store execution aliases can be executable despite reporting size 0.
   if not has_pwsh then
