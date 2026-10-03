@@ -6,6 +6,8 @@
 
 Windows 감지는 사용 환경 선택과 구분합니다. 설치는 `.local/environment.json`의 이전 선택을 확인하고, 최초 PowerShell 사용 승인만 `-ApprovePowerShell`로 기록합니다. Neovim과 WezTerm도 현재 호스트의 저장된 값이 `windows-powershell`일 때만 해당 설정을 적용합니다. 기록이 없거나 WSL 선택이면 PowerShell로 자동 전환하지 않습니다.
 
+AI는 요청 범위의 분석·병렬 분담·수정·검증·PR 제출까지 자율적으로 진행하고 사용자는 최종 PR을 검토합니다. Codex 실행 옵션과 에이전트 역할은 [AI 작업 흐름](docs/ai-workflow.md#자율-진행과-병렬-분담)을 따릅니다.
+
 먼저 실행 환경을 macOS, Windows WSL, Windows 네이티브 PowerShell, Linux로 판별하고 공통 설정과 해당 환경 전용 설정만 적용하는 것을 작업 기준으로 삼습니다. 전용 변경은 다른 환경에서 실행되지 않도록 구분합니다. 네 환경의 통합 설치는 아직 완료되지 않았습니다.
 
 Neovim, 셸, 터미널 및 키보드 설정을 모은 개인 개발 환경 저장소입니다.
