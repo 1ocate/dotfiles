@@ -118,5 +118,16 @@ WezTerm에는 `WSL:Ubuntu-22.04`와 `/home/locate`가 고정되어 있고, Neovi
 WSL용 Neovim 옵션에는 마지막 개행을 유지하지 않는 설정도 포함되어 있습니다.
 따라서 전체 저장소의 공통 OS 지원을 전제로 적용해서는 안 됩니다.
 
-현재 `main`에는 CI, 자동 테스트, AI 작업 지침 또는 PR 템플릿이 없습니다.
+현재 CI와 OS별 설정의 자동 검증은 구성되어 있지 않습니다. 로컬 인증 도구는 `python3 -B -m unittest discover -s tests -v`로 검사할 수 있습니다.
 `nvim/lazy-lock.json`은 `.gitignore`에 포함되어 있지만 이미 추적 중이므로 변경 사항은 Git에 계속 기록됩니다.
+
+
+## 프로젝트 방향과 AI 협업
+
+목표는 macOS와 Windows 네이티브 PowerShell에서 가능한 한 동일한 개발 환경과 작업 경험을 유지하는 것입니다. 기존 WSL 사용 경험을 참고하며, 네이티브 Linux는 미검증 환경입니다.
+
+- [개발 환경의 평가와 방향](docs/environment-direction.md)
+- [AI 협업 지침](AGENTS.md)
+- [로컬 GitHub 인증과 작업 절차](docs/ai-workflow.md)
+
+동작을 바꾸지 않는 README·분석·평가·계획 문서는 검증 후 `main`에 직접 커밋·push합니다. 설정·코드·설치 방식과 AI 지침·인증·권한 절차 변경은 PR로 제출합니다. 문서와 동작 변경이 섞인 경우에도 PR을 사용합니다.
