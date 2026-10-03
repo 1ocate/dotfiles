@@ -103,6 +103,7 @@ end
 for _, choice in ipairs({
   { label = "missing" },
   { label = "WSL", choice = "windows-wsl" },
+  { label = "macOS on native Windows", choice = "macos" },
   { label = "other host", choice = "windows-powershell", host = "other-host" },
   { label = "invalid JSON", choice = "windows-powershell", corrupt = true },
 }) do

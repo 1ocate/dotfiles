@@ -6,7 +6,7 @@
 
 ## 다음 장비에서 한 번에 실행
 
-Windows에 winget이 있어야 합니다. 저장소를 장기간 유지할 위치에 내려받고 저장소 루트에서 실행합니다.
+Windows에 winget과 공통 등록 도구 실행용 Python 3.10 이상이 있어야 합니다. Python이 없는 경우 먼저 승인된 설치 경로로 Python을 준비합니다. 저장소를 장기간 유지할 위치에 내려받고 저장소 루트에서 실행합니다.
 최초 설치에는 사용자의 네이티브 PowerShell 선택이 필요합니다. 아래 -ApprovePowerShell 옵션으로 이를 명시하고, 이후 실행에서는 현재 호스트의 로컬 선택을 재사용합니다. 선택 기록은 .local/environment.json이며 Git에 포함하지 않습니다. 다른 호스트로 복제하지 마세요. 이 진입점은 WSL 설치나 Windows와 WSL 사이의 전환을 구현하지 않습니다.
 
 ```powershell
@@ -88,6 +88,15 @@ Neovim과 WezTerm은 읽기 전용 `environment.lua`로 같은 상태 파일을 
 언어별 LSP·포맷과 Copilot 서버 연결은 모든 기능을 검증한 상태가 아닙니다.
 
 ## 선택 옵션과 재실행
+
+이미 설정된 환경은 설치 스크립트를 재실행하지 않고 먼저 공통 도구로 등록할 수 있습니다.
+
+```powershell
+py -3 scripts/environment.py check --environment windows-powershell
+py -3 scripts/environment.py adopt-existing --environment windows-powershell
+```
+
+이 두 명령은 패키지·프로필·loader·junction을 변경하거나 AutoHotkey를 재시작하지 않습니다. 이후 실제 설치·연결이 필요할 때만 아래 명령을 사용합니다. `-ApprovePowerShell`은 공통 도구의 명시적 `select` 호출을 편의상 제공하며 Windows 어댑터는 상태 파일을 직접 작성하지 않습니다.
 
 ```powershell
 # 설치된 도구를 활용하고 설정만 다시 연결

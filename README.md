@@ -1,5 +1,7 @@
 # dotfiles
 
+호스트별 환경 선택과 이미 세팅된 환경 등록은 [공통 환경 등록 절차](docs/environment-registration.md)를 따릅니다. `scripts/environment.py`는 로컬 선택값만 기록하며 프로그램 설치·설정 연결은 수행하지 않습니다.
+
 공통 설정을 원본으로 유지하고 OS별 스크립트는 환경 차이만 연결합니다. 이후 작업 기준은 [공통 설정 가드레일](docs/setup-guardrails.md)과 [AGENTS.md](AGENTS.md)에 기록합니다. Windows 로컬 사전 점검은 `scripts/setup-windows.ps1 -Check`로 실행합니다.
 
 Windows 감지는 사용 환경 선택과 구분합니다. 설치는 `.local/environment.json`의 이전 선택을 확인하고, 최초 PowerShell 사용 승인만 `-ApprovePowerShell`로 기록합니다. Neovim과 WezTerm도 현재 호스트의 저장된 값이 `windows-powershell`일 때만 해당 설정을 적용합니다. 기록이 없거나 WSL 선택이면 PowerShell로 자동 전환하지 않습니다.

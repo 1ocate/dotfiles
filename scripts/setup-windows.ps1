@@ -49,7 +49,7 @@ if ($Plan) {
 }
 
 if ($env:OS -ne 'Windows_NT') { throw 'This temporary setup is for native Windows only.' }
-foreach ($relativePath in @('.wezterm.lua', 'environment.lua', 'autoHotKey.ahk', 'nvim/init.lua', 'nvim/lazy-lock.json', 'scripts/use-wezterm.ps1', 'scripts/use-neovim.ps1', 'scripts/setup-neovim.lua', 'scripts/windows-environment.ps1')) {
+foreach ($relativePath in @('.wezterm.lua', 'environment.lua', 'autoHotKey.ahk', 'nvim/init.lua', 'nvim/lazy-lock.json', 'scripts/use-wezterm.ps1', 'scripts/use-neovim.ps1', 'scripts/setup-neovim.lua', 'scripts/windows-environment.ps1', 'scripts/environment.py')) {
     if (-not (Test-Path -LiteralPath (Join-Path $repoPath $relativePath) -PathType Leaf)) {
         throw "Required file not found: $relativePath"
     }

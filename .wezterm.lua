@@ -10,8 +10,11 @@ if is_windows then
     local state_path = repo .. '/.local/environment.json'
     wezterm.add_to_config_reload_watch_list(state_path)
     local reason
-    selected_environment, reason = dofile(repo .. '/environment.lua').windows_selection(
+    selected_environment, reason = dofile(repo .. '/environment.lua').selection(
         repo, wezterm.json_parse, os.getenv('COMPUTERNAME'))
+    if selected_environment and selected_environment ~= 'windows-powershell' and selected_environment ~= 'windows-wsl' then
+        selected_environment, reason = nil, 'Saved environment does not match a native Windows process.'
+    end
     if reason then wezterm.log_warn(reason) end
 end
 

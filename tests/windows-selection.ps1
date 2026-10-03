@@ -3,12 +3,14 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path (Split-Path -Parent $PSScriptRoot) 'scripts/windows-environment.ps1')
 $testRoot = Join-Path $env:TEMP ('dotfiles-selection-' + [guid]::NewGuid())
 New-Item -ItemType Directory -Path $testRoot | Out-Null
+New-Item -ItemType Directory -Path (Join-Path $testRoot 'scripts') | Out-Null
+Copy-Item -LiteralPath (Join-Path (Split-Path -Parent $PSScriptRoot) 'scripts/environment.py') -Destination (Join-Path $testRoot 'scripts/environment.py')
 function Expect-Rejection([scriptblock]$Action, [string]$Pattern) {
     try { & $Action }
     catch { if ($_.Exception.Message -like $Pattern) { return }; throw }
     throw 'Expected rejection did not occur.'
 }
-Expect-Rejection { Assert-WindowsPowerShellSelection -RepoPath $testRoot } '*not approved*'
+Expect-Rejection { Assert-WindowsPowerShellSelection -RepoPath $testRoot } '*registration failed*'
 if (Test-Path (Join-Path $testRoot '.local')) { throw 'Unapproved invocation wrote state.' }
 Assert-WindowsPowerShellSelection -RepoPath $testRoot -ApprovePowerShell
 $statePath = Join-Path $testRoot '.local/environment.json'
@@ -19,16 +21,16 @@ if ([Convert]::ToBase64String($first) -ne [Convert]::ToBase64String([System.IO.F
 $state = Get-Content $statePath -Raw | ConvertFrom-Json
 $state.host = 'another-host'
 $state | ConvertTo-Json | Set-Content $statePath -Encoding UTF8
-Expect-Rejection { Assert-WindowsPowerShellSelection -RepoPath $testRoot } '*not approved*'
+Expect-Rejection { Assert-WindowsPowerShellSelection -RepoPath $testRoot } '*registration failed*'
 $state.host = [Environment]::MachineName
 $state.approved = 'true'
 $state | ConvertTo-Json | Set-Content $statePath -Encoding UTF8
-Expect-Rejection { Assert-WindowsPowerShellSelection -RepoPath $testRoot } '*not approved*'
+Expect-Rejection { Assert-WindowsPowerShellSelection -RepoPath $testRoot } '*registration failed*'
 $state.approved = $true
 $state.host = [Environment]::MachineName
 $state.environment = 'windows-wsl'
 $state | ConvertTo-Json | Set-Content $statePath -Encoding UTF8
-Expect-Rejection { Assert-WindowsPowerShellSelection -RepoPath $testRoot } '*not approved*'
+Expect-Rejection { Assert-WindowsPowerShellSelection -RepoPath $testRoot } '*registration failed*'
 $oldOS = $env:OS
 try {
     $env:OS = 'Linux'

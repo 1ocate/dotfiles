@@ -1,52 +1,39 @@
 #Requires -Version 5.1
-# Shared guard for native Windows setup entry points. No changes when dot-sourced.
+# Windows adapter for the common registration tool; owns no state format or writer.
+function Invoke-DotfilesEnvironment {
+    param([string]$RepoPath, [string[]]$CommandArguments)
+    $script = Join-Path $RepoPath 'scripts/environment.py'
+    if (-not (Test-Path -LiteralPath $script -PathType Leaf)) { throw 'Common scripts/environment.py is missing.' }
+    $python = Get-Command py -ErrorAction SilentlyContinue
+    $prefix = @('-3')
+    if (-not $python) { $python = Get-Command python -ErrorAction SilentlyContinue; $prefix = @() }
+    if (-not $python) { throw 'Python 3.10+ is required for common environment registration before Windows installation.' }
+    $oldPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        $output = & $python.Source @prefix $script @CommandArguments 2>&1 | ForEach-Object { $_.ToString() }
+        $exitCode = $LASTEXITCODE
+    } finally { $ErrorActionPreference = $oldPreference }
+    if ($exitCode -ne 0) { throw ('Environment registration failed: ' + ($output -join "`n")) }
+    return ($output -join "`n") | ConvertFrom-Json
+}
 function Get-WindowsEnvironmentSelection {
     param([Parameter(Mandatory = $true)][string]$RepoPath)
-    $statePath = Join-Path $RepoPath '.local/environment.json'
-    if (-not (Test-Path -LiteralPath $statePath -PathType Leaf)) { return $null }
-    try { $state = Get-Content -LiteralPath $statePath -Raw -Encoding UTF8 | ConvertFrom-Json }
-    catch { throw 'Invalid local environment selection. Review .local/environment.json before setup.' }
-    if ($state -isnot [pscustomobject]) { throw 'Local environment selection must be a JSON object.' }
-    return $state
+    return (Invoke-DotfilesEnvironment -RepoPath $RepoPath -CommandArguments @('status')).selection
 }
 function Write-WindowsSelectionStatus {
     param([Parameter(Mandatory = $true)][string]$RepoPath)
     $state = Get-WindowsEnvironmentSelection -RepoPath $RepoPath
     if ($state) { Write-Output "Saved environment: $($state.environment); host: $($state.host). Installation will validate approval and host match." }
-    else { Write-Output 'No saved environment. Installation requires an explicit windows-powershell selection (-ApprovePowerShell).' }
+    else { Write-Output 'No saved environment. Register explicitly with scripts/environment.py or use -ApprovePowerShell.' }
 }
 function Assert-WindowsPowerShellSelection {
-    param(
-        [Parameter(Mandatory = $true)][string]$RepoPath,
-        [switch]$ApprovePowerShell
-    )
+    param([Parameter(Mandatory = $true)][string]$RepoPath, [switch]$ApprovePowerShell)
     if ($env:OS -ne 'Windows_NT') { throw 'This adapter requires native Windows; WSL/macOS/Linux are not targets.' }
-    $statePath = Join-Path $RepoPath '.local/environment.json'
-    $state = Get-WindowsEnvironmentSelection -RepoPath $RepoPath
-    $sameSelection = $state -and $state.environment -eq 'windows-powershell' -and
-        $state.host -eq [Environment]::MachineName -and $state.approved -is [bool] -and $state.approved -eq $true
-    if (-not $ApprovePowerShell -and -not $sameSelection) {
-        if ($state -and $state.environment -eq 'windows-wsl') {
-            throw 'Saved selection is windows-wsl. PowerShell is not approved; run the WSL setup or explicitly approve an environment change.'
-        }
-        throw 'PowerShell environment is not approved for this host. Review -Plan, then pass -ApprovePowerShell to explicitly select native Windows. No installation or configuration has been changed.'
+    if ($ApprovePowerShell) {
+        $registered = Invoke-DotfilesEnvironment -RepoPath $RepoPath -CommandArguments @('select', '--environment', 'windows-powershell')
+        Write-Output "Environment selection $($registered.result): windows-powershell"
     }
-    if ($sameSelection) {
-        Write-Output "Reusing saved selection: windows-powershell ($statePath)"
-        return
-    }
-    # This flag is an explicit user choice, not inferred from OS or shell detection.
-    New-Item -ItemType Directory -Path (Split-Path -Parent $statePath) -Force | Out-Null
-    if (Test-Path -LiteralPath $statePath) {
-        Copy-Item -LiteralPath $statePath -Destination ($statePath + '.backup-' + (Get-Date -Format 'yyyyMMdd-HHmmss-fff'))
-    }
-    $choice = [ordered]@{
-        environment = 'windows-powershell'
-        host = [Environment]::MachineName
-        approved = $true
-        approvedAt = [DateTime]::UtcNow.ToString('o')
-        approvalSource = 'explicit -ApprovePowerShell'
-    }
-    [System.IO.File]::WriteAllText($statePath, ($choice | ConvertTo-Json) + "`n", [System.Text.UTF8Encoding]::new($false))
-    Write-Output "Saved selection: windows-powershell ($statePath)"
+    $null = Invoke-DotfilesEnvironment -RepoPath $RepoPath -CommandArguments @('require', '--environment', 'windows-powershell')
+    Write-Output 'Reusing approved common environment selection: windows-powershell'
 }
