@@ -1,4 +1,4 @@
-"""Compare Unix configuration with main without bootstrapping any plugins."""
+"""Compare Unix configuration with fetched origin/main without bootstrapping plugins."""
 import os
 from pathlib import Path
 import shutil
@@ -20,7 +20,7 @@ def main():
         for name in FILES:
             target = Path(temporary) / name
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(subprocess.check_output([git, "show", "main:" + name], cwd=ROOT))
+            target.write_bytes(subprocess.check_output([git, "show", "origin/main:" + name], cwd=ROOT))
         env = os.environ.copy()
         env["DOTFILES_BASELINE"] = temporary
         return subprocess.run(

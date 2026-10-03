@@ -58,7 +58,7 @@ OS별 선택 설치나 자동 복구 기능은 없습니다.
 주요 설정은 다음과 같습니다.
 
 - PHP, Python, JSON, Markdown, SQL 언어 지원
-- CopilotChat의 한국어 설명·검토·수정 및 커밋 메시지 생성 프롬프트
+- Copilot·CopilotChat 비활성화, 저장 시 자동 포맷 비활성화
 - Telescope와 fzf 검색, Fugitive와 Merginal을 통한 Git 작업
 - tmux와 Neovim 창 이동 연동, 복사 시 클립보드 동기화
 - UTF-8/EUC-KR 파일 읽기와 기본 4칸 들여쓰기
@@ -90,8 +90,7 @@ nvim
 | --- | --- |
 | Neovim과 플러그인 설치 | Neovim, Git, GitHub 접근 |
 | 파일·텍스트 검색 | `fzf`, `fd`, `ripgrep` (`rg`) |
-| Copilot 및 언어 서버 | Node.js 등 각 플러그인·언어 도구의 실행 환경과 별도 인증 |
-| CopilotChat 토큰 계산 빌드 | `make`, 다운로드에 필요한 도구 |
+| 언어 서버 | Node.js 등 각 언어 도구의 실행 환경 |
 | Treesitter 파서 | 플러그인 버전에 맞는 컴파일러와 빌드 환경 |
 | tmux 이동 | tmux |
 | 아이콘 표시 | 설정에 맞는 Nerd Font |
@@ -110,9 +109,8 @@ nvim
 | `<F4>` | Merginal 화면 전환 |
 | `<F8>` | 홈 디렉터리의 `bible.txt` 열기·닫기 |
 | `<F9>` | 복사 시 OS 클립보드 동기화 전환 |
-| `:CreateCommit` | 스테이징된 diff를 CopilotChat에 보내 커밋 메시지 생성 |
 
-`COMMIT_EDITMSG`를 열 때도 커밋 메시지 생성 명령을 자동 호출하도록 구성되어 있습니다.
+Copilot 자동 제안과 CopilotChat은 `enabled = false`로 로드하지 않습니다. 기존 프롬프트와 설정은 보존하지만 비활성화 상태에서는 `config`가 실행되지 않아 `:CreateCommit`과 `COMMIT_EDITMSG`의 AI 커밋 메시지 자동 호출도 등록되지 않습니다. 저장 시 자동 포맷은 기본적으로 꺼져 있으며 수동 포맷은 사용할 수 있습니다. 기존 `lazy-lock.json`의 Copilot 항목은 잠금 버전 보존을 위해 남겨 두며 활성화를 뜻하지 않습니다.
 
 ## 셸과 tmux
 
@@ -154,7 +152,7 @@ tmux 키맵과 프로젝트 세션 전환의 WezTerm 이식은 아직 포함하�
 - **Windows:** AutoHotkey v2 설정과 WezTerm의 네이티브 PowerShell 실행 설정이 있습니다. Unix 설치 스크립트를 Windows 네이티브 설치에 사용할 수는 없습니다.
 
 Neovim과 WezTerm은 실행 플랫폼으로 OS를 판별합니다.
-Neovim의 CopilotChat은 Unix에서만 선택적인 `make tiktoken` 빌드를 실행합니다.
+Copilot과 CopilotChat은 공통 설정에서 비활성화되어 자동 제안·커밋 메시지 생성·빌드를 실행하지 않습니다.
 WSL용 Neovim 옵션에는 마지막 개행을 유지하지 않는 설정도 포함되어 있습니다.
 따라서 전체 저장소의 공통 OS 지원을 전제로 적용해서는 안 됩니다.
 

@@ -39,6 +39,8 @@ python3 scripts/environment.py adopt-existing --environment windows-wsl
 
 ## 저장과 검증
 
+환경 선택과 장비별 적용 진행은 별도로 관리한다. 이 도구는 `.local/environment.json`에 선택값만 저장하며 `.local/setup-state.json`을 생성하거나 설치 완료를 기록하지 않는다. 구성요소별 진행 기록과 AI의 작업 재개 절차는 [공통 설정 가드레일](setup-guardrails.md#장비별-적용-진행-기록과-작업-재개)을 따른다. 진행 상태 자동 저장은 후속 OS별 설치 코드에서 연결한다.
+
 상태 파일의 형식은 다음과 같다. 이 예시는 문서이며 다른 호스트로 복사할 승인 파일이 아니다.
 
 ```json
