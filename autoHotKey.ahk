@@ -1,36 +1,38 @@
-$Esc::
-    ret := IME_CHECK("A")
-    if %ret% <> 0           ; 1 means IME is in Hangul(Korean) mode now.
-        {
-	          Send, {Esc}
-            Send, {vk15}    ;한글인 경우 Esc키를 입력하고 한영키를 입력해 준다.
-        }
-    else if %ret% = 0       ; 0 means IME is in English mode now.
-        {
-	          Send, {Esc}     ;영문인 경우 Esc키만 입력한다.
-        }
-    return
+﻿#Requires AutoHotkey v2.0
+#SingleInstance Force
 
-/*
-  IME check 
-*/
-IME_CHECK(WinTitle) {
-  WinGet,hWnd,ID,%WinTitle%
-  Return Send_ImeControl(ImmGetDefaultIMEWnd(hWnd),0x005,"")
-}
-Send_ImeControl(DefaultIMEWnd, wParam, lParam) {
-  DetectSave := A_DetectHiddenWindows
-  DetectHiddenWindows,ON
-   SendMessage 0x283, wParam,lParam,,ahk_id %DefaultIMEWnd%
-  if (DetectSave <> A_DetectHiddenWindows)
-      DetectHiddenWindows,%DetectSave%
-  return ErrorLevel
-}
-ImmGetDefaultIMEWnd(hWnd) {
-  return DllCall("imm32\ImmGetDefaultIMEWnd", Uint,hWnd, Uint)
-}
-LAlt & Space::Send, {vk15sc138}
+; 왼쪽 Alt와 Windows 키의 위치를 교환한다.
+; 변환된 키가 아래의 키보드 훅 단축키도 실행하도록 입력 레벨을 높인다.
+#InputLevel 1
+LAlt::LWin
+LWin::LAlt
+#InputLevel 0
+#UseHook
 
-!c::Send, ^c
-!v::Send, ^v
+; WezTerm에서만 Esc 원래 입력을 통과시키고, 키를 뗄 때 영문 상태로 설정한다.
+; 한영 토글 키를 보내지 않으므로 이미 영문이면 그대로 유지된다.
+#HotIf WinActive("ahk_exe wezterm-gui.exe")
+~Esc Up::
+{
+    try {
+        IME_SET_ENGLISH("A")
+    }
+    ; IME를 제어할 수 없는 창에서도 Esc 원래 입력은 그대로 전달된다.
+}
+#HotIf
 
+IME_SET_ENGLISH(winTitle) {
+    hwnd := WinGetID(winTitle)
+    imeHwnd := DllCall("imm32\ImmGetDefaultIMEWnd", "Ptr", hwnd, "Ptr")
+    if !imeHwnd
+        return 0
+    ; WM_IME_CONTROL / IMC_SETOPENSTATUS: 0은 영문(IME 닫힘).
+    return SendMessage(0x0283, 0x0006, 0, , imeHwnd, , , , 100)
+}
+
+; 왼쪽 Alt + Space: 한영 전환.
+<!Space::Send("{vk15sc138}")
+
+; Alt + C/V: 복사/붙여넣기.
+!c::Send("^c")
+!v::Send("^v")

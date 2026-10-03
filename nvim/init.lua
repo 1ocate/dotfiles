@@ -1,20 +1,13 @@
 -- bootstrap lazy.nvim, LazyVim and your plugins
-local homePwd = os.getenv("HOME")
-local wslEnv = os.getenv("WSLENV")
-
 osName = ""
-if homePwd then
-  if string.match(homePwd, "/Users") then
-    osName = "Mac"
-  else
-    osName = "Linux"
-
-    if wslEnv then
-      osName = "WSL"
-    end
-  end
+if vim.fn.has("win32") == 1 then
+  osName = "Windows"
+elseif vim.fn.has("macunix") == 1 then
+  osName = "Mac"
+elseif vim.fn.has("wsl") == 1 then
+  osName = "WSL"
 else
-  osName = "Other"
+  osName = "Linux"
 end
 
 autocomplete = "cmp"
