@@ -1,152 +1,103 @@
-# Windows 네이티브 설치와 검증 기록
+# Windows 네이티브 설치와 사용
 
-2026-10-03에 이 저장소로 구성한 Windows 네이티브 환경을 재현하기 위한 기록입니다.
-공통화 설계가 끝나기 전의 임시 절차이며, 이후 OS별 설치 체계로 통합할 예정입니다.
-회사 보안프로그램으로 WSL을 사용할 수 없어 PowerShell과 Windows용 도구를 사용합니다.
+Windows 네이티브 PowerShell용 설치·원본 연결 절차입니다. 회사 정책상 WSL을 사용할 수 없는 환경을 대상으로 하며 macOS·WSL·Linux 설치는 처리하지 않습니다. 네 환경의 통합 설치 진입점은 아직 아닙니다.
 
-## 다음 장비에서 한 번에 실행
+기술 선택의 이유는 [ADR 0002](adr/0002-native-windows-adapters.md), 기존 버전표·검증 결과와 진행 상태는 [작업 0002](work/0002-windows-native-setup.md)가 원본입니다. 이 문서의 과거 실행 보고를 해당 작업 기록으로 이관했습니다. 공통 환경 승인·격리 원칙은 [설정 가드레일](setup-guardrails.md)을 따릅니다.
 
-Windows에 winget과 공통 등록 도구 실행용 Python 3.10 이상이 있어야 합니다. Python이 없는 경우 먼저 승인된 설치 경로로 Python을 준비합니다. 저장소를 장기간 유지할 위치에 내려받고 저장소 루트에서 실행합니다.
-최초 설치에는 사용자의 네이티브 PowerShell 선택이 필요합니다. 아래 -ApprovePowerShell 옵션으로 이를 명시하고, 이후 실행에서는 현재 호스트의 로컬 선택을 재사용합니다. 선택 기록은 .local/environment.json이며 Git에 포함하지 않습니다. 다른 호스트로 복제하지 마세요. 이 진입점은 WSL 설치나 Windows와 WSL 사이의 전환을 구현하지 않습니다.
+## 사전 준비와 의존성
+
+winget과 공통 등록 도구 실행용 Python 3.10 이상을 먼저 준비하고 저장소를 장기간 유지할 위치에 둡니다. Python이 없으면 회사에서 승인한 설치 경로를 사용합니다. 명령은 저장소 루트에서 실행합니다.
+
+| 구성 | 필요 범위와 부재 시 처리 |
+| --- | --- |
+| Python 3.10 이상 (`py -3` 또는 `python`) | 환경 등록·계획·점검·승인 확인에 필수. winget 준비 단계 이전에 필요 |
+| winget | 패키지 설치 시 필수. 준비된 의존성을 사용할 때 `-SkipPackages`로 설치 생략 |
+| WezTerm, Neovim, PowerShell 7, Oh My Posh | 전체 설치의 사전 점검에 필수. 런타임 셸만 PowerShell 7 부재 시 Windows PowerShell 5.1로 폴백 |
+| Git, Node.js·npm, rg, fd, fzf, GCC, Python | 플러그인·검색·parser·Mason 도구 준비 시 필수. 현재 컴파일러는 WinLibs. `-SkipPlugins`로 준비 생략 가능 |
+| AutoHotkey v2 | 현재 실행 또는 로그인 등록 시 필수. 실행만 생략하려면 `-SkipAutoHotkey`, 등록 옵션도 지정하지 않음 |
+| Meslo Nerd Font | 아이콘·화면용 선택 준비. 없으면 설치를 시도하며 `-SkipFonts`로 생략 가능 |
+
+winget은 설치된 패키지를 유지하며 없는 패키지는 공급되는 버전을 설치합니다. 버전 숫자를 고정하지 않습니다. 현재 패키지 ID 목록의 원본은 [setup-windows.ps1](../scripts/setup-windows.ps1)입니다. 개별 기능 생략 옵션은 패키지 목록을 줄이지 않으므로 패키지를 전혀 설치하지 않을 때는 `-SkipPackages`도 지정합니다. 각 프로젝트의 LSP·포맷 런타임은 추가로 필요할 수 있습니다.
+
+## 계획·점검과 최초 설치
 
 ```powershell
-# 변경 없이 실행 계획 확인
+# 읽기 전용 계획과 로컬 사전 점검
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 -Plan
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 -Check
 
-# 설치와 설정 적용
+# 네이티브 PowerShell 사용 선택을 명시하고 설치·연결
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 -ApprovePowerShell
 ```
 
-설치 프로그램이 필요한 경우 Windows 관리자 승인 창이 표시될 수 있습니다.
-회사 정책에 의해 도구 설치·다운로드·스크립트 실행이 차단되면 해당 단계가 실패합니다.
-실행 명령의 Bypass는 시작하는 프로세스 범위에만 적용되며 조직 정책을 해제하지 않습니다.
-필요한 호스트는 winget의 다운로드 서버, GitHub, npm 및 Python 패키지 저장소 등입니다.
+`-Plan`·`-Check`는 Python으로 상태를 조회하지만 상태 생성·패키지 설치·설정 연결이나 적용 대상 프로그램의 시작·재시작은 하지 않습니다. `-Check`는 필요한 도구가 없으면 중단하므로 새 장비에서는 누락 목록 확인용입니다. 네트워크·설치 권한이나 GUI 기능을 보증하는 검사는 아닙니다.
 
-설치 완료 후 WezTerm을 새로 열고 `nvim`을 실행합니다.
-첫 실행과 문법 파서 설치는 다운로드·컴파일 때문에 시간이 걸릴 수 있습니다.
-재현 스크립트 전체를 새 장비에서 실행한 검증은 아직 하지 않았습니다.
-2026-10-03 검증 환경에서는 PowerShell 문법 검사, 변경 없는 `-Plan` 실행과
-`setup-neovim.lua`의 플러그인·문법 파서·Mason 설치 완료 검사를 통과했습니다.
+최초 설치는 `.local/environment.json`에 사용 환경을 명시적으로 기록하고 이후에는 현재 호스트의 승인된 `windows-powershell` 선택을 재사용합니다. 부재·손상·호스트 불일치·다른 선택에서는 승인 없이 적용하지 않습니다. `-ApprovePowerShell`은 공통 도구의 명시적 `select` 호출이며 기존 유효한 다른 선택을 변경할 수 있습니다. 환경 변경을 의도할 때만 사용합니다. 자세한 규칙은 [공통 환경 등록](environment-registration.md)을 따릅니다. `.local/`을 다른 장비로 복제하지 않습니다.
 
-## 적용하는 내용과 확인한 버전
+설치 프로그램이 필요하면 관리자 승인 창이 표시될 수 있습니다. 회사 정책으로 설치·다운로드·스크립트 실행이 막히면 해당 단계에서 중단합니다. Bypass는 시작하는 프로세스에만 적용되며 조직 정책을 해제하지 않습니다. 다운로드에는 winget 공급 서버, GitHub, npm·Python 패키지 저장소 등의 접근이 필요합니다.
 
-### 이전 선택 확인과 재사용
+설치 후 WezTerm을 새로 열고 `nvim`을 실행합니다. 첫 플러그인·parser 준비에는 다운로드·컴파일 시간이 걸릴 수 있습니다. 새 장비 전체 설치는 미검증이며 검증의 근거·남은 범위는 작업 0002에서 확인합니다.
 
-설치 대상의 정확한 이름은 `windows-powershell`입니다. Windows OS 감지만으로 이 환경을 승인하지 않습니다. `-Plan`과 `-Check`도 `.local/environment.json`의 기존 선택을 표시하며 상태를 생성하지 않습니다.
+## 기존 환경 등록과 선택 옵션
 
-최초 설치는 `-ApprovePowerShell`로 선택을 승인하고 로컬 파일에 환경·호스트·승인 여부·시각을 기록합니다. 재실행은 같은 호스트의 승인된 `windows-powershell` 값을 먼저 확인해 재사용합니다. 기록이 없거나 다른 호스트의 기록이면 변경 전에 중단합니다. `windows-wsl`이 저장되어 있으면 이를 PowerShell로 자동 덮어쓰지 않습니다. 명시적으로 환경을 변경할 때만 다시 승인하며 기존 상태는 백업합니다.
-
-Neovim과 WezTerm은 읽기 전용 `environment.lua`로 같은 상태 파일을 확인합니다. OS 판별과 선택값을 구분하며, 승인된 현재 호스트의 `windows-powershell` 선택에만 PowerShell 셸·도메인·Windows 클립보드 처리를 적용합니다. 선택이 없거나 손상되면 안내를 표시하고 공통 설정만 사용합니다. 저장된 WSL 선택에서도 네이티브 PowerShell 처리를 적용하지 않으며, WSL 설치/도메인 전환은 별도 구현 범위입니다. Unix 프로세스는 Windows 선택 파일을 읽지 않습니다.
-
-`.local/`은 Git 추적에서 제외합니다. 이 파일과 토큰을 포함한 폴더를 다른 장비로 복제하지 않습니다.
-
-아래 버전은 2026-10-03 검증 환경에서 확인한 기록입니다. winget 설치는 설치된 패키지를 유지하고,
-없는 패키지는 저장소에서 제공하는 버전을 설치합니다. 아래 숫자로 버전을 고정하지는 않습니다.
-
-| 구성 | 확인한 버전 / 상태 | 적용 방식 |
-| --- | --- | --- |
-| Windows | Windows 11 Pro, 빌드 26200 | 테스트한 OS |
-| Windows PowerShell | 5.1.26100.9168 | 기본 제공, 프로필 유지 |
-| PowerShell | 7.6.6 | WezTerm 및 Neovim 내부 셸에서 우선 사용 |
-| Oh My Posh | 31.4.0 | PowerShell 5.1·7 사용자 프로필에 초기화 추가 |
-| AutoHotkey | 2.0.28 | 저장소의 `autoHotKey.ahk` 실행 |
-| WezTerm | 20240203-110809-5046fc22 | 사용자 홈 로더가 저장소 `.wezterm.lua`를 읽음 |
-| Neovim | 0.12.5 | `%LOCALAPPDATA%\nvim`을 저장소 `nvim/`에 junction으로 연결 |
-| Neovim 플러그인 | 52개 | `nvim/lazy-lock.json` 기준 복원 |
-| 문법 파서 | 33개 설치 확인 | Treesitter 구성의 언어 목록으로 설치 |
-| 글꼴 | MesloLGMDZ Nerd Font | 기존 설치를 활용했으며, 재현 스크립트는 없으면 Meslo 설치 |
-| Git | 2.55.0.5 | 플러그인 다운로드와 Git 작업 |
-| Node.js LTS | 24.19.0 | 플러그인·npm 기반 언어 도구 |
-| Python | 3.13.15 | SQL/Python 기반 도구 |
-| fd / fzf | 10.5.0 / 0.74.4 | 파일 검색과 선택 |
-| ripgrep | 기존 설치 15.2.0 | 텍스트 검색 |
-| WinLibs GCC | 16.2.0-14.0.0-r1 | Treesitter 문법 파서 컴파일 |
-
-## 설정 파일과 키 동작
-
-| 파일 | 현재 역할 |
-| --- | --- |
-| `.wezterm.lua` | 공통 색상·글꼴, 실제 OS 판별, Windows의 네이티브 PowerShell 실행 |
-| `autoHotKey.ahk` | AutoHotkey v2 문법 및 Windows 키 동작 |
-| `nvim/` | 기존 LazyVim 설정과 Windows 호환 처리 |
-| `scripts/use-wezterm.ps1` | WezTerm 설정 연결 |
-| `scripts/use-neovim.ps1` | Neovim 설정 연결 |
-| `scripts/setup-windows.ps1` | 이번 기록을 재현하는 임시 진입점 |
-| `scripts/setup-neovim.lua` | 문법 파서·Mason 도구 설치 완료 확인 |
-
-- 왼쪽 Alt와 왼쪽 Windows 키를 교환합니다.
-- 교환 후 Alt 위치에서 `Alt+Space`는 한영 전환, `Alt+C/V`는 복사·붙여넣기입니다.
-- **WezTerm에서만** Esc 원래 입력을 전달하고 키를 놓을 때 IME를 영문 상태로 설정합니다.
-- Esc는 한영 토글 키를 보내지 않으므로 이미 영문이면 영문을 유지합니다.
-- 다른 앱의 Esc에는 영문 전환 처리가 적용되지 않습니다.
-- Neovim에서 yank는 Windows 클립보드로 전달하고 F9로 연동을 켜거나 끕니다.
-- Neovim 내부 셸은 PowerShell 7을 우선 사용하며, Windows 실행 별칭도 처리합니다.
-- Windows에서는 CopilotChat의 선택적인 `make tiktoken` 빌드를 실행하지 않습니다.
-
-사용자가 WezTerm의 Esc 영문 전환이 정상 동작함을 확인했습니다.
-자동 검사에서는 Markdown 파일 열기·문법 파서와 Neovim 내부 PowerShell 명령 실행을 확인했습니다.
-언어별 LSP·포맷과 Copilot 서버 연결은 모든 기능을 검증한 상태가 아닙니다.
-
-## 선택 옵션과 재실행
-
-이미 설정된 환경은 설치 스크립트를 재실행하지 않고 먼저 공통 도구로 등록할 수 있습니다.
+이미 구성된 환경은 설치를 다시 실행하기 전에 읽기 전용 점검으로 등록할 수 있습니다.
 
 ```powershell
 py -3 scripts/environment.py check --environment windows-powershell
 py -3 scripts/environment.py adopt-existing --environment windows-powershell
 ```
 
-이 두 명령은 패키지·프로필·loader·junction을 변경하거나 AutoHotkey를 재시작하지 않습니다. 이후 실제 설치·연결이 필요할 때만 아래 명령을 사용합니다. `-ApprovePowerShell`은 공통 도구의 명시적 `select` 호출을 편의상 제공하며 Windows 어댑터는 상태 파일을 직접 작성하지 않습니다.
+두 명령은 패키지·프로필·loader·junction을 바꾸거나 AutoHotkey를 재시작하지 않습니다. 등록 성공이 설치·기능 완료를 보증하지는 않습니다.
 
 ```powershell
-# 설치된 도구를 활용하고 설정만 다시 연결
+# 패키지·글꼴·플러그인 준비 생략. 연결·프로필 처리는 진행하고 AutoHotkey는 실행
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 -SkipPackages -SkipFonts -SkipPlugins
 
-# 다음 로그인부터 AutoHotkey도 자동 실행
+# 로그인 시 AutoHotkey 실행도 등록. 나머지 설치 단계는 그대로 진행
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 -RegisterAutoHotkeyStartup
 ```
 
-2026-10-03 검증 환경에는 AutoHotkey 시작프로그램 등록을 하지 않았습니다.
-기본 스크립트는 현재 실행만 하며, `-RegisterAutoHotkeyStartup`을 지정할 때만 로그인 바로가기를 만듭니다.
-`-SkipAutoHotkey`는 현재 실행을 생략하며, `-SkipFonts`·`-SkipPlugins`는 해당 설치 단계를 생략합니다.
-이미 설치된 패키지는 업데이트하지 않습니다. 기존 프로필의 Oh My Posh 초기화는 중복 추가하지 않습니다.
-기존 사용자 설정을 바꿀 때는 `.backup-날짜` 백업을 남기며, 설정 연결은 반복 적용할 수 있습니다.
-사용자 실행 정책이 Undefined/Restricted인 경우에만 CurrentUser RemoteSigned로 설정합니다.
-플러그인 설치 중 변경될 수 있는 잠금 파일은 실행 전 원본으로 복구합니다.
+기본 AutoHotkey 동작은 현재 실행이며 로그인 바로가기는 `-RegisterAutoHotkeyStartup`에서만 작성합니다. `-SkipAutoHotkey`는 현재 실행만, `-SkipFonts`·`-SkipPlugins`는 해당 준비 단계를 생략합니다. 개별 옵션은 프로필 변경·설정 연결을 생략하지 않습니다. 사용자 실행 정책이 Undefined/Restricted이면 CurrentUser RemoteSigned로 설정합니다.
 
-## 장비별로 남겨둔 작업
+## 설정 원본과 런타임 동작
 
-- Git 사용자 정보와 인증, SSH 키, 프로젝트 경로는 기존 사용자 설정을 사용합니다.
-- Copilot 인증과 회사의 외부 서비스 사용 가능 여부는 별도로 확인합니다.
-- PHP·Java 등 각 프로젝트 런타임은 프로젝트 요구사항에 맞게 별도 설치합니다.
-- tmux 기능과 프로젝트 전환을 WezTerm workspace로 옮기는 작업은 아직 하지 않았습니다.
-- macOS 셸을 PowerShell로 변경하거나 기존 Unix `install`을 실행하지 않습니다.
+전체 설치 대신 필요한 설정만 연결할 때는 Python과 해당 프로그램을 먼저 준비하고 다음 어댑터를 사용할 수 있습니다. 최초 선택 이후 명령은 현재 호스트의 승인을 재사용합니다. 두 명령은 패키지·프로필 준비를 하지 않습니다.
 
-## 복구와 이후 공통화
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\use-neovim.ps1 -ApprovePowerShell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\use-wezterm.ps1
+```
 
-WezTerm 사용자 설정은 `%USERPROFILE%\.wezterm.lua`, Neovim 연결은 `%LOCALAPPDATA%\nvim`입니다.
-PowerShell 프로필은 Windows의 Documents 경로 아래 `WindowsPowerShell/`와 `PowerShell/`에 있습니다.
-설정 연결을 해제할 때 Neovim junction의 대상인 저장소 폴더를 재귀 삭제하지 않도록 주의합니다.
-백업이 있다면 로더·junction을 해제한 뒤 기존 이름으로 복원합니다.
-로그인 바로가기는 사용자 시작프로그램 폴더의 `dotfiles-AutoHotkey.lnk`입니다.
-이 스크립트는 자동 제거·전체 복구 기능을 제공하지 않습니다.
+| 원본·진입점 | 역할 |
+| --- | --- |
+| `.wezterm.lua`, `nvim/` | 공통 설정과 플랫폼별 작은 분기 |
+| `scripts/use-wezterm.ps1`, `scripts/use-neovim.ps1` | 사용자 설정을 loader·junction으로 체크아웃 원본에 연결 |
+| `scripts/setup-windows.ps1` | Windows 전용 패키지·프로필·글꼴·도구 준비와 연결 |
+| `scripts/setup-neovim.lua` | 승인된 Windows PowerShell에서 parser·Mason 도구 준비 및 완료 검사 |
+| `autoHotKey.ahk` | Windows 키·IME 처리. macOS Hammerspoon은 그대로 유지 |
 
-공통화에서는 이 기록의 동작을 기준으로 유지하고, OS별 구현과 장비별 예외를 분리합니다.
-PowerShell 프로필도 파일로 관리하고 설치 절차를 macOS/Windows 공통 구조에 통합할 예정입니다.
-현재 연결은 저장소 경로를 사용하므로 폴더를 이동했다면 새 위치에서 설치 스크립트를 재실행합니다.
+Neovim과 WezTerm은 Windows에서 현재 호스트의 저장된 선택을 읽습니다. 승인된 PowerShell 선택에만 해당 셸·도메인·Windows yank 처리를 적용하며 부재·손상·불일치에서는 안내하고 공통 설정을 사용합니다. Unix 프로세스는 Windows 선택 파일을 읽지 않습니다.
 
-관련 방향: [개발 환경의 평가와 방향](environment-direction.md)
+Windows 호스트가 명시적으로 WSL을 선택했다면 WezTerm은 발견한 첫 WSL 도메인과 fish 로그인 셸을 사용합니다. 발견한 도메인이 없으면 기본 도메인을 강제하지 않습니다. 특정 배포판·사용자 홈 경로를 고정하지 않으며 WSL 설치나 선택 전환을 자동으로 수행하지 않습니다. 회사 정책으로 WSL이 금지된 호스트에서는 이 방식을 사용하지 않습니다.
 
-## 환경 격리 검증
+- 왼쪽 Alt와 Windows 키를 교환합니다. 교환 후 Alt 위치의 `Alt+Space`는 한영 전환, `Alt+C/V`는 복사·붙여넣기입니다.
+- WezTerm에서만 Esc 원래 입력을 통과시키고 키를 놓을 때 영문 상태를 설정합니다. 이미 영문이면 유지하며 다른 앱의 Esc는 그대로입니다.
+- Neovim의 yank는 승인된 PowerShell 환경에서 Windows 클립보드로 전달하고 F9로 연동을 켜거나 끕니다.
+- 내부 셸은 PowerShell 7을 우선 사용하고 Windows 실행 별칭을 처리합니다.
+- Copilot·CopilotChat은 비활성화 상태를 유지합니다. 향후 활성화하더라도 Windows의 선택적인 `make tiktoken` 빌드는 생략합니다.
 
-`py -3 tests/check_environment.py`는 main 파일을 임시 경로에 추출하고 Neovim·WezTerm API를 모의하여 macOS/Linux/WSL 결과가 기존 설정과 같은지 비교합니다. Windows 분기 진입도 확인합니다. 플러그인 다운로드와 외부 셸 실행은 차단합니다.
+## 연결 보존과 복구
 
-`powershell -NoProfile -File tests/windows-selection.ps1`는 임시 상태 파일로 최초 승인, 재실행, 호스트·환경 불일치, 비Windows 거부를 확인합니다. 설치 스크립트 문법과 -Plan/-Check도 확인했습니다.
+기존 설정을 바꾸면 `.backup-날짜` 백업을 만들며 같은 연결의 재실행은 변경하지 않습니다. 기존 Oh My Posh 초기화는 프로필에 중복 추가하지 않습니다. 플러그인 준비 중 바뀔 수 있는 lockfile은 실행 전 원본 바이트로 복구합니다.
 
-이 검사는 다른 OS의 실기기 검증을 대신하지 않습니다. 새 Windows 장비 전체 설치, macOS/Linux/WSL 실기기 회귀 검증, 모든 LSP·Copilot 기능은 미검증입니다.
+WezTerm loader는 `%USERPROFILE%\.wezterm.lua`, Neovim junction은 `%LOCALAPPDATA%\nvim`입니다. PowerShell 프로필은 Documents 아래 `WindowsPowerShell/`·`PowerShell/`에 있고 로그인 바로가기는 시작프로그램 폴더의 `dotfiles-AutoHotkey.lnk`입니다. 저장소 위치를 바꾸면 새 체크아웃에서 연결을 다시 적용합니다.
 
-## PR 제출 전 재검증
+복구는 loader·junction 참조를 해제한 뒤 백업을 기존 이름으로 되돌리는 방식입니다. junction 대상인 저장소 폴더를 재귀 삭제하지 않습니다. 자동 제거·전체 롤백 기능은 없습니다. Git 인증·SSH·개인 Git 정보는 자동 배포하지 않습니다.
 
-Windows 네이티브에서 최신 main 통합 후 환경 격리 모의 검사, Python 테스트 14개(POSIX 권한 검사 1개 제외), PowerShell 문법·선택 검사와 변경 없는 `-Plan`/`-Check`를 확인했습니다. Neovim은 `-u NONE -i NONE`으로 Lua 문법, 실제 PowerShell UTF-8 명령 실행과 미승인 설치 거부를 확인했습니다. 임시 경로에서 중첩 연결 거부도 통과했습니다.
+## 검사 방법과 남은 범위
 
-중첩된 Neovim 연결 경로 검사와 설치 보조 스크립트의 승인 확인을 보완했습니다. Windows 호스트의 명시적인 WSL 선택에서는 발견한 첫 도메인과 fish 로그인 셸을 사용하며 특정 배포판·사용자 경로를 고정하지 않습니다. macOS 정적 리뷰와 모의 검사에서 신규 회귀를 발견하지 못했으며 실제 macOS 실행은 미검증입니다. 설치·프로필 변경·junction 연결·AutoHotkey 재실행은 수행하지 않았습니다. 새 장비 전체 설치와 GUI·IME·클립보드 기능 검증은 남아 있습니다.
+`py -3 tests/check_environment.py`는 fetch된 main 파일을 임시 경로에 추출하고 Neovim·WezTerm API를 모의하여 Unix 결과와 Windows 분기·선택 격리를 검사합니다. Git·Neovim이 PATH에 필요하며 플러그인 다운로드와 외부 셸 실행은 차단합니다.
+
+`powershell -NoProfile -ExecutionPolicy Bypass -File tests/windows-selection.ps1`는 임시 상태로 최초 승인·재사용·호스트·환경 불일치와 비Windows 거부를 검사합니다. 이 검사와 Plan/Check는 실제 설치·GUI 기능 검증을 대신하지 않습니다.
+
+setup-state 자동 저장·PowerShell 프로필 원본화·macOS 설치 통합과 tmux·프로젝트 전환의 WezTerm 이식은 아직 포함하지 않습니다. LSP·포맷 런타임과 외부 서비스의 회사 사용 허용 여부는 프로젝트별로 확인합니다. 구체적인 과거·현재 검증 결과와 후속 작업은 작업 0002에서만 누적합니다.

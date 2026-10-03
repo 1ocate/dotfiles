@@ -5,3 +5,4 @@
 | ID | 목표 | 관련 결정 |
 | --- | --- | --- |
 | 0001 | [ADR·작업 기록 가드레일 마련](0001-recordkeeping-guardrails.md) | [ADR 0001](../adr/0001-decision-and-work-records.md) |
+| 0002 | [Windows 네이티브 설치와 Neovim 호환성](0002-windows-native-setup.md) | [ADR 0002](../adr/0002-native-windows-adapters.md) |

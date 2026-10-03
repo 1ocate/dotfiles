@@ -59,7 +59,7 @@ python3 scripts/environment.py adopt-existing --environment windows-wsl
 
 다른 호스트 또는 다른 환경의 기존 기록은 자동 승인으로 사용하지 않는다. 사용자가 명시적으로 다시 `select`할 때 기존 파일을 백업하고 원자적으로 교체한다. 손상된 기록은 기본적으로 중단하며, 확인 후 `--replace-invalid`를 지정하면 기존 바이트를 백업하고 새 선택을 기록한다. 기존 프로그램 설정은 이 경우에도 변경하지 않는다.
 
-OS별 설치는 `scripts/environment.py require --environment <ID>`로 같은 호스트의 해당 선택을 요구할 수 있다. Python의 `read_selection`/`require_selection`과 읽기 전용 `environment.lua`의 `selection(repo, decode, host)`가 같은 상태 형식을 사용한다. Lua reader는 선택값만 반환하며 실제 프로세스와 선택 환경의 일치 검사는 사용하는 어댑터가 수행한다. 이 PR에서는 Neovim·WezTerm 설정을 reader에 연결하지 않는다.
+OS별 설치는 `scripts/environment.py require --environment <ID>`로 같은 호스트의 해당 선택을 요구할 수 있다. Python의 `read_selection`/`require_selection`과 읽기 전용 `environment.lua`의 `selection(repo, decode, host)`가 같은 상태 형식을 사용한다. Lua reader는 선택값만 반환하며 실제 프로세스와 선택 환경의 일치 검사는 사용하는 어댑터가 수행한다. Neovim·WezTerm의 Windows 설정과 설치 어댑터는 이 reader·공통 등록 도구를 재사용한다. 연결의 선택 이유는 [ADR 0002](adr/0002-native-windows-adapters.md), 사용 절차는 [Windows 사용 지침](windows-setup.md)을 따른다.
 
 ## 검증 범위
 
@@ -70,4 +70,4 @@ py -3 -B -m unittest discover -s tests -v
 nvim --headless -u NONE -i NONE -l tests/environment-state.lua
 ```
 
-Windows에서 실제 실행한 `status`/`check`는 읽기 전용으로 확인했다. macOS/Linux/WSL 실기기, 다른 이름을 사용하는 Windows 호스트, Windows ACL은 미검증이다. 등록 테스트는 임시 디렉터리에서 수행하며 실사용 호스트의 선택이나 프로그램 설정을 변경하지 않는다.
+등록 테스트는 임시 디렉터리에서 수행하며 실사용 호스트의 선택이나 프로그램 설정을 변경하지 않는다. 이 문서의 과거 Windows `status`/`check` 보고는 [작업 0002](work/0002-windows-native-setup.md#과거-검증적용-보고의-사후-이관)로 이관했다. 실행 결과와 미검증 범위는 같은 작업 기록에서 관리한다.
