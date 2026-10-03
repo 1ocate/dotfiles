@@ -24,7 +24,7 @@ return {
     opts = { ensure_installed = { "php" } },
   },
   {
-    "mason-org/mason.nvim",
+    "williamboman/mason.nvim",
     opts = {
       ensure_installed = {
         "phpcs",
