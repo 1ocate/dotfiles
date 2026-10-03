@@ -25,7 +25,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 
 설치 완료 후 WezTerm을 새로 열고 `nvim`을 실행합니다.
 첫 실행과 문법 파서 설치는 다운로드·컴파일 때문에 시간이 걸릴 수 있습니다.
 재현 스크립트 전체를 새 장비에서 실행한 검증은 아직 하지 않았습니다.
-현재 장비에서는 PowerShell 문법 검사, 변경 없는 `-Plan` 실행과
+2026-10-03 검증 환경에서는 PowerShell 문법 검사, 변경 없는 `-Plan` 실행과
 `setup-neovim.lua`의 플러그인·문법 파서·Mason 설치 완료 검사를 통과했습니다.
 
 ## 적용하는 내용과 확인한 버전
@@ -40,7 +40,7 @@ Neovim과 WezTerm은 읽기 전용 `environment.lua`로 같은 상태 파일을 
 
 `.local/`은 Git 추적에서 제외합니다. 이 파일과 토큰을 포함한 폴더를 다른 장비로 복제하지 않습니다.
 
-아래 버전은 현재 장비에서 확인한 기록입니다. winget 설치는 설치된 패키지를 유지하고,
+아래 버전은 2026-10-03 검증 환경에서 확인한 기록입니다. winget 설치는 설치된 패키지를 유지하고,
 없는 패키지는 저장소에서 제공하는 버전을 설치합니다. 아래 숫자로 버전을 고정하지는 않습니다.
 
 | 구성 | 확인한 버전 / 상태 | 적용 방식 |
@@ -97,7 +97,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 -RegisterAutoHotkeyStartup
 ```
 
-현재 장비에는 AutoHotkey 시작프로그램 등록을 하지 않았습니다.
+2026-10-03 검증 환경에는 AutoHotkey 시작프로그램 등록을 하지 않았습니다.
 기본 스크립트는 현재 실행만 하며, `-RegisterAutoHotkeyStartup`을 지정할 때만 로그인 바로가기를 만듭니다.
 `-SkipAutoHotkey`는 현재 실행을 생략하며, `-SkipFonts`·`-SkipPlugins`는 해당 설치 단계를 생략합니다.
 이미 설치된 패키지는 업데이트하지 않습니다. 기존 프로필의 Oh My Posh 초기화는 중복 추가하지 않습니다.
