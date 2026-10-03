@@ -1,5 +1,7 @@
 # dotfiles
 
+호스트별 환경 선택과 이미 세팅된 환경 등록은 [공통 환경 등록 절차](docs/environment-registration.md)를 따릅니다. `scripts/environment.py`는 로컬 선택값만 기록하며 프로그램 설치·설정 연결은 수행하지 않습니다.
+
 공통 설정을 원본으로 유지하고 OS별 스크립트는 환경 차이만 연결합니다. 이후 작업 기준은 [공통 설정 가드레일](docs/setup-guardrails.md)과 [AGENTS.md](AGENTS.md)에 기록합니다.
 
 먼저 실행 환경을 macOS, Windows WSL, Windows 네이티브 PowerShell, Linux로 판별하고 공통 설정과 해당 환경 전용 설정만 적용하는 것을 작업 기준으로 삼습니다. 전용 변경은 다른 환경에서 실행되지 않도록 구분합니다. 네 환경의 통합 설치는 아직 완료되지 않았습니다.
