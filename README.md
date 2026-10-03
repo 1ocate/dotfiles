@@ -93,7 +93,7 @@ OS별 선택 설치나 자동 복구 기능은 없습니다.
 | `<F8>` | 홈 디렉터리의 `bible.txt` 열기·닫기 |
 | `<F9>` | 복사 시 OS 클립보드 동기화 전환 |
 
-Copilot 자동 제안과 CopilotChat은 로드하지 않습니다. `:CreateCommit`과 `COMMIT_EDITMSG`의 AI 커밋 메시지 자동 생성도 제거했습니다. 저장 시 자동 포맷은 기본적으로 꺼져 있으며 수동 포맷은 사용할 수 있습니다. 기존 `lazy-lock.json`의 Copilot 항목은 잠금 버전 보존을 위해 남겨 두며 활성화를 뜻하지 않습니다.
+Copilot 자동 제안과 CopilotChat은 `enabled = false`로 로드하지 않습니다. 기존 프롬프트와 설정은 보존하지만 비활성화 상태에서는 `config`가 실행되지 않아 `:CreateCommit`과 `COMMIT_EDITMSG`의 AI 커밋 메시지 자동 호출도 등록되지 않습니다. 저장 시 자동 포맷은 기본적으로 꺼져 있으며 수동 포맷은 사용할 수 있습니다. 기존 `lazy-lock.json`의 Copilot 항목은 잠금 버전 보존을 위해 남겨 두며 활성화를 뜻하지 않습니다.
 
 ## 셸과 tmux
 
