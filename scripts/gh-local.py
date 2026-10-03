@@ -28,7 +28,7 @@ def main(args):
             raise ValueError("Set one nonempty token in .local/gh-token; do not paste it into chat.")
     except (OSError, UnicodeError, ValueError) as error:
         # Do not print file contents or exception details that may contain them.
-        message = str(error) if isinstance(error, ValueError) else "Cannot read .local/gh-token."
+        message = str(error) if type(error) is ValueError else "Cannot read .local/gh-token."
         print(message, file=sys.stderr)
         return 2
     gh = shutil.which("gh")
