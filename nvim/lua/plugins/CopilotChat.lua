@@ -1,6 +1,7 @@
 return {
   {
     "CopilotC-Nvim/CopilotChat.nvim",
+    enabled = false,
     event = "VimEnter",
     branch = "canary",
     dependencies = {
@@ -96,4 +97,6 @@ return {
       })
     end,
   },
+  { "zbirenbaum/copilot.lua", enabled = false },
+  { "zbirenbaum/copilot-cmp", enabled = false },
 }

@@ -95,5 +95,5 @@ vim.cmd("highlight DiffChange guibg=#00008B guifg=#FFFFFF")
 vim.cmd("highlight DiffDelete guibg=#8B0000 guifg=#FFFFFF")
 vim.cmd("highlight Visual guibg=#006400 guifg=#FFFFFF")
 
--- 저장할 때 ./git/0에 포멧 적용하지 않게 처리
-vim.g.format_on_save = false
+-- 모든 파일에서 저장 시 자동 포맷 비활성화 (수동 포맷은 유지)
+vim.g.autoformat = false
