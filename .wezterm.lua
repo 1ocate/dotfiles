@@ -105,6 +105,16 @@ if selected_environment == 'windows-powershell' then
     setting['font'] = wezterm.font_with_fallback(fonts)
 end
 
+-- Preserve WSL startup only for an explicitly selected WSL host.
+if selected_environment == 'windows-wsl' then
+    local domains = wezterm.default_wsl_domains()
+    for _, domain in ipairs(domains) do
+        domain.default_prog = { 'fish', '-l' }
+    end
+    setting['wsl_domains'] = domains
+    if domains[1] then setting['default_domain'] = domains[1].name end
+end
+
 setting['font_rules'] = font_rules
 setting['keys'] = keybind
 setting['color_schemes'] = color_schemes

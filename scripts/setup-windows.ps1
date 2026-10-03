@@ -84,7 +84,7 @@ foreach ($variableName in @('LOCALAPPDATA', 'USERPROFILE', 'ProgramFiles', 'WIND
 if (-not [Environment]::GetFolderPath('MyDocuments')) { throw 'User Documents directory is unavailable.' }
 $nvimSource = [System.IO.Path]::GetFullPath((Join-Path $repoPath 'nvim')).TrimEnd('\')
 $nvimTarget = [System.IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'nvim')).TrimEnd('\')
-if ($nvimSource -eq $nvimTarget -or $nvimSource.StartsWith($nvimTarget + '\', [StringComparison]::OrdinalIgnoreCase) -or $nvimTarget.StartsWith($nvimSource + '\', [StringComparison]::OrdinalIgnoreCase)) {
+if ($nvimSource -eq $nvimTarget -or $nvimSource.StartsWith($nvimTarget + [System.IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or $nvimTarget.StartsWith($nvimSource + [System.IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
     throw 'Neovim source and target must be separate, non-nested directories.'
 }
 if ([System.IO.Path]::GetFullPath((Join-Path $repoPath '.wezterm.lua')) -eq [System.IO.Path]::GetFullPath((Join-Path ([Environment]::GetFolderPath('UserProfile')) '.wezterm.lua'))) {

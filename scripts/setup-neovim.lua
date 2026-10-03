@@ -2,6 +2,9 @@
 if vim.fn.has("win32") ~= 1 then
   error("This setup entry point is for native Windows only")
 end
+if vim.g.dotfiles_environment ~= "windows-powershell" then
+  error("Approved windows-powershell selection is required before installing Neovim tools")
+end
 local function setup()
   require("lazy").load({ plugins = { "nvim-treesitter", "mason.nvim" } })
   local treesitter = require("nvim-treesitter")

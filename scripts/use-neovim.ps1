@@ -13,7 +13,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $sourcePath 'init.lua') -PathType Le
 if (-not (Test-Path -LiteralPath (Join-Path (Split-Path -Parent $PSScriptRoot) 'environment.lua') -PathType Leaf)) { throw 'Shared environment.lua is missing.' }
 $sourceFull = [System.IO.Path]::GetFullPath($sourcePath).TrimEnd('\')
 $targetFull = [System.IO.Path]::GetFullPath($targetPath).TrimEnd('\')
-if ($sourceFull -eq $targetFull -or $sourceFull.StartsWith($targetFull + '\', [StringComparison]::OrdinalIgnoreCase) -or $targetFull.StartsWith($sourceFull + '\', [StringComparison]::OrdinalIgnoreCase)) {
+if ($sourceFull -eq $targetFull -or $sourceFull.StartsWith($targetFull + [System.IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or $targetFull.StartsWith($sourceFull + [System.IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
     throw 'Neovim source and target must be separate, non-nested directories.'
 }
 . (Join-Path $PSScriptRoot 'windows-environment.ps1')

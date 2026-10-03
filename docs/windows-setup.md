@@ -144,3 +144,9 @@ PowerShell 프로필도 파일로 관리하고 설치 절차를 macOS/Windows �
 `powershell -NoProfile -File tests/windows-selection.ps1`는 임시 상태 파일로 최초 승인, 재실행, 호스트·환경 불일치, 비Windows 거부를 확인합니다. 설치 스크립트 문법과 -Plan/-Check도 확인했습니다.
 
 이 검사는 다른 OS의 실기기 검증을 대신하지 않습니다. 새 Windows 장비 전체 설치, macOS/Linux/WSL 실기기 회귀 검증, 모든 LSP·Copilot 기능은 미검증입니다.
+
+## PR 제출 전 재검증
+
+Windows 네이티브에서 최신 main 통합 후 환경 격리 모의 검사, Python 테스트 14개(POSIX 권한 검사 1개 제외), PowerShell 문법·선택 검사와 변경 없는 `-Plan`/`-Check`를 확인했습니다. Neovim은 `-u NONE -i NONE`으로 Lua 문법, 실제 PowerShell UTF-8 명령 실행과 미승인 설치 거부를 확인했습니다. 임시 경로에서 중첩 연결 거부도 통과했습니다.
+
+중첩된 Neovim 연결 경로 검사와 설치 보조 스크립트의 승인 확인을 보완했습니다. Windows 호스트의 명시적인 WSL 선택에서는 발견한 첫 도메인과 fish 로그인 셸을 사용하며 특정 배포판·사용자 경로를 고정하지 않습니다. macOS 정적 리뷰와 모의 검사에서 신규 회귀를 발견하지 못했으며 실제 macOS 실행은 미검증입니다. 설치·프로필 변경·junction 연결·AutoHotkey 재실행은 수행하지 않았습니다. 새 장비 전체 설치와 GUI·IME·클립보드 기능 검증은 남아 있습니다.

@@ -62,7 +62,10 @@ local function wezterm_config(directory, scenario)
       assert(scenario.id == "windows-powershell", "Unix launched Windows command")
       return true, "C:/PowerShell/pwsh.exe\r\n"
     end,
-    default_wsl_domains = function() error("Implicit WSL domain setup") end,
+    default_wsl_domains = function()
+      assert(scenario.choice == "windows-wsl", "Implicit WSL domain setup")
+      return { { name = "WSL:fixture" } }
+    end,
   }
   return dofile(directory .. "/.wezterm.lua"), calls
 end
@@ -112,7 +115,13 @@ for _, choice in ipairs({
   local native = nvim_config(root, choice)
   local terminal, calls = wezterm_config(root, choice)
   assert(native.options.shell == nil and not native.clipboard_event)
-  assert(terminal.default_prog == nil and terminal.default_domain == nil and calls == 0)
+  assert(terminal.default_prog == nil and calls == 0)
+  if choice.choice == "windows-wsl" then
+    assert(terminal.default_domain == "WSL:fixture")
+    assert(terminal.wsl_domains[1].default_prog[1] == "fish")
+  else
+    assert(terminal.default_domain == nil)
+  end
   print("PASS: " .. choice.label .. " selection does not force PowerShell")
 end
 _G.vim, os.getenv, io.open = real_vim, real_getenv, real_open
