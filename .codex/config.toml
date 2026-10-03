@@ -1,0 +1,4 @@
+[agents]
+enabled = true
+# The primary agent is not included in this limit.
+max_concurrent_threads_per_session = 3
