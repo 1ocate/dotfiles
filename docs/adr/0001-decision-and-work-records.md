@@ -4,7 +4,8 @@
 - 작성일: 2026-10-03
 - 적용 범위: common의 문서·AI 협업 절차
 - 관련 작업: [작업 0001](../work/0001-recordkeeping-guardrails.md)
-- 채택 근거: 사용자 리뷰와 이 문서 PR의 병합 대기
+- 관련 PR: [PR #8](https://github.com/1ocate/dotfiles/pull/8)
+- 채택 근거: PR #8의 사용자 리뷰와 병합 대기
 - 대체 관계: 없음
 
 ## 배경과 문제
