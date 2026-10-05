@@ -2,7 +2,9 @@
 
 호스트별 환경 선택과 이미 세팅된 환경 등록은 [공통 환경 등록 절차](docs/environment-registration.md)를 따릅니다. `scripts/environment.py`는 로컬 선택값만 기록하며 프로그램 설치·설정 연결은 수행하지 않습니다.
 
-공통 설정을 원본으로 유지하고 OS별 스크립트는 환경 차이만 연결합니다. 이후 작업 기준은 [공통 설정 가드레일](docs/setup-guardrails.md)과 [AGENTS.md](AGENTS.md)에 기록합니다.
+공통 설정을 원본으로 유지하고 OS별 스크립트는 환경 차이만 연결합니다. 이후 작업 기준은 [공통 설정 가드레일](docs/setup-guardrails.md)과 [AGENTS.md](AGENTS.md)에 기록합니다. Windows 로컬 사전 점검은 `scripts/setup-windows.ps1 -Check`로 실행합니다.
+
+Windows 감지는 사용 환경 선택과 구분합니다. 설치는 `.local/environment.json`의 이전 선택을 확인하고, 최초 PowerShell 사용 승인만 `-ApprovePowerShell`로 기록합니다. Neovim과 WezTerm도 현재 호스트의 저장된 값이 `windows-powershell`일 때만 해당 설정을 적용합니다. 기록이 없거나 WSL 선택이면 PowerShell로 자동 전환하지 않습니다.
 
 AI는 요청 범위의 분석·병렬 분담·수정·검증·PR 제출까지 자율적으로 진행하고 사용자는 최종 PR을 검토합니다. Codex 실행 옵션과 에이전트 역할은 [AI 작업 흐름](docs/ai-workflow.md#자율-진행과-병렬-분담)을 따릅니다.
 
@@ -13,6 +15,8 @@ AI는 요청 범위의 분석·병렬 분담·수정·검증·PR 제출까지 �
 Neovim, 셸, 터미널 및 키보드 설정을 모은 개인 개발 환경 저장소입니다.
 macOS 중심 설정과 Linux/WSL 및 Windows용 설정이 함께 있으며, 모든 파일을 모든 운영체제에 적용하는 구성은 아닙니다.
 사용자 경로와 설치된 도구에 맞게 필요한 설정을 선택해서 사용합니다.
+
+Windows 설치·연결 명령과 의존성·복구 방법은 [Windows 네이티브 사용 지침](docs/windows-setup.md)에 모았습니다. 선택 이유는 [ADR 0002](docs/adr/0002-native-windows-adapters.md), 계획·진행·검증 이력은 [작업 0002](docs/work/0002-windows-native-setup.md)에서 확인합니다.
 
 ## 저장소 구성
 
@@ -68,8 +72,7 @@ OS별 선택 설치나 자동 복구 기능은 없습니다.
 | macOS / Linux / WSL | `~/.config/nvim` (`XDG_CONFIG_HOME` 설정 시 그 아래 `nvim`) |
 | Windows 네이티브 | `%LOCALAPPDATA%\nvim` |
 
-해당 디렉터리에 `nvim/`의 내용을 배치하면 됩니다. 기존 설정은 먼저 백업하세요.
-**현재 설정의 Windows 네이티브 호환성은 검증되지 않았습니다.** 아래 OS별 제약을 함께 확인하세요.
+설정 디렉터리는 저장소 `nvim/`을 참조하도록 연결하고 기존 설정을 먼저 백업합니다. Windows는 junction을 사용하며 설치·의존성과 명령은 Windows 사용 지침을 따릅니다. 언어별 자동완성·포맷은 프로젝트에서 확인해야 하며 실제 확인 결과는 작업 0002에서 관리합니다.
 
 필요한 도구는 사용하는 기능에 따라 다릅니다.
 
@@ -118,16 +121,20 @@ tmux prefix는 `<C-Space>`입니다. `<C-h/j/k/l>`로 pane을 이동하고 prefi
 
 ## 운영체제별 범위와 현재 제약
 
+### Windows에서 WezTerm 적용
+
+Windows는 사용자 홈의 loader로 저장소 `.wezterm.lua`를 읽습니다. 승인된 PowerShell 선택에서는 네이티브 셸을 사용하고, 명시적인 WSL 선택은 발견한 도메인을 사용합니다. 등록·연결·옵션과 제한은 Windows 사용 지침에서 확인합니다. macOS·Linux의 기존 기본 셸은 유지하며 tmux·프로젝트 전환의 대체는 아직 포함하지 않습니다.
+
 - **macOS:** Hammerspoon, Homebrew/MacPorts 경로, `pbcopy` 등 macOS용 설정이 포함되어 있습니다.
 - **Linux / WSL:** 셸·tmux·Neovim 설정을 활용할 수 있지만 클립보드, 외부 도구, 개인 경로를 조정해야 합니다.
-- **Windows:** AutoHotkey 설정과 WezTerm의 WSL 연결 설정이 있습니다. Unix 설치 스크립트를 Windows 네이티브 설치에 사용할 수는 없습니다.
+- **Windows:** AutoHotkey v2 설정과 WezTerm의 네이티브 PowerShell 실행 설정이 있습니다. Unix 설치 스크립트를 Windows 네이티브 설치에 사용할 수는 없습니다.
 
-Neovim과 WezTerm은 현재 `HOME` 경로를 이용해 OS를 추측합니다.
-WezTerm에는 `WSL:Ubuntu-22.04`와 `/home/locate`가 고정되어 있습니다.
+Neovim과 WezTerm은 실행 플랫폼으로 OS를 판별합니다.
+Copilot과 CopilotChat은 공통 설정에서 비활성화되어 자동 제안·커밋 메시지 생성·빌드를 실행하지 않습니다.
 WSL용 Neovim 옵션에는 마지막 개행을 유지하지 않는 설정도 포함되어 있습니다.
 따라서 전체 저장소의 공통 OS 지원을 전제로 적용해서는 안 됩니다.
 
-현재 CI와 OS별 설정의 자동 검증은 구성되어 있지 않습니다. 로컬 인증 도구는 `python3 -B -m unittest discover -s tests -v`로 검사할 수 있습니다.
+CI와 OS별 실기기 자동 검증은 아직 없습니다. 설정 격리·Windows 승인 검사 방법은 Windows 사용 지침에 있으며 결과는 작업 0002에서 관리합니다. 로컬 인증 도구는 `python3 -B -m unittest discover -s tests -v`로 검사할 수 있습니다.
 `nvim/lazy-lock.json`은 `.gitignore`에 포함되어 있지만 이미 추적 중이므로 변경 사항은 Git에 계속 기록됩니다.
 
 

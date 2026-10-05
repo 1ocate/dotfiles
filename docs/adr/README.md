@@ -5,3 +5,4 @@
 | ID | 결정 | 관련 작업 |
 | --- | --- | --- |
 | 0001 | [결정과 작업 기록의 원본 분리](0001-decision-and-work-records.md) | [작업 0001](../work/0001-recordkeeping-guardrails.md) |
+| 0002 | [공통 원본에 Windows 네이티브 어댑터 연결](0002-native-windows-adapters.md) | [작업 0002](../work/0002-windows-native-setup.md) |

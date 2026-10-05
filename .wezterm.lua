@@ -1,28 +1,23 @@
 local wezterm = require 'wezterm'
 
--- OS Check
-local homePwd = os.getenv('HOME')
-local osName =''
-if homePwd then
-    if string.match(homePwd, "/Users") then
-        osName = 'Mac'
-    else
-        osName = 'Linux'
+-- OS detection is separate from the user's saved environment selection.
+local is_windows = wezterm.target_triple:find('windows', 1, true) ~= nil
+local is_macos = wezterm.target_triple:find('apple', 1, true) ~= nil
+local selected_environment
+if is_windows then
+    -- WezTerm's Lua runtime does not expose the debug library.
+    -- The loader supplies its checkout; direct loading uses the config directory.
+    local repo = (wezterm.GLOBAL.dotfiles_repo or wezterm.config_dir):gsub('\\', '/')
+    if repo == '' then repo = '.' end -- Relative --config-file in the checkout.
+    local state_path = repo .. '/.local/environment.json'
+    wezterm.add_to_config_reload_watch_list(state_path)
+    local reason
+    selected_environment, reason = dofile(repo .. '/environment.lua').selection(
+        repo, wezterm.json_parse, os.getenv('COMPUTERNAME'))
+    if selected_environment and selected_environment ~= 'windows-powershell' and selected_environment ~= 'windows-wsl' then
+        selected_environment, reason = nil, 'Saved environment does not match a native Windows process.'
     end
-else
-    osName = 'WSL'
-end
-
-local default_domain = ''
-local wsl_domains = ''
-if osName == 'WSL' then
-    wsl_domains = wezterm.default_wsl_domains()
-    for idx, dom in ipairs(wsl_domains) do
-       dom.default_prog = {"fish", "-l"}
-       dom.default_cwd = '/home/locate'
-    end
-    default_domain = 'WSL:Ubuntu-22.04'
-else
+    if reason then wezterm.log_warn(reason) end
 end
 
 local keybind = {
@@ -35,14 +30,16 @@ local keybind = {
     { key = 'v', mods = 'CMD', action = wezterm.action.PasteFrom 'Clipboard' },
 }
 
+local fonts = {
+    'MesloLGMDZ Nerd Font',
+    'D2Coding',
+}
+
 local font_rules = {
     {
         italic = false,
         --bold = false,
-        font = wezterm.font_with_fallback {
-          'MesloLGMDZ Nerd Font',
-          'D2Coding',
-        }
+        font = wezterm.font_with_fallback(fonts)
     },
 }
 
@@ -82,7 +79,7 @@ wezterm.on('update-right-status', function(window, pane)
 
   -- battery info
   local bat = ''
-  if osName == 'Mac' then
+  if is_macos then
       for _, b in ipairs(wezterm.battery_info()) do
         bat = '🔋 ' .. string.format('%.0f%%', b.state_of_charge * 100)
       end
@@ -95,16 +92,36 @@ end)
 
 local setting = {}
 
--- only Wsl use domain
-if osName == 'WSL' then
-    setting['wsl_domains'] = wsl_domains
-    setting['default_domain'] = default_domain
+if selected_environment == 'windows-powershell' then
+    -- Prefer PowerShell 7 when available, otherwise use Windows PowerShell 5.1.
+    local found_pwsh, pwsh_path = wezterm.run_child_process { 'where.exe', 'pwsh.exe' }
+    local executable_path = found_pwsh and pwsh_path:match('[^\r\n]+')
+    if executable_path then
+        setting['default_prog'] = { executable_path, '-NoLogo' }
+    else
+        setting['default_prog'] = { 'powershell.exe', '-NoLogo' }
+    end
+    setting['default_domain'] = 'local'
+    setting['wsl_domains'] = {}
+    -- Preserve the existing default font selection on Unix hosts.
+    setting['font'] = wezterm.font_with_fallback(fonts)
+end
+
+-- Preserve WSL startup only for an explicitly selected WSL host.
+if selected_environment == 'windows-wsl' then
+    local domains = wezterm.default_wsl_domains()
+    for _, domain in ipairs(domains) do
+        domain.default_prog = { 'fish', '-l' }
+    end
+    setting['wsl_domains'] = domains
+    if domains[1] then setting['default_domain'] = domains[1].name end
 end
 
 setting['font_rules'] = font_rules
 setting['keys'] = keybind
 setting['color_schemes'] = color_schemes
 setting['color_scheme'] = color_scheme
-setting['term'] = 'wezterm'
+-- Use a terminal entry recognized by Git for Windows' pager.
+setting['term'] = selected_environment == 'windows-powershell' and 'xterm-256color' or 'wezterm'
 
 return setting

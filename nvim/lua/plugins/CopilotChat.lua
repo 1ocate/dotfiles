@@ -8,7 +8,8 @@ return {
       { "zbirenbaum/copilot.lua" },
       { "nvim-lua/plenary.nvim" },
     },
-    build = "make tiktoken",
+    -- Native tiktoken is optional; keep Unix builds without requiring make on Windows.
+    build = vim.fn.has("win32") == 0 and "make tiktoken" or nil,
     opts = {
       model = "gpt-4o-2024-11-20",
       debug = false,

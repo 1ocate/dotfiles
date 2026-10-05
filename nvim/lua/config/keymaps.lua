@@ -25,10 +25,13 @@ vim.keymap.set("n", "<F8>", function()
 end)
 
 -- 오동작으로 인한 라인이동 키맵 해제
-vim.api.nvim_del_keymap("n", "<A-j>")
-vim.api.nvim_del_keymap("n", "<A-k>")
-vim.api.nvim_del_keymap("i", "<A-j>")
-vim.api.nvim_del_keymap("i", "<A-k>")
+for _, mode in ipairs({ "n", "i" }) do
+  for _, key in ipairs({ "<A-j>", "<A-k>" }) do
+    if vim.fn.maparg(key, mode) ~= "" then
+      vim.keymap.del(mode, key)
+    end
+  end
+end
 
 vim.keymap.set("n", "<C-h>", "<Cmd>NvimTmuxNavigateLeft<CR>", { silent = true })
 vim.keymap.set("n", "<C-j>", "<Cmd>NvimTmuxNavigateDown<CR>", { silent = true })

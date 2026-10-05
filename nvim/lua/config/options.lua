@@ -5,6 +5,25 @@
 -- vim 클립보드 연동 해제
 vim.cmd("set clipboard=")
 
+-- Use the same native PowerShell shell as WezTerm on Windows.
+if vim.fn.has("win32") == 1 and vim.g.dotfiles_environment == "windows-powershell" then
+  local has_pwsh = vim.fn.executable("pwsh") == 1
+  -- Microsoft Store execution aliases can be executable despite reporting size 0.
+  if not has_pwsh then
+    vim.fn.system({ "where.exe", "pwsh.exe" })
+    has_pwsh = vim.v.shell_error == 0
+  end
+  vim.opt.shell = has_pwsh and "pwsh" or "powershell"
+  vim.opt.shellcmdflag = "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command "
+    .. "[Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new();"
+    .. "$PSDefaultParameterValues['Out-File:Encoding']='utf8';"
+    .. (has_pwsh and "$PSStyle.OutputRendering='PlainText';" or "")
+  vim.opt.shelltemp = false
+  vim.opt.shellpipe = "> %s 2>&1"
+  vim.opt.shellquote = ""
+  vim.opt.shellxquote = ""
+end
+
 -- 커서 라인 및 컬럼 활성화 (필요 시 주석 해제)
 -- vim.opt.cursorline = true
 -- vim.opt.cursorcolumn = true

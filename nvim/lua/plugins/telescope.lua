@@ -5,7 +5,7 @@ return {
     { "<leader>sW", LazyVim.pick("grep_string", { root = false }), mode = "v", desc = "Selection (cwd)" },
     {
       "<leader>fa",
-      LazyVim.pick("find_files", { no_ignore = true, prompt_title = "Find Files All" }),
+      LazyVim.pick("files", { no_ignore = true, ignored = true, hidden = true, prompt_title = "Find Files All" }),
       desc = "All Files (Including .gitignore)",
     },
   },
