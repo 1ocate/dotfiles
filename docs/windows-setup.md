@@ -61,6 +61,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 
 
 ## 설정 원본과 런타임 동작
 
+Windows PowerShell용 WezTerm은 `TERM=xterm-256color`를 전달하여 Git 페이저의 `'wezterm': unknown terminal type` 오류를 방지합니다. 변경 후 새 탭을 열어 `$env:TERM`과 `git log`를 확인하세요. 기존 탭의 환경 변수는 바뀌지 않습니다. macOS·WSL·Linux의 기존 터미널 값은 유지합니다. 설정 항목은 [WezTerm term 문서](https://wezterm.org/config/lua/config/term.html)를 참고하세요.
+
 전체 설치 대신 필요한 설정만 연결할 때는 Python과 해당 프로그램을 먼저 준비하고 다음 어댑터를 사용할 수 있습니다. 최초 선택 이후 명령은 현재 호스트의 승인을 재사용합니다. 두 명령은 패키지·프로필 준비를 하지 않습니다.
 
 ```powershell

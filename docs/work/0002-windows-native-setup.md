@@ -114,6 +114,10 @@ Python 전체 단위 테스트와 격리 PowerShell UTF-8·중첩 경로 검사�
 
 ## AutoHotkey 자동 시작 선택 보완
 
+2026-10-05: 후속 요청으로 Windows `git log`의 `'wezterm': unknown terminal type` 오류 영구 수정을 진행한다. 사용자가 세션의 `TERM=xterm-256color`로 해결됨을 확인했다. 실사용 원본과 PR의 Windows PowerShell 분기에만 TERM 호환값을 적용하고 macOS·WSL·Linux의 기존 값은 유지한다. Lua 문법 검사 후 같은 PR에 제출하며 새 GUI 세션 검증은 사용자 확인 대상으로 남긴다.
+
+검증: Windows에서 `nvim --headless -u NONE -i NONE`의 `loadfile`로 두 원본의 Lua 문법 검사 통과, 두 diff의 공백 검사 통과. PR의 조건식은 `windows-powershell`만 변경하며 다른 환경은 `wezterm`을 유지함을 정적으로 확인했다. 기존 키맵·셸·tmux·IME 및 lockfile은 수정하지 않았다. 새 GUI 탭과 다른 OS 실기기 검증은 미수행이다.
+
 2026-10-05 09:31 KST: 사용자가 자동 등록 대신 세팅 중 등록 여부 질문을 요청했다. 기준 `dc43677`, Windows 네이티브 PowerShell에서 PR #7의 같은 브랜치를 수정한다. 대화형 실행은 기본 아니오 질문, 명시 등록·생략 옵션은 질문 생략, 비대화형 실행은 미등록으로 처리한다. Plan/Check는 읽기 전용으로 유지한다. 코드·사용 지침·ADR을 갱신하고 선택 분기 모의 검사와 문법 검사를 수행한다. 실제 설치·시작프로그램 등록 및 다른 OS 실기기 검증은 범위 밖이다.
 
 검증: Windows PowerShell 5.1에서 `powershell -NoProfile -ExecutionPolicy Bypass -File tests/autohotkey-startup.ps1` 통과. 문법, 응답 10가지 모의 분기, 충돌 옵션 거부를 확인했고 설치·등록은 수행하지 않았다. `git diff --check` 통과. 실제 `-Plan`은 기존 환경 확인 어댑터가 호출한 `py -3`의 `No installed Python found!`로 중단되어 전체 실행은 미검증이다. 설치 실행·로그인 후 자동 시작·다른 OS 실기기는 미검증으로 남긴다. 독립 리뷰에서 발견한 `-NonInteractive` 축약 인수 감지 누락을 보완했다.

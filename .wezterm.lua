@@ -119,6 +119,7 @@ setting['font_rules'] = font_rules
 setting['keys'] = keybind
 setting['color_schemes'] = color_schemes
 setting['color_scheme'] = color_scheme
-setting['term'] = 'wezterm'
+-- Use a terminal entry recognized by Git for Windows' pager.
+setting['term'] = selected_environment == 'windows-powershell' and 'xterm-256color' or 'wezterm'
 
 return setting
