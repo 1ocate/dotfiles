@@ -1,58 +1,99 @@
 return {
   {
     "hrsh7th/nvim-cmp",
-    -- 전체 코드를 나열하지 않고, 필요한 부분만 opts 함수로 오버라이딩합니다.
-    opts = function(_, opts)
+    version = false, -- last release is way too old
+    event = "InsertEnter",
+    dependencies = {
+      "hrsh7th/cmp-nvim-lsp",
+      "hrsh7th/cmp-buffer",
+      "hrsh7th/cmp-path",
+    },
+    -- Not all LSP servers add brackets when completing a function.
+    -- To better deal with this, LazyVim adds a custom option to cmp,
+    -- that you can configure. For example:
+    --
+    -- ```lua
+    -- opts = {
+    --   auto_brackets = { "python" }
+    -- }
+    -- ```
+    opts = function()
+      vim.api.nvim_set_hl(0, "CmpGhostText", { link = "Comment", default = true })
       local cmp = require("cmp")
+      local defaults = require("cmp.config.default")()
       local auto_select = true
-
-      -- 1. 매핑 오버라이딩 (가장 중요한 엔터 프리징 해결)
-      opts.mapping = vim.tbl_extend("force", opts.mapping or {}, {
-        ["<CR>"] = cmp.mapping(function(fallback)
-          if cmp.visible() then
-            if cmp.get_active_entry() then
-              -- 항목이 선택되었을 때만 확정
-              LazyVim.cmp.confirm({ select = auto_select })
-            else
-              -- o, i 진입 직후처럼 선택된 게 없으면 창을 닫고 개행(fallback)
-              cmp.close()
-              fallback()
-            end
-          else
+      return {
+        auto_brackets = {}, -- configure any filetype to auto add brackets
+        completion = {
+          completeopt = "menu,menuone,noinsert" .. (auto_select and "" or ",noselect"),
+        },
+        preselect = auto_select and cmp.PreselectMode.Item or cmp.PreselectMode.None,
+        mapping = cmp.mapping.preset.insert({
+          ["<C-b>"] = cmp.mapping.scroll_docs(-4),
+          ["<C-f>"] = cmp.mapping.scroll_docs(4),
+          ["<C-n>"] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Insert }),
+          ["<C-p>"] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Insert }),
+          ["<C-Space>"] = cmp.mapping.complete(),
+          ["<CR>"] = LazyVim.cmp.confirm({ select = auto_select }),
+          ["<C-y>"] = LazyVim.cmp.confirm({ select = true }),
+          ["<S-CR>"] = LazyVim.cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
+          ["<C-CR>"] = function(fallback)
+            cmp.abort()
             fallback()
-          end
-        end, { "i", "s" }),
+          end,
+        }),
+        sources = cmp.config.sources({
+          { name = "nvim_lsp" },
+          { name = "path" },
+          {
+            name = "buffer",
+            option = {
+              keyword_length = 3,
+              -- keyword_pattern = [[\k\+]],
+              keyword_pattern = [[\%(-\?\d\+\%(\.\d\+\)\?\|\h\w*\%([\-.]\w*\)*\)]],
+              get_bufnrs = function()
+                local bufs = {}
+                for _, value in ipairs(vim.api.nvim_list_bufs()) do
+                  local buf = value
+                  local byte_size = vim.api.nvim_buf_get_offset(buf, vim.api.nvim_buf_line_count(buf))
+                  if not (byte_size > 1024 * 1024) then -- 1 Megabyte max
+                    table.insert(bufs, buf)
+                  end
+                end
+                return bufs
+              end,
+            },
+          },
+        }),
+        formatting = {
+          format = function(entry, item)
+            local icons = LazyVim.config.icons.kinds
+            if icons[item.kind] then
+              item.kind = icons[item.kind] .. item.kind
+            end
 
-        -- 필요하다면 다른 키맵도 여기서 추가/수정 가능
-        ["<C-y>"] = LazyVim.cmp.confirm({ select = true }),
-      })
+            local widths = {
+              abbr = vim.g.cmp_widths and vim.g.cmp_widths.abbr or 40,
+              menu = vim.g.cmp_widths and vim.g.cmp_widths.menu or 30,
+            }
 
-      -- 2. 검색 소스 커스텀 (기존 코드의 buffer 로직 유지 가능)
-      -- 기본적으로 LazyVim 설정을 따르되, 우선순위나 특정 옵션만 변경합니다.
-      opts.sources = cmp.config.sources({
-        { name = "nvim_lsp", priority = 1000 },
-        { name = "path", priority = 500 },
-        {
-          name = "buffer",
-          priority = 250,
-          option = {
-            keyword_length = 3,
-            -- 기존 코드에 있던 복잡한 buffer 필터링 로직을 그대로 사용하려면 여기에 유지
+            for key, width in pairs(widths) do
+              if item[key] and vim.fn.strdisplaywidth(item[key]) > width then
+                item[key] = vim.fn.strcharpart(item[key], 0, width - 1) .. "…"
+              end
+            end
+
+            return item
+          end,
+        },
+        experimental = {
+          ghost_text = {
+            hl_group = "CmpGhostText",
           },
         },
-      })
-
-      -- 3. 포맷팅 (아이콘 옆에 출처 [LSP/Path] 표시 추가로 가독성 향상)
-      local format_original = opts.formatting.format
-      opts.formatting.format = function(entry, item)
-        item = format_original(entry, item) -- 기존 LazyVim 아이콘 로직 호출
-        item.menu = ({
-          nvim_lsp = "[LSP]",
-          path = "[Path]",
-          buffer = "[Buf]",
-        })[entry.source.name]
-        return item
-      end
+        sorting = defaults.sorting,
+      }
     end,
+    main = "lazyvim.util.cmp",
   },
 }
