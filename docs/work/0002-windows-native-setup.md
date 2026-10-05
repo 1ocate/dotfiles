@@ -13,6 +13,10 @@
 
 ## 분석과 미확인 사항
 
+2026-10-05 Git Tab 완성 추가: 기준 `e58d9e1`. PowerShell 7에서 posh-git 미설치와 빈 브랜치 완성 결과를 확인했고 사용자가 세팅 코드 및 현재 호스트 적용을 요청했다. Windows 전용 설치·프로필 연결을 추가하며 기존 Oh My Posh와 사용자 프로필을 보존한다. 모듈은 PSGallery의 posh-git 1.1.0을 사용자 경로에 준비하고 두 셸이 동일 원본을 로드한다. 계획/점검·생략·재실행 보존과 checkout/switch 브랜치 완성을 검사하고 같은 PR에 제출한다. 다른 OS에는 설치·프로필 변경을 실행하지 않는다.
+
+검증·적용: 현재 장비에서 posh-git을 준비하고 두 프로필을 백업 후 loader 추가. PowerShell 7과 5.1에서 프로필을 실제 로드한 `tests/git-completion.ps1`의 checkout/switch 브랜치 완성과 프롬프트 보존 통과. 재실행 전후 프로필 바이트 불변, 일반 세팅 Plan·Check 통과. 독립 리뷰는 비대상 OS·승인 gate·자동 호출·생략 옵션·백업과 중복 방지를 확인했으며 구 PowerShell의 PSResourceGet 의존성을 문서화했다. 신규 장비 전체 설치와 다른 OS 실기기는 미검증이다.
+
 2026-10-05 Neovim 추가 작업 흐름 검토: 기준 `680cf29`, 시작 검사 외 창 이동·저장·검색·플로팅 터미널·F9 검사 확대 요청. 설치된 LazyVim 코드 대조에서 공통 Enter 매핑이 confirm 콜백을 실행하지 않는 것을 확인했고 `tests/completion-mappings.lua`로 실패를 재현했다. 전체 파일 검색도 특정 backend 이름 대신 LazyVim 공통 files 명령을 사용하도록 보완한다. 공통 기능 수정은 모든 OS에 적용하되 실행 검증은 Windows, 다른 OS는 모의/정적 범위다. 검사 fixture에서 Mason 자동 설치를 제외하여 다운로드 없이 작업 흐름을 검사한다.
 
 2026-10-05 10:35 KST 이후 검증 결과: completion-mappings의 Enter 확정과 formatting 기본값 누락 실패를 재현하고 수정 후 통과. Windows 격리 실행은 실제 한글 파일 저장, rg 검색, Telescope 파일 목록, Neovim 분할 창 이동, Snacks 플로팅 PowerShell job 시작, 실제 OsYankToggle 명령과 모의 클립보드 쓰기 검사 통과. 전체 파일 검색 키는 실제 선택된 picker dispatcher를 통해 올바른 files 명령을 보내는지 검사했다. 네 환경 분리 모의 검사와 Python 단위 검사(13 통과·POSIX 1 제외), diff 검사도 통과했다.

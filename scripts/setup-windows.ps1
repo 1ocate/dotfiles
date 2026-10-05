@@ -11,6 +11,7 @@ param(
     [switch]$SkipPackages,
     [switch]$SkipFonts,
     [switch]$SkipPlugins,
+    [switch]$SkipGitCompletion,
     [switch]$SkipAutoHotkey,
     [switch]$RegisterAutoHotkeyStartup,
     [switch]$SkipAutoHotkeyStartup
@@ -53,6 +54,7 @@ if ($Plan) {
     if (-not $SkipPackages) { Write-Output ('Install missing winget packages: ' + ($packages -join ', ')) }
     Write-Output 'Connect WezTerm and Neovim to this checkout, backing up previous settings.'
     Write-Output 'Add Oh My Posh initialization to the 5.1 and 7 user profiles.'
+    if (-not $SkipGitCompletion) { & (Join-Path $PSScriptRoot 'setup-git-completion.ps1') -Plan }
     Write-Output 'Set CurrentUser RemoteSigned only if it is currently Undefined or Restricted.'
     if (-not $SkipFonts) { Write-Output 'Install Meslo Nerd Font if absent.' }
     if (-not $SkipPlugins) { Write-Output 'Install/restore Neovim plugins from lazy-lock.json and install syntax parsers/tools.' }
@@ -63,7 +65,7 @@ if ($Plan) {
 }
 
 if ($env:OS -ne 'Windows_NT') { throw 'This temporary setup is for native Windows only.' }
-foreach ($relativePath in @('.wezterm.lua', 'environment.lua', 'autoHotKey.ahk', 'nvim/init.lua', 'nvim/lazy-lock.json', 'scripts/use-wezterm.ps1', 'scripts/use-neovim.ps1', 'scripts/setup-neovim.lua', 'scripts/windows-environment.ps1', 'scripts/environment.py')) {
+foreach ($relativePath in @('.wezterm.lua', 'environment.lua', 'autoHotKey.ahk', 'nvim/init.lua', 'nvim/lazy-lock.json', 'scripts/use-wezterm.ps1', 'scripts/use-neovim.ps1', 'scripts/setup-neovim.lua', 'scripts/windows-environment.ps1', 'scripts/environment.py', 'scripts/setup-git-completion.ps1', 'powershell/git-completion.ps1')) {
     if (-not (Test-Path -LiteralPath (Join-Path $repoPath $relativePath) -PathType Leaf)) {
         throw "Required file not found: $relativePath"
     }
@@ -76,6 +78,7 @@ function Update-SetupPath {
 
 function Test-SetupPrerequisites {
     $requiredCommands = @('wezterm', 'nvim', 'pwsh', 'oh-my-posh')
+    if (-not $SkipGitCompletion) { $requiredCommands += 'git' }
     if (-not $SkipPlugins) { $requiredCommands += @('git', 'node', 'npm', 'rg', 'fd', 'fzf', 'gcc', 'python') }
     $missing = @($requiredCommands | Where-Object { -not (Get-Command $_ -ErrorAction SilentlyContinue) })
     if (-not $SkipAutoHotkey -or $RegisterAutoHotkeyStartup) {
@@ -109,6 +112,7 @@ if ($Check) {
     Write-WindowsSelectionStatus -RepoPath $repoPath
     Update-SetupPath
     Test-SetupPrerequisites
+    if (-not $SkipGitCompletion) { & (Join-Path $PSScriptRoot 'setup-git-completion.ps1') -Check }
     return
 }
 
@@ -134,6 +138,10 @@ if (-not $SkipPackages) {
 }
 Update-SetupPath
 Test-SetupPrerequisites
+
+if (-not $SkipGitCompletion) {
+    & (Join-Path $PSScriptRoot 'setup-git-completion.ps1') -SkipInstall:$SkipPackages
+}
 
 & (Join-Path $PSScriptRoot 'use-wezterm.ps1')
 & (Join-Path $PSScriptRoot 'use-neovim.ps1')

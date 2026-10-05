@@ -40,6 +40,12 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 
 
 ## 기존 환경 등록과 선택 옵션
 
+Git의 명령·브랜치 Tab 완성은 `posh-git` 1.1.0으로 제공합니다. 기본 세팅이 사용자 `Documents/WindowsPowerShell/Modules`에 모듈을 준비하고 5.1·7 프로필에 저장소의 `powershell/git-completion.ps1`을 읽는 loader를 추가합니다. 기존 프로필은 백업하고 인코딩·Oh My Posh 프롬프트를 보존합니다. 설치에는 PowerShell 7.4 이상 또는 `Save-PSResource`를 제공하는 PSResourceGet과 PSGallery 접근이 필요합니다. PSGallery 신뢰 설정은 전역으로 변경하지 않습니다.
+
+이미 세팅된 장비에서 Git 완성만 추가하려면 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-git-completion.ps1`을 실행합니다. 새 PowerShell 탭부터 적용됩니다. 모듈이 없으면 런타임에서 기능만 생략하며, 기본 세팅에서는 준비 실패를 알리고 프로필 연결 전에 중단합니다. `-SkipGitCompletion`은 일반 세팅의 해당 설치·연결·점검을 생략하고 기존 연결을 제거하지 않습니다. `-SkipPackages`는 모듈 다운로드도 생략하므로 이미 모듈이 있거나 `-SkipGitCompletion`을 함께 사용해야 합니다. standalone의 `-Plan`·`-Check`는 읽기 전용이며 `-SkipInstall`은 기존 모듈만 사용합니다.
+
+참고: [posh-git](https://github.com/dahlbyk/posh-git), [Save-PSResource](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.psresourceget/save-psresource).
+
 이미 구성된 환경은 설치를 다시 실행하기 전에 읽기 전용 점검으로 등록할 수 있습니다.
 
 ```powershell
