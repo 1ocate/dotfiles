@@ -7,7 +7,7 @@
 - 실행 환경: macos (Darwin)
 - 적용 범위: common의 mini.pairs 저장소 주소. 기존 로컬 미추적 파일의 옵션을 보존하여 추적한다. 다른 사용자 변경, lockfile, 설치·연결은 제외한다.
 - 관련 ADR: 새 구조나 정책 선택이 없는 작은 버그 수정으로 새 ADR 불필요.
-- 관련 PR: 제출 후 기록
+- 관련 PR: [#9](https://github.com/1ocate/dotfiles/pull/9)
 
 ## 분석과 미확인 사항
 
