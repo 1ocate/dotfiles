@@ -100,6 +100,7 @@ for _, scenario in ipairs(scenarios) do
   else
     assert(actual.options.shell == "pwsh" and actual.build == nil and actual.clipboard_event)
     assert(terminal.default_domain == "local" and #terminal.wsl_domains == 0 and calls == 1)
+    assert(terminal.term == "xterm-256color", "Windows Git pager TERM compatibility missing")
   end
   print("PASS: " .. scenario.id)
 end

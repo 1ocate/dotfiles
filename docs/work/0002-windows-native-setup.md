@@ -106,6 +106,16 @@ Python 전체 단위 테스트와 격리 PowerShell UTF-8·중첩 경로 검사�
 
 ## 남은 일과 미검증 범위
 
+### 2026-10-05 PR 커밋본 Windows 재검증
+
+사용자는 실사용 main의 미커밋 변경에 의존하지 않고 `feat/windows-native-setup` 자체가 동작하는지 확인을 요청했다. 기준 `4b0f29a`, Windows 네이티브 PowerShell에서 기존 junction을 유지하고 임시 저장소·승인 fixture·설치된 플러그인 복사본으로 검사한다. 패키지 설치·원본 연결·stash·사용자 클립보드 변경은 하지 않는다. 실제 시작·PowerShell·UTF-8과 클립보드 이벤트, 기존 모의·단위 검사를 확인하고 같은 PR에 검증 코드를 남긴다.
+
+- Python 단위 검사 14개 중 13개 통과, POSIX 권한 검사 1개는 Windows에서 제외. 네 환경 baseline 비교와 승인 누락·호스트 불일치 등 격리 검사, Lua 상태 reader 검사 통과.
+- 권한 확대 실행에서 `py -3` 3.13.15 정상, `tests/windows-selection.ps1`, `setup-windows.ps1 -Plan`·`-Check` 통과. 앞선 `No installed Python found!`는 샌드박스 제한에서만 발생했으며 실제 설치 오류로 확정할 근거가 없음을 정정한다.
+- `python tests/windows-runtime.py`: 설치된 플러그인을 임시 경로에 복사하고 다운로드·업데이트 확인을 비활성화하여 실제 LazyVim 시작, PowerShell 명령과 한글 출력, Copilot·자동 포맷 비활성화, Windows yank와 토글 검사 통과. `+` 레지스터 쓰기만 모의하여 실제 시스템 클립보드 내용은 변경하지 않는다. 복사된 lockfile 불변도 검사한다.
+- 초기 검증 harness의 Windows 데이터 경로 오류와 이미 초기화된 clipboard provider 모의 방식 오류를 수정했다. PR 런타임 설정 자체의 회귀는 발견하지 않았다. 기존 Windows TERM 모의 검사에도 명시 assertion을 추가했다.
+- 기존 사용자 설정과 junction은 보존. 기존 플러그인 캐시를 복사해 사용했으므로 신규 설치 검증은 아니다. 실제 clipboard provider·GUI 키·IME·LSP·새 장비 전체 설치 및 다른 OS 실기기는 미검증이다.
+
 - 앞선 문서 이관 제출과 신규 설치 기준 보완의 문서 검사·독립 리뷰·PR #7 반영은 완료. 현재 리뷰 대기이며 작업 전체의 검증 범위 확정·병합 확인이 남아 있다.
 - 신규 Windows 검증은 winget·실행 가능한 Python 3.10 이상·저장소 확보와 기본 PowerShell 5.1을 시작 조건으로 선언하고 다른 도구·프로필·캐시의 기존 유무를 기록해야 한다. 승인된 깨끗한 환경 확보·실제 설치 요청이 필요하며 현재 장비의 도구를 삭제해 검증하지 않는다. 전체 준비·연결·최초 시작·기본 작업·재실행·실패/복구 시나리오는 공통 가드레일을 따른다.
 - 새 Windows 장비 전체 설치, macOS/Linux/WSL 실기기, GUI 키·IME·클립보드, 모든 언어별 LSP·포맷, Copilot 외부 연결은 미검증. 검증 범위 확정 전 draft 유지.
