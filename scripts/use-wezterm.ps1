@@ -26,6 +26,7 @@ $loader = @"
 -- Managed by dotfiles/scripts/use-wezterm.ps1
 local wezterm = require 'wezterm'
 local source = '$luaPath'
+wezterm.GLOBAL.dotfiles_repo = source:match('^(.*)/[^/]+$')
 wezterm.add_to_config_reload_watch_list(source)
 return dofile(source)
 "@

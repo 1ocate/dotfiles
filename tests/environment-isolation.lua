@@ -48,6 +48,8 @@ end
 local function wezterm_config(directory, scenario)
   local calls = 0
   package.loaded.wezterm = {
+    GLOBAL = {},
+    config_dir = directory,
     target_triple = scenario.triple,
     action = setmetatable({ CopyTo = function(x) return { copy = x } end,
       PasteFrom = function(x) return { paste = x } end }, { __call = function(_, x) return x end }),
@@ -67,7 +69,12 @@ local function wezterm_config(directory, scenario)
       return { { name = "WSL:fixture" } }
     end,
   }
-  return dofile(directory .. "/.wezterm.lua"), calls
+  local original_debug = debug
+  debug = nil -- WezTerm omits Lua's debug library.
+  local ok, result = pcall(dofile, directory .. "/.wezterm.lua")
+  debug = original_debug
+  assert(ok, result)
+  return result, calls
 end
 local function select_scenario(scenario)
   os.getenv = function(name)

@@ -5,8 +5,10 @@ local is_windows = wezterm.target_triple:find('windows', 1, true) ~= nil
 local is_macos = wezterm.target_triple:find('apple', 1, true) ~= nil
 local selected_environment
 if is_windows then
-    local source = debug.getinfo(1, 'S').source:sub(2):gsub('\\', '/')
-    local repo = source:match('^(.*)/[^/]+$') or '.'
+    -- WezTerm's Lua runtime does not expose the debug library.
+    -- The loader supplies its checkout; direct loading uses the config directory.
+    local repo = (wezterm.GLOBAL.dotfiles_repo or wezterm.config_dir):gsub('\\', '/')
+    if repo == '' then repo = '.' end -- Relative --config-file in the checkout.
     local state_path = repo .. '/.local/environment.json'
     wezterm.add_to_config_reload_watch_list(state_path)
     local reason
