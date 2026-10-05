@@ -111,3 +111,9 @@ Python 전체 단위 테스트와 격리 PowerShell UTF-8·중첩 경로 검사�
 - 새 Windows 장비 전체 설치, macOS/Linux/WSL 실기기, GUI 키·IME·클립보드, 모든 언어별 LSP·포맷, Copilot 외부 연결은 미검증. 검증 범위 확정 전 draft 유지.
 - setup-state 자동 저장, PowerShell 프로필 원본화, macOS 설치 통합, tmux·프로젝트 전환 대체는 후속 목표로 분리할 때 이 작업과 연결.
 - PR #7 병합 확인은 아직 없음. 작업·기술 결정의 완료·채택이나 현재 호스트의 적용 완료를 주장하지 않음.
+
+## AutoHotkey 자동 시작 선택 보완
+
+2026-10-05 09:31 KST: 사용자가 자동 등록 대신 세팅 중 등록 여부 질문을 요청했다. 기준 `dc43677`, Windows 네이티브 PowerShell에서 PR #7의 같은 브랜치를 수정한다. 대화형 실행은 기본 아니오 질문, 명시 등록·생략 옵션은 질문 생략, 비대화형 실행은 미등록으로 처리한다. Plan/Check는 읽기 전용으로 유지한다. 코드·사용 지침·ADR을 갱신하고 선택 분기 모의 검사와 문법 검사를 수행한다. 실제 설치·시작프로그램 등록 및 다른 OS 실기기 검증은 범위 밖이다.
+
+검증: Windows PowerShell 5.1에서 `powershell -NoProfile -ExecutionPolicy Bypass -File tests/autohotkey-startup.ps1` 통과. 문법, 응답 10가지 모의 분기, 충돌 옵션 거부를 확인했고 설치·등록은 수행하지 않았다. `git diff --check` 통과. 실제 `-Plan`은 기존 환경 확인 어댑터가 호출한 `py -3`의 `No installed Python found!`로 중단되어 전체 실행은 미검증이다. 설치 실행·로그인 후 자동 시작·다른 OS 실기기는 미검증으로 남긴다. 독립 리뷰에서 발견한 `-NonInteractive` 축약 인수 감지 누락을 보완했다.

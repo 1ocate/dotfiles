@@ -57,7 +57,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 -RegisterAutoHotkeyStartup
 ```
 
-기본 AutoHotkey 동작은 현재 실행이며 로그인 바로가기는 `-RegisterAutoHotkeyStartup`에서만 작성합니다. `-SkipAutoHotkey`는 현재 실행만, `-SkipFonts`·`-SkipPlugins`는 해당 준비 단계를 생략합니다. 개별 옵션은 프로필 변경·설정 연결을 생략하지 않습니다. 사용자 실행 정책이 Undefined/Restricted이면 CurrentUser RemoteSigned로 설정합니다.
+기본 AutoHotkey 동작은 현재 실행입니다. 대화형 세팅에서는 로그인 자동 시작 등록 여부를 묻고, `y` 또는 `yes`로 답할 때만 바로가기를 작성합니다(기본 아니오). `-RegisterAutoHotkeyStartup`은 질문 없이 등록하고, `-SkipAutoHotkeyStartup`은 질문과 등록을 생략합니다. 두 옵션은 함께 지정할 수 없습니다. 비대화형 실행에서는 명시 등록 옵션이 없으면 등록하지 않습니다. `-Plan`·`-Check`는 질문하거나 등록하지 않습니다. `-SkipAutoHotkey`는 현재 실행과 질문을 생략하지만 명시 등록 옵션은 유효합니다. 생략·거절 시 기존 바로가기는 제거하지 않습니다. `-SkipFonts`·`-SkipPlugins`는 해당 준비 단계를 생략합니다. 개별 옵션은 프로필 변경·설정 연결을 생략하지 않습니다. 사용자 실행 정책이 Undefined/Restricted이면 CurrentUser RemoteSigned로 설정합니다.
 
 ## 설정 원본과 런타임 동작
 

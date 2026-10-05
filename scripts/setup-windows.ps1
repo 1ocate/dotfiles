@@ -12,10 +12,23 @@ param(
     [switch]$SkipFonts,
     [switch]$SkipPlugins,
     [switch]$SkipAutoHotkey,
-    [switch]$RegisterAutoHotkeyStartup
+    [switch]$RegisterAutoHotkeyStartup,
+    [switch]$SkipAutoHotkeyStartup
 )
 
 $ErrorActionPreference = 'Stop'
+if ($RegisterAutoHotkeyStartup -and $SkipAutoHotkeyStartup) {
+    throw 'RegisterAutoHotkeyStartup and SkipAutoHotkeyStartup cannot be combined.'
+}
+
+function Resolve-AutoHotkeyStartup {
+    param([bool]$Register, [bool]$Skip, [bool]$SkipCurrentRun, [bool]$Interactive)
+    if ($Register) { return $true }
+    if ($Skip -or $SkipCurrentRun -or -not $Interactive) { return $false }
+    $answer = Read-Host 'Register AutoHotkey to start at Windows login? [y/N]'
+    return $answer -match '^(?i:y|yes)$'
+}
+
 $repoPath = Split-Path -Parent $PSScriptRoot
 $packages = @(
     'Git.Git',
@@ -45,6 +58,7 @@ if ($Plan) {
     if (-not $SkipPlugins) { Write-Output 'Install/restore Neovim plugins from lazy-lock.json and install syntax parsers/tools.' }
     if (-not $SkipAutoHotkey) { Write-Output 'Start the AutoHotkey v2 script in the background.' }
     if ($RegisterAutoHotkeyStartup) { Write-Output 'Register the optional AutoHotkey login shortcut.' }
+    elseif (-not $SkipAutoHotkeyStartup -and -not $SkipAutoHotkey) { Write-Output 'Ask about AutoHotkey login startup in an interactive setup (default: No); skip registration otherwise.' }
     return
 }
 
@@ -100,6 +114,10 @@ if ($Check) {
 
 . (Join-Path $PSScriptRoot 'windows-environment.ps1')
 Assert-WindowsPowerShellSelection -RepoPath $repoPath -ApprovePowerShell:$ApprovePowerShell
+$interactiveSetup = [Environment]::UserInteractive -and -not [Console]::IsInputRedirected -and
+    -not ([Environment]::GetCommandLineArgs() -match '^-NonI')
+$RegisterAutoHotkeyStartup = Resolve-AutoHotkeyStartup -Register $RegisterAutoHotkeyStartup `
+    -Skip $SkipAutoHotkeyStartup -SkipCurrentRun $SkipAutoHotkey -Interactive $interactiveSetup
 
 if (-not $SkipPackages) {
     $winget = (Get-Command winget -ErrorAction Stop).Source
