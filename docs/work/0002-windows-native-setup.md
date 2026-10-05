@@ -13,6 +13,12 @@
 
 ## 분석과 미확인 사항
 
+2026-10-05 Neovim 추가 작업 흐름 검토: 기준 `680cf29`, 시작 검사 외 창 이동·저장·검색·플로팅 터미널·F9 검사 확대 요청. 설치된 LazyVim 코드 대조에서 공통 Enter 매핑이 confirm 콜백을 실행하지 않는 것을 확인했고 `tests/completion-mappings.lua`로 실패를 재현했다. 전체 파일 검색도 특정 backend 이름 대신 LazyVim 공통 files 명령을 사용하도록 보완한다. 공통 기능 수정은 모든 OS에 적용하되 실행 검증은 Windows, 다른 OS는 모의/정적 범위다. 검사 fixture에서 Mason 자동 설치를 제외하여 다운로드 없이 작업 흐름을 검사한다.
+
+2026-10-05 10:35 KST 이후 검증 결과: completion-mappings의 Enter 확정과 formatting 기본값 누락 실패를 재현하고 수정 후 통과. Windows 격리 실행은 실제 한글 파일 저장, rg 검색, Telescope 파일 목록, Neovim 분할 창 이동, Snacks 플로팅 PowerShell job 시작, 실제 OsYankToggle 명령과 모의 클립보드 쓰기 검사 통과. 전체 파일 검색 키는 실제 선택된 picker dispatcher를 통해 올바른 files 명령을 보내는지 검사했다. 네 환경 분리 모의 검사와 Python 단위 검사(13 통과·POSIX 1 제외), diff 검사도 통과했다.
+
+검사 확대 중 임시 fixture에서 Mason/Treesitter가 도구·파서를 자동 다운로드하려는 동작을 발견하여 harness에서 provisioning을 제외했다. 당시 설치는 임시 경로에 한정됐고 최종 검사에서는 발생하지 않았다. headless 터미널 화면 출력은 GUI와 달라 job 시작 검사로 범위를 한정했다. 공통 자동완성 수정은 콜백 모의 검사이며 실제 각 OS의 완성 메뉴·IME 입력, 언어별 LSP·실제 클립보드 provider는 미검증이다. 사용자 lockfile·연결·stash는 변경하지 않았다.
+
 2026-10-05 실사용 오류 재개: WezTerm 설정 오류 pane에서 `.wezterm.lua:8`의 `global debug nil`을 확인했다. 기준 `f536534`, stash의 기존 설정은 debug를 사용하지 않았다. loader가 공식 GLOBAL로 저장소 경로를 전달하고 직접 로드는 config_dir을 사용하도록 수정한다. 모의 검사에서도 debug를 제거하고, 실제 WezTerm 엔진으로 loader 로딩을 확인한다. 현재 호스트 loader는 백업 후 필요한 부분만 재연결하며 stash는 유지한다.
 
 검증 결과: debug를 제거한 네 환경 모의 비교 통과. WezTerm 20240203 엔진에서 `ls-fonts --text A`로 사용자 loader와 절대 경로 원본 직접 로드 모두 exit 0, Meslo 글꼴 로드를 확인했다. 상대 경로 직접 로드의 빈 config_dir도 처리한다. 기존 loader는 백업 후 재연결했고 환경 승인·TERM·키맵을 유지했다. 앞선 `show-keys`는 설정 실행 오류를 검출하지 못했으므로 실제 엔진 검사에는 `ls-fonts`를 사용한다. GUI 새 창은 사용자 확인 대상으로 남긴다.

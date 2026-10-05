@@ -63,7 +63,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 
 
 Windows loader는 `wezterm.GLOBAL.dotfiles_repo`로 체크아웃 경로를 원본에 전달합니다. WezTerm에는 Lua `debug` 라이브러리가 없으므로 경로 판별에 사용하지 않습니다. 이 변경 전 loader를 사용하는 장비는 원본 업데이트 후 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/use-wezterm.ps1`로 반드시 다시 연결해야 합니다. 기존 파일은 백업되며 다른 설치 단계는 실행하지 않습니다. 원본 직접 로드는 `wezterm.config_dir`을 사용합니다.
 
-기존 Windows 플러그인이 설치된 장비에서는 저장소 루트에서 `python tests/windows-runtime.py`로 커밋된 Neovim 설정의 격리 시작을 검사할 수 있습니다. 임시 설정·플러그인 복사본으로 PowerShell·한글 출력·yank 이벤트를 확인하며, 실제 클립보드 쓰기는 모의합니다. 설치·원본 연결·신규 다운로드·GUI 기능 검증은 수행하지 않습니다.
+기존 Windows 플러그인이 설치된 장비에서는 저장소 루트에서 `python tests/windows-runtime.py`로 Neovim 설정의 격리 시작·저장·검색·창 이동·터미널 job 시작을 검사할 수 있습니다. 임시 설정·플러그인 복사본으로 PowerShell·한글 출력·yank 이벤트를 확인하며, 실제 클립보드 쓰기는 모의합니다. 검사 중 Mason/Treesitter 도구 설치는 제외합니다. 설치·원본 연결·신규 다운로드·GUI 기능 검증은 수행하지 않습니다. Enter 완성 매핑은 `nvim --headless -u NONE -i NONE -l tests/completion-mappings.lua`로 별도 모의 검사합니다.
 
 Windows PowerShell용 WezTerm은 `TERM=xterm-256color`를 전달하여 Git 페이저의 `'wezterm': unknown terminal type` 오류를 방지합니다. 변경 후 새 탭을 열어 `$env:TERM`과 `git log`를 확인하세요. 기존 탭의 환경 변수는 바뀌지 않습니다. macOS·WSL·Linux의 기존 터미널 값은 유지합니다. 설정 항목은 [WezTerm term 문서](https://wezterm.org/config/lua/config/term.html)를 참고하세요.
 

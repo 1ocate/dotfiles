@@ -12,7 +12,7 @@ return {
           if cmp.visible() then
             if cmp.get_active_entry() then
               -- 항목이 선택되었을 때만 확정
-              LazyVim.cmp.confirm({ select = auto_select })
+              LazyVim.cmp.confirm({ select = auto_select })(fallback)
             else
               -- o, i 진입 직후처럼 선택된 게 없으면 창을 닫고 개행(fallback)
               cmp.close()
@@ -43,9 +43,12 @@ return {
       })
 
       -- 3. 포맷팅 (아이콘 옆에 출처 [LSP/Path] 표시 추가로 가독성 향상)
+      opts.formatting = opts.formatting or {}
       local format_original = opts.formatting.format
       opts.formatting.format = function(entry, item)
-        item = format_original(entry, item) -- 기존 LazyVim 아이콘 로직 호출
+        if format_original then
+          item = format_original(entry, item) -- 기존 LazyVim 아이콘 로직 호출
+        end
         item.menu = ({
           nvim_lsp = "[LSP]",
           path = "[Path]",

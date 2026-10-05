@@ -38,7 +38,12 @@ def main():
             "local lazy=require('lazy'); local original=lazy.setup; "
             "lazy.setup=function(opts) opts.install={missing=false}; "
             "opts.checker={enabled=false}; opts.change_detection={enabled=false}; "
-            "opts.pkg={enabled=false}; opts.rocks={enabled=false}; return original(opts) end"
+            "opts.pkg={enabled=false}; opts.rocks={enabled=false}; "
+            "opts.spec[#opts.spec+1]={'mason.nvim',config=function(_,o) require('mason').setup(o) end}; "
+            "opts.spec[#opts.spec+1]={'mason-lspconfig.nvim',opts=function(_,o) "
+            "o.ensure_installed={}; o.automatic_installation=false end}; "
+            "opts.spec[#opts.spec+1]={'nvim-treesitter',opts=function(_,o) "
+            "o.ensure_installed={}; o.auto_install=false end}; return original(opts) end"
         )
         lazy_path = (fixture / "data/nvim-data/lazy/lazy.nvim").as_posix()
         command = [shutil.which("nvim"), "--headless", "-i", "NONE",
