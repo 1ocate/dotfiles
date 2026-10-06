@@ -1,14 +1,14 @@
 ﻿-- Foreground marker isolation and lifecycle; actual ConPTY is tested separately.
 local original_vim, original_stderr = vim, io.stderr
 local events, writes = {}, {}
-local function run(win, approved, tmux)
+local function run(win, approved, tmux, mode)
   events, writes = {}, {}
   io.stderr = { write=function(_, s) writes[#writes+1]=s end, flush=function() end }
   _G.vim = {
     env={TMUX=tmux}, g={dotfiles_environment=approved and 'windows-powershell' or nil},
     fn={has=function(feature) return feature=='win32' and win and 1 or 0 end},
-    api={nvim_create_augroup=function() return 1 end,
-      nvim_create_autocmd=function(names, spec) for _,name in ipairs(names) do events[name]=spec.callback end end},
+    api={nvim_get_mode=function() return {mode=mode or 'n'} end, nvim_create_augroup=function() return 1 end,
+      nvim_create_autocmd=function(names, spec) if type(names)=='string' then names={names} end; for _,name in ipairs(names) do events[name]=spec.callback end end},
   }
   dofile('nvim/lua/config/psmux.lua').setup()
 end
@@ -24,8 +24,17 @@ for _,case in ipairs({
 end
 run(true,true,'/tmp/psmux-1/dotfiles,1,0')
 assert(writes[1]=='\27]133;C;cmdline_url=nvim\7')
+events.InsertEnter(); assert(writes[#writes]=='\27]133;C;cmdline_url=nvim-insert\7')
+events.InsertLeave(); assert(writes[#writes]=='\27]133;C;cmdline_url=nvim\7')
 events.VimSuspend(); assert(writes[#writes]=='\27]133;D\7')
 events.VimResume(); assert(writes[#writes]=='\27]133;C;cmdline_url=nvim\7')
 events.VimLeavePre(); assert(writes[#writes]=='\27]133;D\7')
+run(true,true,'/tmp/psmux-1/dotfiles,1,0','i')
+assert(writes[1]=='\27]133;C;cmdline_url=nvim-insert\7','Late setup lost insert mode')
+events.VimResume(); assert(writes[#writes]=='\27]133;C;cmdline_url=nvim-insert\7')
+for _,mode in ipairs({'n','t','c','v'}) do
+  run(true,true,'/tmp/psmux-1/dotfiles,1,0',mode)
+  assert(writes[1]=='\27]133;C;cmdline_url=nvim\7','Non-insert mode received insert marker')
+end
 _G.vim, io.stderr = original_vim, original_stderr
 print('PASS: psmux foreground lifecycle and non-target environment isolation')

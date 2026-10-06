@@ -6,7 +6,6 @@ from ctypes import wintypes
 import os
 from pathlib import Path
 import shutil
-import shlex
 import subprocess
 import tempfile
 import time
@@ -62,6 +61,9 @@ def main():
         env = os.environ.copy()
         env.pop('TMUX', None)
         env.pop('TMUX_PANE', None)
+        for key in list(env):
+            if key.startswith('PSMUX_'):
+                env.pop(key)
         env.update(PSMUX_DATA_DIR=str(temp / 'runtime'), PSMUX_NO_WARM='1',
                    DOTFILES_PSMUX_NAMESPACE=namespace, DOTFILES_PSMUX_ROOT=str(ROOT),
                    DOTFILES_PSMUX_FULL='1' if args.full_config else '0',
@@ -109,6 +111,20 @@ def main():
             except (FileNotFoundError, json.JSONDecodeError):
                 return None
 
+        input_host = None
+        input_dir = temp / 'input-host'
+        input_dir.mkdir()
+        csc = Path(os.environ['WINDIR']) / 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
+        if not csc.is_file():
+            raise SystemExit('Windows .NET Framework C# compiler is required; no downloads.')
+        host_exe = temp / 'psmux-input-host.exe'
+        subprocess.run([str(csc), '/nologo', '/out:' + str(host_exe),
+                        str(ROOT / 'tests/psmux-input-host.cs')], check=True,
+                       capture_output=True, text=True, timeout=30)
+        def terminal_bytes(data):
+            with (input_dir / 'conpty_ctrl.txt').open('a', encoding='ascii') as control:
+                control.write('HEX ' + data.hex() + '\n')
+
         try:
             run('-f', str(ROOT / 'tmux/psmux.conf'), 'new-session', '-d', '-s', 'probe',
                 '-x', '120', '-y', '40', '--', nvim, '--headless', *startup, '-i', 'NONE',
@@ -120,8 +136,9 @@ def main():
                 print('PASS:', test['name'])
             cleanup_servers()  # Always this unique -L namespace and isolated data directory.
 
-            # Live Neovim in ConPTY. Dispatch the exact root binding command that
-            # an attached psmux client sends; physical terminal keys remain untested.
+            # Live Neovim plus a genuinely attached psmux client. Feed raw terminal
+            # bytes through a second ConPTY, exercising client key decoding/bindings.
+            # Desktop focus, WezTerm and IME remain separate physical checks.
             live_path = temp / 'live.json'
             live_script = temp / 'live.lua'
             live_script.write_text("""
@@ -137,11 +154,34 @@ else
 end
 -- Mimic an LSP/terminal child that must not steal the foreground identity.
 vim.fn.jobstart({'pwsh','-NoProfile','-File',vim.env.DOTFILES_PSMUX_WAIT})
+if vim.env.DOTFILES_PSMUX_FULL ~= '1' then vim.opt.backspace={'indent','eol','start'} end
+vim.api.nvim_set_current_buf(vim.api.nvim_create_buf(true,false))
 vim.cmd('vsplit')
 vim.cmd('wincmd l')
+local prepare_count=0
 local timer=vim.uv.new_timer()
 timer:start(100,100,vim.schedule_wrap(function()
-  vim.fn.writefile({vim.json.encode({win=vim.api.nvim_get_current_win(),count=#vim.api.nvim_list_wins(),pane=vim.env.TMUX_PANE})},vim.env.DOTFILES_PSMUX_LIVE)
+  local prepare=vim.env.DOTFILES_PSMUX_LIVE..'.insert'
+  if vim.fn.filereadable(prepare) == 1 then
+    vim.fn.delete(prepare)
+    local buffer=vim.api.nvim_create_buf(true,false)
+    prepare_count=prepare_count+1
+    vim.api.nvim_buf_set_name(buffer,vim.env.DOTFILES_PSMUX_LIVE..'.'..prepare_count..'.txt')
+    vim.api.nvim_set_current_buf(buffer)
+    vim.api.nvim_set_current_line('ab'); vim.cmd('startinsert!')
+  end
+  if vim.fn.filereadable(vim.env.DOTFILES_PSMUX_LIVE..'.quit') == 1 then
+    vim.cmd('qa!') -- Fixture cleanup after all attached-client input assertions.
+    return
+  end
+  local terminal=vim.env.DOTFILES_PSMUX_LIVE..'.terminal'
+  if vim.fn.filereadable(terminal) == 1 then
+    vim.fn.delete(terminal)
+    vim.api.nvim_set_current_buf(vim.api.nvim_create_buf(true,false))
+    vim.fn.jobstart({'pwsh','-NoProfile','-File',vim.env.DOTFILES_PSMUX_WAIT},{term=true})
+    vim.cmd('startinsert')
+  end
+  vim.fn.writefile({vim.json.encode({win=vim.api.nvim_get_current_win(),count=#vim.api.nvim_list_wins(),pane=vim.env.TMUX_PANE,line=vim.api.nvim_get_current_line(),mode=vim.api.nvim_get_mode().mode})},vim.env.DOTFILES_PSMUX_LIVE)
 end))
 """, encoding='utf-8')
             shell_script = temp / 'live.ps1'
@@ -161,33 +201,103 @@ end))
             condition = "#{m/ri:(^|[/\\\\ ])(g?view|g?n?vim|fzf)([.]exe)?( |$),#{pane_current_command}}"
             assert run('display-message', '-p', condition) == '1', 'Native Neovim foreground matcher failed'
             print('PASS: foreground remains Neovim with an LSP-like child process')
-            root_bindings = {}
-            for line in (ROOT / 'tmux/psmux.conf').read_text(encoding='utf-8-sig').splitlines():
-                tokens = shlex.split(line)
-                if tokens[:2] == ['bind', '-n']:
-                    root_bindings[tokens[2]] = tokens[3:]
+            env['DOTFILES_PROBE_DIR'] = str(input_dir)
+            command_line = subprocess.list2cmdline([str(binary), '-L', namespace,
+                                                  'attach-session', '-t', '=live'])
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            startupinfo.wShowWindow = 0  # Hidden test helper console only.
+            input_host = subprocess.Popen([str(host_exe), command_line], env=env,
+                                          startupinfo=startupinfo,
+                                          creationflags=subprocess.CREATE_NEW_CONSOLE)
+            until(lambda: (input_dir / 'conpty_childpid.txt').exists(),
+                  'ConPTY attached client did not start')
+            until(lambda: run('list-clients'), 'Real psmux client did not attach')
+            def dispatch(name):
+                # CLI dispatch checks the binding action, not physical decoding.
+                run('if-shell', '-F', condition, 'send-keys ' + name,
+                    'select-pane ' + {'C-h':'-L', 'C-j':'-D', 'C-k':'-U', 'C-l':'-R'}[name])
+
             def press(name):
-                assert name in root_bindings
-                run(*root_bindings[name])
+                terminal_bytes({'C-h': b'\x08', 'C-j': b'\x0a', 'C-k': b'\x0b', 'C-l': b'\x0c'}[name])
 
             before_win = state['win']
-            press('C-h')
+            dispatch('C-h')
             until(lambda: (current := load_state(live_path)) and current.get('win') != before_win,
-                  'Root Ctrl-h command did not reach Neovim internal split')
+                  'CLI Ctrl-h dispatch did not reach Neovim internal split')
             assert run('display-message', '-p', '#{pane_id}') == original
-            print('PASS: root Ctrl-h command forwards to internal Neovim split')
+            print('PASS: CLI Ctrl-h dispatch forwards to internal Neovim split')
             press('C-l')
             until(lambda: (load_state(live_path) or {}).get('win') == before_win,
-                  'Root Ctrl-l command did not return to right split')
+                  'Raw Ctrl-l input did not return to right split')
             press('C-l')
             until(lambda: run('display-message', '-p', '#{pane_id}') != original,
                   'Neovim did not leave for the neighboring pane')
-            print('PASS: root Ctrl-l command traverses Neovim then psmux')
+            print('PASS: raw Ctrl-l input traverses Neovim then psmux')
             assert run('display-message', '-p', condition) == '0'
-            press('C-h')
+            dispatch('C-h')
             until(lambda: run('display-message', '-p', '#{pane_id}') == original,
-                  'Shell root Ctrl-h command did not select Neovim pane')
-            print('PASS: shell root Ctrl-h command returns to Neovim')
+                  'Shell CLI Ctrl-h dispatch did not select Neovim pane')
+            print('PASS: shell CLI Ctrl-h dispatch returns to Neovim')
+            # Ordinary Backspace (DEL) must still edit, never select another pane.
+            assert (load_state(live_path) or {}).get('mode') == 'n'
+            Path(str(live_path) + '.insert').write_text('prepare', encoding='ascii')
+            try:
+                until(lambda: (current := load_state(live_path)) and current.get('mode', '').startswith('i') and current.get('line') == 'ab',
+                      'Backspace test insert preparation failed')
+            except AssertionError:
+                print('Insert preparation state:', load_state(live_path), flush=True)
+                raise
+            terminal_bytes(b'\x7f')
+            until(lambda: (load_state(live_path) or {}).get('line') == 'a', 'Ordinary Backspace did not delete the inserted character')
+            # Regression: repeated control bytes can wedge a subsequent raw Escape.
+            # CLI bytes prepare the broken editor state without invoking navigation.
+            run('send-keys', 'C-l', 'C-l', 'C-l', 'C-l')
+            until(lambda: (load_state(live_path) or {}).get('line') == 'a' + '\x0c' * 4,
+                  'Repeated control-input regression preparation failed')
+            terminal_bytes(b'\x1b')
+            until(lambda: (load_state(live_path) or {}).get('mode') == 'n', 'Editor did not leave insert mode')
+            assert run('display-message', '-p', '#{pane_id}') == original
+            assert (load_state(live_path) or {}).get('win') == before_win
+            print('PASS: ordinary Backspace edits without pane navigation')
+            print('PASS: raw single Escape recovers after split and repeated Ctrl-l input')
+            run('split-window', '-v', '-t', original, '--', pwsh, '-NoProfile', '-File', str(temp / 'wait.ps1'))
+            below = run('display-message', '-p', '#{pane_id}')
+            press('C-k')
+            until(lambda: run('display-message', '-p', '#{pane_id}') == original,
+                  'Raw Ctrl-k did not move from lower shell pane to upper Neovim pane')
+            dispatch('C-j')
+            until(lambda: run('display-message', '-p', '#{pane_id}') == below,
+                  'CLI Ctrl-j dispatch did not move from upper Neovim pane to lower shell pane')
+            press('C-k')
+            until(lambda: run('display-message', '-p', '#{pane_id}') == original,
+                  'Raw Ctrl-k did not return to upper Neovim pane')
+            run('kill-pane', '-t', below)
+            print('PASS: raw Ctrl-k and CLI Ctrl-j traverse vertically split Neovim and shell panes')
+            above = run('split-window', '-v', '-b', '-d', '-P', '-F', '#{pane_id}', '-t', original,
+                        '--', pwsh, '-NoProfile', '-File', str(temp / 'wait.ps1'))
+            assert above and above != original
+            Path(str(live_path) + '.insert').write_text('prepare', encoding='ascii')
+            until(lambda: (current := load_state(live_path)) and current.get('mode', '').startswith('i') and current.get('line') == 'ab',
+                  'Insert-mode upward navigation preparation failed')
+            press('C-k')
+            until(lambda: run('display-message', '-p', '#{pane_id}') == above,
+                  'Insert-mode raw Ctrl-k did not navigate to the upper shell pane')
+            until(lambda: (load_state(live_path) or {}).get('mode') == 'n',
+                  'Ctrl-k did not leave insert mode')
+            assert (load_state(live_path) or {}).get('line') == 'ab'
+            run('select-pane', '-t', original)
+            run('kill-pane', '-t', above)
+            print('PASS: raw Ctrl-k leaves insert mode and navigates upward without inserting control characters')
+            Path(str(live_path) + '.insert').write_text('prepare', encoding='ascii')
+            until(lambda: (current := load_state(live_path)) and current.get('mode', '').startswith('i') and current.get('line') == 'ab',
+                  'Insert-mode right navigation preparation failed')
+            terminal_bytes(b'\x0c' * 4)
+            until(lambda: (load_state(live_path) or {}).get('mode') == 'n',
+                  'Repeated raw Ctrl-l did not leave insert mode')
+            assert (load_state(live_path) or {}).get('line') == 'ab'
+            run('select-pane', '-t', original)
+            print('PASS: repeated raw Ctrl-l navigation never inserts literal control characters')
             assert run('show-options', '-gv', 'prefix') == 'C-Space'
             run('split-window', '-h', '-c', '#{pane_current_path}')
             assert len(run('list-panes', '-F', '#{pane_id}').splitlines()) == 3
@@ -195,16 +305,36 @@ end))
             assert Path(new_cwd).resolve() == cwd.resolve(), new_cwd
             print('PASS: configured prefix and split action preserve Korean/space directory')
             run('select-pane', '-t', original)
-            run('send-keys', '-t', original, ':qa!', 'Enter')
+            Path(str(live_path) + '.insert').write_text('prepare', encoding='ascii')
+            until(lambda: (current := load_state(live_path)) and current.get('mode', '').startswith('i') and current.get('line') == 'ab',
+                  'Insert-to-terminal preparation failed')
+            Path(str(live_path) + '.terminal').write_text('prepare', encoding='ascii')
+            until(lambda: (load_state(live_path) or {}).get('mode') == 't',
+                  'Neovim terminal did not enter terminal-input mode')
+            assert run('display-message', '-p', '#{pane_current_command}') == 'nvim', 'Terminal retained insert marker'
+            terminal_bytes(b'\x1b')
+            time.sleep(0.5)
+            assert (load_state(live_path) or {}).get('mode') == 't', 'Escape incorrectly forced terminal mode to normal'
+            print('PASS: insert-to-terminal transition resets marker and preserves terminal Escape')
+            Path(str(live_path) + '.quit').write_text('quit', encoding='ascii')
             until(lambda: run('display-message', '-p', '#{pane_current_command}').lower().removesuffix('.exe') == 'pwsh',
                   'Editor exit did not clear psmux foreground identity')
             print('PASS: Neovim exit restores shell foreground identity')
-            # No GUI client is attached in this test. Session survival is checked
-            # after a short control connection closes, not claimed as GUI detach.
-
+            with (input_dir / 'conpty_ctrl.txt').open('a', encoding='ascii') as control:
+                control.write('QUIT\n')
+            input_host.wait(timeout=15)
+            input_host = None
             run('has-session', '-t', '=live')
-            print('PASS: session survives control connection closure')
+            print('PASS: session survives attached terminal closure')
         finally:
+            if input_host is not None:
+                with (input_dir / 'conpty_ctrl.txt').open('a', encoding='ascii') as control:
+                    control.write('QUIT\n')
+                try:
+                    input_host.wait(timeout=15)
+                except subprocess.TimeoutExpired:
+                    input_host.kill()  # Only the helper process created above.
+                    input_host.wait(timeout=5)
             cleanup_servers()
     assert (ROOT / 'nvim/lazy-lock.json').read_bytes() == lock_before, 'User lockfile changed'
     print('PASS: test server termination confirmed; user lockfile preserved')

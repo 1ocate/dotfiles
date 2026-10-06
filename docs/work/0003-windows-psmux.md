@@ -1,6 +1,6 @@
 # 0003: Windows PowerShell에 psmux 적용
 
-- 상태: 리뷰 대기 (로컬 적용·자동검증 완료, GUI·IME 미검증)
+- 상태: 리뷰 대기 (초기 로컬 적용 완료, 입력 후속 수정은 원본만 변경; GUI·IME 미검증)
 - 요청·배경: 호환성 확인 후 사용자가 PowerShell 로컬 적용과 변경 파일을 모은 PR 제출을 요청했다. Neovim 연동을 우선한다.
 - 시작일: 2026-10-06
 - 기준: main `38d1473`, `feat/windows-psmux`; fetch 후 origin/main 일치, 기존 사용자 변경 없음
@@ -23,7 +23,7 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 3. 별도 이름의 서버에서 입력 전달·Neovim 이동·zoom·두 세션·공백/한글 경로를 검증하고 사용자 세션과 lockfile을 보존한다.
 4. OS 격리 검사·독립 리뷰 후 diff 검토·커밋·SSH push·PR 제출. 인증 불가 시 PR 본문과 브랜치 준비. merge는 사용자에게 맡긴다.
 
-물리 키·GUI detach/attach와 IME 검증은 이번 자동 검사로 대체하지 않는다. 클라이언트의 root binding 명령을 control CLI로 전달하여 ConPTY의 Neovim TUI 동작을 검사하며, 실제 터미널 키 이벤트 검증은 남긴다.
+물리 키·GUI detach/attach와 IME 검증은 이번 자동 검사로 대체하지 않는다. 클라이언트의 root binding 명령을 control CLI로 전달하여 ConPTY의 Neovim TUI 동작을 검사했다. 이후 후속 검사에서 실제 attached-client Esc/K/L을 추가했으며 물리 WezTerm 키 이벤트 검증은 남긴다.
 
 ## 진행 로그
 
@@ -75,3 +75,27 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 - 위 인증 대기 시점에는 작업 상태를 완료/리뷰 대기로 표시하지 않았다. 이후 아래 PR 제출 결과에 따라 리뷰 대기로 갱신했다.
 
 - 2026-10-06 10:26 +09:00 (KST): 사용자 안내에 따라 토큰 파일 존재만 확인했다. GitHub CLI 2.102.0을 winget CurrentUser 범위로 준비하고 repo-scoped wrapper로 열린 PR을 확인한 뒤 [draft PR #10](https://github.com/1ocate/dotfiles/pull/10)을 제출했다. GUI/IME 미검증 때문에 draft를 유지하며 merge하지 않았다.
+
+## Ctrl+H 입력 경로 후속 수정
+
+### Ctrl+K·분할 후 Esc 후속 분석
+
+- 2026-10-06 KST: 사용자가 위아래 분할의 Ctrl+K 실패와 Neovim에서 literal `^L` 입력·Esc 실패를 보고했다. 실행 환경은 windows-powershell, 기준은 `75cf568`이다. 기존 staged Ctrl+H 수정 및 사용자 lockfile 변경을 보존한다. 최신 main은 fetch로 확인한다.
+- 계획: 기존 attached ConPTY 검사에 실제 단일 Esc와 위아래 pane의 raw Ctrl+J/K를 추가하여 재현한다. Neovim 모드를 테스트 helper로 강제 복원하면 Esc 오류를 숨기므로 해당 구간은 실제 입력을 사용한다. 원인을 확인한 뒤 Windows 입력 경로만 수정하고 기본/전체 설정 검증을 수행한다. 기존 ADR 0003에 따른 버그 수정이며 새 결정은 아직 없다.
+
+- 2026-10-06 KST: 사용자가 Ctrl+H 실패를 보고했다. 기준 커밋은 75cf568이고 최신 origin/main은 38d1473이다. Windows PowerShell 체크아웃에 기존 사용자 변경은 없었다.
+- 분석: 격리된 psmux 3.3.8 서버에 실제 ConPTY 클라이언트를 붙여 passthrough flags 0xE 진단에서 raw 0x08을 보내면 Backspace+CONTROL 이벤트가 되고 C-h root binding은 실행되지 않는다. 임시 C-BSpace binding에서는 왼쪽 pane 이동이 통과했다. 0x7f 일반 Backspace는 modifier 없이 입력되어 이동하지 않았다.
+- 계획: Windows 전용 psmux 설정의 root와 prefix에 C-BSpace 별칭을 추가한다. WezTerm 공통 키맵과 Neovim 키맵은 보존한다. 실제 클라이언트 입력으로 Neovim 내부/외부 이동과 일반 Backspace를 검증하고 현재 세션에 설정을 reload한 뒤 같은 PR #10을 갱신한다. Ctrl+Backspace도 동일 이벤트이므로 이동으로 처리되는 제약을 문서화한다.
+- 결과: C-BSpace root/prefix 별칭과 사용 제약을 추가했다. 호스트의 기존 PowerShell 승인·psmux 활성화를 확인한 뒤 현재 dotfiles/main 세션에 source-file로 reload하고 두 binding 등록을 확인했다. 프로세스나 세션은 재시작하지 않았다.
+- 검증 보완: 기존 live 검사에서 root 명령을 CLI로 실행하던 방식을 실제 attached client의 ConPTY 키 입력 검사로 교체했다. 기본 ConPTY 플래그 0을 사용하며 테스트 전용 C# helper는 설치된 .NET Framework 컴파일러로 임시 경로에 만든다. 당시 Ctrl+H/Ctrl+L/일반 Backspace raw 검사를 시도했다. 후속 표준 flags 0 실행에서는 raw Ctrl+H가 modifier 없는 Backspace여서 탐색 검사가 실패했으며, 이 시도는 통과 근거로 사용하지 않는다. 최종 검사는 Ctrl+H/J CLI 전달과 Ctrl+K/L·Backspace·Esc의 실제 attached-client 입력을 구분한다. 물리 WezTerm·IME·단일 Esc의 입력 처리는 검증 완료로 주장하지 않는다.
+- 테스트 준비 수정: 전체 LazyVim에서 dashboard 버퍼가 검사 버퍼를 대체해 삽입 준비가 실패했다. Backspace 검사는 별도의 이름 있는 편집 버퍼를 준비해 수행하도록 분리했다. 키 매핑이나 실제 설정을 덮어쓰지 않는다.
+
+- 후속 재현: 실제 attached ConPTY 클라이언트에서 삽입 모드에 Ctrl+L 네 번 후 단일/두 Escape를 보내면 줄에 0x0c 네 개가 들어가고 mode=i가 유지됐다. Ctrl+\ Ctrl+N은 정상 복귀했다. 위아래 Ctrl+K는 일반 모드에서 통과했다. Ctrl+J의 LF는 Enter로 디코딩되며 별도로 기록한다.
+- 수정 계획: Windows dotfiles psmux의 foreground marker에 삽입 모드를 구분하고, 해당 모드에서만 Esc 및 탐색 키를 Neovim 표준 Ctrl+\ Ctrl+N으로 일반 모드 복귀시킨 뒤 전달한다. 일반 모드·셸·fzf·Neovim 터미널 모드의 Esc와 일반 Backspace는 보존한다. 기존 ADR 0003의 Windows 입력 어댑터 제안에 구체적 처리를 보완한다.
+
+- 검증 정정: 최초 Ctrl+H 분석은 passthrough flags 0xE 진단의 결과였다. 표준 ConPTY flags 0에서는 raw 0x08이 modifier 없는 Backspace이고 raw LF는 Enter로 해석됐다. 모드 준비에는 CLI를 사용하되 실제 검사 키 Esc/K/L은 attached-client 입력으로 전달하며, H/J CLI 검사를 raw/물리 키 검증으로 주장하지 않는다.
+
+- 2026-10-06T14:37+09:00 (KST): 최종 windows-powershell 미커밋 diff에서 `py -3 -u tests/windows-psmux.py` 및 `--full-config` 모두 통과했다. 실제 attached-client Esc/K/L, 삽입 모드 위 이동·반복 오른쪽 이동의 문자 보존, 삽입→터미널 전환 marker/원래 Esc 보존, 일반 Backspace, 격리 서버 종료와 사용자 lockfile 보존을 확인했다. H/J는 CLI 검증이며 물리 키 성공으로 표시하지 않는다.
+- 검증 보완 과정에서 Neovim 터미널 정리를 native 키로 처리하던 fixture가 실패했다. 입력 검증 이후의 종료를 테스트 Lua `qa!`로 분리했다. 실제 Esc 복귀·이동 검사는 강제 모드 변경이나 fixture 종료로 통과시키지 않는다.
+- `nvim --headless -u NONE -i NONE -l tests/psmux-foreground.lua`, `py -3 -B tests/check_environment.py`, `git diff --check` 통과. 지연 로드/재개 시 현재 모드 감지와 OS·승인·socket 격리를 확인했다. Windows/독립 읽기 전용 리뷰 지적을 반영했다. macOS/WSL/Linux 실기기, WezTerm 물리 키/IME는 미검증이다.
+- 원본만 수정했으며 이번 후속 작업에서 사용자 서버 reload·설치·프로필 적용·Neovim 재시작은 수행하지 않았다. 반영하려면 저장 후 Neovim을 다시 실행하고 psmux prefix+r로 원본 설정을 다시 읽는다. 관련 수정은 기존 draft PR #10에 제출하며 merge하지 않는다.
