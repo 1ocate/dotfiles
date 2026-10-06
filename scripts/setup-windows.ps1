@@ -9,6 +9,7 @@ param(
     [switch]$Check,
     [switch]$ApprovePowerShell,
     [switch]$SkipPackages,
+    [switch]$WithPsmux,
     [switch]$SkipFonts,
     [switch]$SkipPlugins,
     [switch]$SkipGitCompletion,
@@ -52,6 +53,7 @@ if ($Plan) {
     Write-Output "windows-powershell setup from: $repoPath"
     Write-Output 'First setup requires -ApprovePowerShell; later runs reuse the local host selection.'
     if (-not $SkipPackages) { Write-Output ('Install missing winget packages: ' + ($packages -join ', ')) }
+    if ($WithPsmux) { & (Join-Path $PSScriptRoot 'setup-psmux.ps1') -Plan }
     Write-Output 'Connect WezTerm and Neovim to this checkout, backing up previous settings.'
     Write-Output 'Add Oh My Posh initialization to the 5.1 and 7 user profiles.'
     if (-not $SkipGitCompletion) { & (Join-Path $PSScriptRoot 'setup-git-completion.ps1') -Plan }
@@ -112,6 +114,7 @@ if ($Check) {
     Write-WindowsSelectionStatus -RepoPath $repoPath
     Update-SetupPath
     Test-SetupPrerequisites
+    if ($WithPsmux) { & (Join-Path $PSScriptRoot 'setup-psmux.ps1') -Check }
     if (-not $SkipGitCompletion) { & (Join-Path $PSScriptRoot 'setup-git-completion.ps1') -Check }
     return
 }
@@ -138,6 +141,7 @@ if (-not $SkipPackages) {
 }
 Update-SetupPath
 Test-SetupPrerequisites
+if ($WithPsmux) { & (Join-Path $PSScriptRoot 'setup-psmux.ps1') -InstallOnly -SkipInstall:$SkipPackages }
 
 if (-not $SkipGitCompletion) {
     & (Join-Path $PSScriptRoot 'setup-git-completion.ps1') -SkipInstall:$SkipPackages
@@ -166,6 +170,8 @@ foreach ($profileFolder in @('WindowsPowerShell', 'PowerShell')) {
         [System.IO.File]::WriteAllText($profilePath, $initLine + "`r`n", [System.Text.UTF8Encoding]::new($true))
     }
 }
+if ($WithPsmux) { & (Join-Path $PSScriptRoot 'setup-psmux.ps1') -SkipInstall }
+
 if ((Get-ExecutionPolicy -Scope CurrentUser) -in @('Undefined', 'Restricted')) {
     try { Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force }
     catch {

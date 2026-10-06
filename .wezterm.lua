@@ -4,11 +4,13 @@ local wezterm = require 'wezterm'
 local is_windows = wezterm.target_triple:find('windows', 1, true) ~= nil
 local is_macos = wezterm.target_triple:find('apple', 1, true) ~= nil
 local selected_environment
+local windows_repo
 if is_windows then
     -- WezTerm's Lua runtime does not expose the debug library.
     -- The loader supplies its checkout; direct loading uses the config directory.
     local repo = (wezterm.GLOBAL.dotfiles_repo or wezterm.config_dir):gsub('\\', '/')
     if repo == '' then repo = '.' end -- Relative --config-file in the checkout.
+    windows_repo = repo
     local state_path = repo .. '/.local/environment.json'
     wezterm.add_to_config_reload_watch_list(state_path)
     local reason
@@ -100,6 +102,28 @@ if selected_environment == 'windows-powershell' then
         setting['default_prog'] = { executable_path, '-NoLogo' }
     else
         setting['default_prog'] = { 'powershell.exe', '-NoLogo' }
+    end
+    -- Host-local opt-in; missing tools retain the plain PowerShell startup.
+    local mux_state_path = windows_repo .. '/.local/psmux.json'
+    wezterm.add_to_config_reload_watch_list(mux_state_path)
+    local mux_file = io.open(mux_state_path, 'r')
+    if mux_file then
+        local content = mux_file:read('*a'):gsub('^\239\187\191', '')
+        mux_file:close()
+        local ok, feature = pcall(wezterm.json_parse, content)
+        if ok and type(feature) == 'table' and feature.schemaVersion == 1
+            and feature.enabled == true and type(feature.host) == 'string'
+            and feature.host:lower() == (os.getenv('COMPUTERNAME') or ''):lower() then
+            local mux_bin = (os.getenv('LOCALAPPDATA') or '') .. '/Programs/psmux/3.3.8/psmux.exe'
+            local binary = io.open(mux_bin, 'rb')
+            if binary and executable_path then
+                binary:close()
+                setting['default_prog'] = { executable_path, '-NoLogo', '-NoProfile',
+                    '-File', windows_repo .. '/scripts/start-psmux.ps1' }
+            elseif binary then
+                binary:close()
+            end
+        end
     end
     setting['default_domain'] = 'local'
     setting['wsl_domains'] = {}

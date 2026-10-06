@@ -1,0 +1,69 @@
+# 0003: Windows PowerShell에 psmux 적용
+
+- 상태: 진행 중 (로컬 적용·검증과 제출 준비 완료, GitHub 인증 대기)
+- 요청·배경: 호환성 확인 후 사용자가 PowerShell 로컬 적용과 변경 파일을 모은 PR 제출을 요청했다. Neovim 연동을 우선한다.
+- 시작일: 2026-10-06
+- 기준: main `38d1473`, `feat/windows-psmux`; fetch 후 origin/main 일치, 기존 사용자 변경 없음
+- 실행 환경: windows-powershell. 저장된 승인과 Neovim junction/WezTerm loader 확인
+- 범위: Windows psmux 설치·설정·PowerShell 함수·WezTerm 시작, Neovim 이동 검증과 PR
+- 비대상: macOS/WSL tmux 변경, 플러그인 업데이트, 다른 health 경고, 재부팅 복원
+- 관련 ADR: [ADR 0003](../adr/0003-windows-psmux.md)
+- 관련 PR: 로컬 토큰 부재로 아직 제출하지 못함. 브랜치와 PR 본문 준비
+
+## 분석과 미확인 사항
+
+navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.8 검사에서 내부/외부 이동·zoom·두 세션 8개 검사가 통과했다. pane PATH에 tmux.exe가 없으면 실패했다. 이전 보고 원본은 Git 제외 `.local/psmux-compatibility.md`이며 아래 통합 검증과 구분한다.
+
+기존 tmux.conf의 Unix 명령을 그대로 사용할 수 없어 Windows 전용 pane_current_command 감지와 clipboard 동작을 연결했다. Neovim navigator의 기존 키맵·zoom 동작과 WezTerm 키맵은 유지하고 Windows psmux 전경 상태 helper만 연결했다. GitHub wrapper에서 토큰 부재로 열린 PR 조회가 불가능했다. 기존 기록의 다음 번호 0003을 사용하며 제출 전에 충돌을 확인해야 한다.
+
+## 계획과 완료 조건
+
+1. Windows 전용 설정·opt-in 설치 진입점·원본 profile loader·launcher 구현. 승인·경로·도구 점검과 재실행 보존.
+2. 현재 장비에 적용하고 새 셸의 실행 경로·프로젝트 세션 확인.
+3. 별도 이름의 서버에서 입력 전달·Neovim 이동·zoom·두 세션·공백/한글 경로를 검증하고 사용자 세션과 lockfile을 보존한다.
+4. OS 격리 검사·독립 리뷰 후 diff 검토·커밋·SSH push·PR 제출. 인증 불가 시 PR 본문과 브랜치 준비. merge는 사용자에게 맡긴다.
+
+물리 키·GUI detach/attach와 IME 검증은 이번 자동 검사로 대체하지 않는다. 클라이언트의 root binding 명령을 control CLI로 전달하여 ConPTY의 Neovim TUI 동작을 검사하며, 실제 터미널 키 이벤트 검증은 남긴다.
+
+## 진행 로그
+
+| 시각 | 수행 내용·결과 | 다음 일 |
+| --- | --- | --- |
+| 2026-10-06 KST (시각 미기록) | 최신 main·원본·저장된 승인·선행 검사 확인. 사용자 변경 없음. GitHub token 부재 | 구현·적용·통합 검증 |
+| 2026-10-06 KST (시각 미기록) | v3.3.8 공식 x64 ZIP의 SHA256 확인 후 사용자 프로그램 경로에 설치. 두 프로필에 원본 loader, PATH와 호스트 opt-in 연결 | 새 셸·Neovim 검사 |
+| 2026-10-06 KST (시각 미기록) | Windows 리뷰의 PATH 우선순위·PS5.1 UTF-8·빈 PATH 문제 수정. macOS 정적 리뷰에서 기존 흐름 회귀 없음 | 통합 검증 |
+| 2026-10-06 KST (시각 미기록) | LSP와 같은 자식 프로세스가 pane_current_command를 pwsh로 가리는 문제 재현. Windows Neovim OSC 133 표시와 셸 prompt 초기화 추가. prompt 오류 상태 보존까지 5.1/7 검사 | 자식 프로세스·종료 검증 통과 |
+| 2026-10-06 KST (시각 미기록) | 초기 TUI 검사에서 한 TCP 연결에 명령을 여러 번 보내는 테스트가 실패. psmux의 클라이언트 root 명령 전달 경로와 직접 send-key를 구분하여 검사 수정 | 수정된 통합 검사 통과 |
+| 2026-10-06 KST (시각 미기록) | 기본 navigator 및 오프라인 현재 LazyVim 설정에서 이동 검사 통과. 독립 리뷰에 따라 detach 후 PowerShell 유지, 테스트 서버 종료 확인 보완 | 제출·GUI 후속 확인 |
+
+## 변경 결과
+
+- `scripts/setup-psmux.ps1`: pinned portable 준비, 승인·입력 점검, 프로필 백업·loader, PATH 백업, opt-in/Disable. 기존 다른 psmux 버전과 홈 tmux.conf를 덮어쓰지 않는다.
+- `scripts/setup-windows.ps1 -WithPsmux`: 명시적 선택 기능으로 Plan/Check/설치 연결. 기본 설치 동작은 유지한다.
+- `tmux/psmux.conf`: Windows 전경 프로그램 감지, Ctrl+h/j/k/l 전달/이동, Ctrl+Space prefix, split·copy mode·Windows clipboard.
+- `powershell/psmux.ps1`: pinned tmux.exe PATH, 기존 명령을 보존하는 mux/t alias, 전체 이름의 함수와 경로 해시 기반 프로젝트 세션.
+- `.wezterm.lua`와 launcher: 같은 호스트의 승인·opt-in에서만 시작, 도구 부재/오류와 detach 후 PowerShell 제공.
+
+## 검증 결과
+
+대상은 main `38d1473` 이후 본 작업 diff. 실제 환경은 Windows 네이티브 PowerShell 5.1/7.6.6, Neovim 0.12.5, psmux 3.3.8이다.
+
+| 종류·명령 | 결과·한계 |
+| --- | --- |
+| 실제 `setup-psmux.ps1`, `-SkipInstall` 재실행 | 설치·프로필·PATH 연결 성공; 두 프로필·feature state·user PATH의 재실행 전후 해시/값 유지 |
+| 실제 `setup-windows.ps1 -Check -WithPsmux`, WezTerm `show-keys` | 사전 점검 및 실제 WezTerm 설정 읽기 통과. GUI 키 입력은 아님 |
+| 실제 `tests/psmux-runtime.ps1` (5.1과 7) | 승인·schema·호스트·환경·활성화 격리, 사용자 mux/t 보존, pinned PATH, 한글/공백 및 같은 이름의 프로젝트 세션 식별 검사 통과 |
+| 실제 `tests/windows-psmux.py` | 현재 options/navigator 로드; 8개 내부/외부 매핑·zoom·두 세션 검사 통과. LSP와 같은 자식이 있어도 Neovim 감지 유지, 종료 후 셸 감지 복귀. live ConPTY Neovim의 root 명령 전달·셸 복귀·한글/공백 split 경로 통과. 서버 PID 종료 확인, 사용자 lockfile 유지 |
+| 실제 `tests/windows-psmux.py --full-config` | 현재 LazyVim 원본과 설치된 플러그인으로 같은 시나리오 통과. 다운로드·Mason/parser 자동 설치와 Lua bytecode cache를 검사에서 차단. 전체 설정 모드에서는 lazy.load로 navigator를 로드하고 config/키맵을 직접 다시 적용하지 않는다. 일반 캐시 경로/GUI 전체 기능을 검증했다고 주장하지 않음 |
+| 실제 mux 함수 별도 smoke (5.1과 7) | 임시 data 경로의 dotfiles 이름 서버에서 세션 생성·reload binding 원본 경로 확인. 비TTY attach 버전 출력은 GUI attach 성공 근거로 사용하지 않음 |
+| 모의 `tests/check_environment.py` | macOS/Linux/WSL 설정의 origin/main 비교 및 Windows opt-in/부재/잘못된 marker 검사 통과 |
+| 실제 Python unittest discover | 14개 검사 성공, POSIX ACL 검사 1개는 Windows에서 skip |
+| 모의 `tests/psmux-foreground.lua` | OSC 실행·정지·재개·종료 및 비대상 OS/승인/서버의 미실행 검사 통과 |
+| 문법·정적 | PowerShell AST, Lua loadfile, git diff --check, macOS/windows/독립 reviewer 검토. 지적된 사항 수정 |
+
+## 남은 일
+
+- `.local/gh-token` 준비 후 repo-scoped wrapper로 열린 PR/번호 충돌 재확인 및 draft PR 제출. PR 링크를 이 기록에 추가한다.
+- WezTerm 실제 Ctrl+Space·Ctrl+h/j/k/l, detach/attach, fzf 선택 UI, copy mode 한글 clipboard, 기존 Alt/Esc·IME 동작을 확인한다.
+- 깨끗한 새 장비의 전체 설치, macOS/WSL/Linux 실기기는 미검증이다. 이 PR을 새 장비 설치 재현성 완료로 표시하지 않는다.
+- merge는 요청되지 않았으며 수행하지 않는다. 로컬 구성요소의 설치/자동검사 결과는 `.local/setup-state.json`에 별도로 보존한다.
