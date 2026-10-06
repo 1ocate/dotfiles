@@ -1,6 +1,6 @@
 # 0003: Windows PowerShell에 psmux 적용
 
-- 상태: 리뷰 대기 (초기 로컬 적용 완료, 입력 후속 수정은 원본만 변경; GUI·IME 미검증)
+- 상태: 리뷰 대기 (사용자 PowerShell tmux 동작 확인 완료, PR 병합 준비)
 - 요청·배경: 호환성 확인 후 사용자가 PowerShell 로컬 적용과 변경 파일을 모은 PR 제출을 요청했다. Neovim 연동을 우선한다.
 - 시작일: 2026-10-06
 - 기준: main `38d1473`, `feat/windows-psmux`; fetch 후 origin/main 일치, 기존 사용자 변경 없음
@@ -8,7 +8,7 @@
 - 범위: Windows psmux 설치·설정·PowerShell 함수·WezTerm 시작, Neovim 이동 검증과 PR
 - 비대상: macOS/WSL tmux 변경, 플러그인 업데이트, 다른 health 경고, 재부팅 복원
 - 관련 ADR: [ADR 0003](../adr/0003-windows-psmux.md)
-- 관련 PR: [draft PR #10](https://github.com/1ocate/dotfiles/pull/10), [작업 브랜치](https://github.com/1ocate/dotfiles/tree/feat/windows-psmux)
+- 관련 PR: [PR #10](https://github.com/1ocate/dotfiles/pull/10), [작업 브랜치](https://github.com/1ocate/dotfiles/tree/feat/windows-psmux)
 
 ## 분석과 미확인 사항
 
@@ -63,8 +63,8 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 
 ## 남은 일
 
-- [draft PR #10](https://github.com/1ocate/dotfiles/pull/10)에서 변경과 미검증 범위를 검토한다.
-- WezTerm 실제 Ctrl+Space·Ctrl+h/j/k/l, detach/attach, fzf 선택 UI, copy mode 한글 clipboard, 기존 Alt/Esc·IME 동작을 확인한다.
+- [PR #10](https://github.com/1ocate/dotfiles/pull/10)에서 변경과 미검증 범위를 검토하고 병합을 결정한다.
+- 사용자가 PowerShell tmux 동작 확인 완료를 보고했다. 개별 시나리오 목록은 제공되지 않았으므로 fzf 선택 UI, copy mode 한글 clipboard, 기존 Alt/Esc·IME의 개별 검증 완료를 추가로 주장하지 않는다.
 - 깨끗한 새 장비의 전체 설치, macOS/WSL/Linux 실기기는 미검증이다. 이 PR을 새 장비 설치 재현성 완료로 표시하지 않는다.
 - merge는 요청되지 않았으며 수행하지 않는다. 로컬 구성요소의 설치/자동검사 결과는 `.local/setup-state.json`에 별도로 보존한다.
 
@@ -111,3 +111,9 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 - 추가 삽입 모드 왼쪽 검사에서 수평 split-window -b가 실제로 오른쪽 pane을 만드는 fixture 문제를 발견했다. 새 pane을 swap-pane으로 왼쪽에 배치하고 좌표를 확인한 뒤 입력을 검증하도록 수정했다. 최초 실패를 입력 성공 근거로 사용하지 않는다. sandbox에서는 기존 headless 외부 이동도 실패하여 격리 ConPTY 검증을 승인된 실행으로 수행했다.
 
 - 2026-10-06T15:46+09:00 (KST): 최종 windows-powershell 미커밋 diff에서 `py -3 -u tests/windows-psmux.py`와 `--full-config` 모두 통과했다. 실제 attached-client Alt+h 형식의 Ctrl+h로 내부 왼쪽 이동·외부 pane 복귀·삽입 모드 왼쪽 이동과 문자 보존을 확인했으며 raw Ctrl+l 오른쪽 이동·Backspace·Esc·격리 서버 종료·사용자 lockfile 보존도 통과했다. `py -3 -B tests/check_environment.py`, Lua loadfile, 실제 WezTerm show-keys의 h/l 전달, `git diff --check` 통과. 독립 읽기 전용 리뷰의 Alt+h 예약·다른 탭 영향을 반영했다. 물리 WezTerm 키/IME 및 macOS/WSL/Linux 실기기는 미검증이다. 사용자 서버 reload·설치·설정 연결은 수행하지 않았으며 사용 지침에 재로드 방법을 적었다. 기존 draft PR #10으로 제출한다.
+
+## 사용자 동작 확인과 병합 준비
+
+- 2026-10-06T15:59+09:00 (KST): 사용자가 “powershell 환경에서 tmux 동작확인 완료. 커밋 후 pr merge준비”를 요청했다. 실행 환경은 windows-powershell, 기준 HEAD는 `05711b1`, fetch한 origin/main은 `38d1473`이다. PR #10의 원격 head가 로컬 HEAD와 일치하며 충돌 없음(`MERGEABLE`/`CLEAN`), 등록된 CI check와 승인 리뷰는 없다.
+- 분석·계획: 후속 입력 수정은 이미 커밋·push되어 있다. 이번에는 사용자 실제 동작 확인을 같은 기록에 추가하고 문서 diff·링크를 검증한 뒤 명시적 파일 stage, 커밋·SSH push, 한국어 PR 본문 갱신과 draft 해제를 수행한다. 새 설계 결정은 없고 ADR 0003은 병합 전 제안 상태를 유지한다. 플러그인 일괄 업데이트인 기존 사용자 `nvim/lazy-lock.json` 변경은 보존·제외한다.
+- 검증 범위: 사용자 보고를 Windows PowerShell tmux의 실제 사용 확인 근거로 기록하며 자동 검사를 재실행한 것으로 쓰지 않는다. 개별 키·GUI·clipboard·IME 시나리오와 재로드 방식은 보고에 명시되지 않았다. 앞선 자동 검사 근거를 유지하고 macOS/WSL/Linux 실기기 및 깨끗한 새 장비 전체 설치는 미검증으로 남긴다. 실제 merge·자동 merge·설치·설정 적용은 이번 요청 범위에 포함하지 않는다.
