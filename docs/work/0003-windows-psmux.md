@@ -1,6 +1,6 @@
 # 0003: Windows PowerShell에 psmux 적용
 
-- 상태: 진행 중 (로컬 적용·검증과 제출 준비 완료, GitHub 인증 대기)
+- 상태: 리뷰 대기 (로컬 적용·자동검증 완료, GUI·IME 미검증)
 - 요청·배경: 호환성 확인 후 사용자가 PowerShell 로컬 적용과 변경 파일을 모은 PR 제출을 요청했다. Neovim 연동을 우선한다.
 - 시작일: 2026-10-06
 - 기준: main `38d1473`, `feat/windows-psmux`; fetch 후 origin/main 일치, 기존 사용자 변경 없음
@@ -8,7 +8,7 @@
 - 범위: Windows psmux 설치·설정·PowerShell 함수·WezTerm 시작, Neovim 이동 검증과 PR
 - 비대상: macOS/WSL tmux 변경, 플러그인 업데이트, 다른 health 경고, 재부팅 복원
 - 관련 ADR: [ADR 0003](../adr/0003-windows-psmux.md)
-- 관련 PR: 로컬 토큰 부재로 아직 제출하지 못함. [push한 작업 브랜치](https://github.com/1ocate/dotfiles/tree/feat/windows-psmux)와 PR 본문 준비
+- 관련 PR: [draft PR #10](https://github.com/1ocate/dotfiles/pull/10), [작업 브랜치](https://github.com/1ocate/dotfiles/tree/feat/windows-psmux)
 
 ## 분석과 미확인 사항
 
@@ -63,7 +63,7 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 
 ## 남은 일
 
-- `.local/gh-token` 준비 후 repo-scoped wrapper로 열린 PR/번호 충돌 재확인 및 draft PR 제출. PR 링크를 이 기록에 추가한다.
+- [draft PR #10](https://github.com/1ocate/dotfiles/pull/10)에서 변경과 미검증 범위를 검토한다.
 - WezTerm 실제 Ctrl+Space·Ctrl+h/j/k/l, detach/attach, fzf 선택 UI, copy mode 한글 clipboard, 기존 Alt/Esc·IME 동작을 확인한다.
 - 깨끗한 새 장비의 전체 설치, macOS/WSL/Linux 실기기는 미검증이다. 이 PR을 새 장비 설치 재현성 완료로 표시하지 않는다.
 - merge는 요청되지 않았으며 수행하지 않는다. 로컬 구성요소의 설치/자동검사 결과는 `.local/setup-state.json`에 별도로 보존한다.
@@ -72,4 +72,6 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 
 - 2026-10-06 10:22 +09:00 (KST): 구현 커밋 `c39073f`를 SSH로 `feat/windows-psmux`에 push했다. Git 작성자 값은 저장소의 기존 .gitconfig에서 이번 커밋 프로세스에만 전달했다.
 - repo-scoped wrapper의 draft PR 생성은 해당 체크아웃의 `.local/gh-token` 부재로 실행되지 않았다. 본문은 Git 제외 `.local/pr-windows-psmux.md`에 준비했다. 토큰 준비 후 열린 PR과 번호 충돌 확인·PR 제출·역링크 기록이 남는다.
-- 로컬 적용과 자동검사는 완료했지만 물리 GUI/IME와 깨끗한 새 장비 설치 검증은 남아 있다. 작업 상태를 완료/리뷰 대기로 표시하지 않는다.
+- 위 인증 대기 시점에는 작업 상태를 완료/리뷰 대기로 표시하지 않았다. 이후 아래 PR 제출 결과에 따라 리뷰 대기로 갱신했다.
+
+- 2026-10-06 10:26 +09:00 (KST): 사용자 안내에 따라 토큰 파일 존재만 확인했다. GitHub CLI 2.102.0을 winget CurrentUser 범위로 준비하고 repo-scoped wrapper로 열린 PR을 확인한 뒤 [draft PR #10](https://github.com/1ocate/dotfiles/pull/10)을 제출했다. GUI/IME 미검증 때문에 draft를 유지하며 merge하지 않았다.

@@ -3,7 +3,7 @@
 - 상태: 제안
 - 작성일: 2026-10-06
 - 적용 범위: windows-powershell
-- 관련 작업: [작업 0003](../work/0003-windows-psmux.md)
+- 관련 작업·PR: [작업 0003](../work/0003-windows-psmux.md), [PR #10](https://github.com/1ocate/dotfiles/pull/10)
 - 채택 근거: 미결정. 로컬 적용 요청과 PR 병합을 구분한다.
 - 대체 관계: 없음. [ADR 0002](0002-native-windows-adapters.md)의 Windows 어댑터 확장이다.
 
