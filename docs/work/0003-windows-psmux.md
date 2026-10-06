@@ -99,3 +99,5 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 - 검증 보완 과정에서 Neovim 터미널 정리를 native 키로 처리하던 fixture가 실패했다. 입력 검증 이후의 종료를 테스트 Lua `qa!`로 분리했다. 실제 Esc 복귀·이동 검사는 강제 모드 변경이나 fixture 종료로 통과시키지 않는다.
 - `nvim --headless -u NONE -i NONE -l tests/psmux-foreground.lua`, `py -3 -B tests/check_environment.py`, `git diff --check` 통과. 지연 로드/재개 시 현재 모드 감지와 OS·승인·socket 격리를 확인했다. Windows/독립 읽기 전용 리뷰 지적을 반영했다. macOS/WSL/Linux 실기기, WezTerm 물리 키/IME는 미검증이다.
 - 원본만 수정했으며 이번 후속 작업에서 사용자 서버 reload·설치·프로필 적용·Neovim 재시작은 수행하지 않았다. 반영하려면 저장 후 Neovim을 다시 실행하고 psmux prefix+r로 원본 설정을 다시 읽는다. 관련 수정은 기존 draft PR #10에 제출하며 merge하지 않는다.
+
+- 2026-10-06T14:38+09:00 (KST): 수정 커밋 `1026d48`을 SSH로 같은 작업 브랜치에 push하고 [draft PR #10](https://github.com/1ocate/dotfiles/pull/10)의 한국어 제목·본문을 갱신했다. GitHub에서 OPEN/draft와 head 일치를 확인했다. 사용자 lockfile만 미커밋 변경으로 남겼으며 merge·실사용 재로드는 수행하지 않았다.
