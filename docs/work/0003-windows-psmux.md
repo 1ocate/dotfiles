@@ -8,7 +8,7 @@
 - 범위: Windows psmux 설치·설정·PowerShell 함수·WezTerm 시작, Neovim 이동 검증과 PR
 - 비대상: macOS/WSL tmux 변경, 플러그인 업데이트, 다른 health 경고, 재부팅 복원
 - 관련 ADR: [ADR 0003](../adr/0003-windows-psmux.md)
-- 관련 PR: 로컬 토큰 부재로 아직 제출하지 못함. 브랜치와 PR 본문 준비
+- 관련 PR: 로컬 토큰 부재로 아직 제출하지 못함. [push한 작업 브랜치](https://github.com/1ocate/dotfiles/tree/feat/windows-psmux)와 PR 본문 준비
 
 ## 분석과 미확인 사항
 
@@ -55,7 +55,7 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 | 실제 `tests/psmux-runtime.ps1` (5.1과 7) | 승인·schema·호스트·환경·활성화 격리, 사용자 mux/t 보존, pinned PATH, 한글/공백 및 같은 이름의 프로젝트 세션 식별 검사 통과 |
 | 실제 `tests/windows-psmux.py` | 현재 options/navigator 로드; 8개 내부/외부 매핑·zoom·두 세션 검사 통과. LSP와 같은 자식이 있어도 Neovim 감지 유지, 종료 후 셸 감지 복귀. live ConPTY Neovim의 root 명령 전달·셸 복귀·한글/공백 split 경로 통과. 서버 PID 종료 확인, 사용자 lockfile 유지 |
 | 실제 `tests/windows-psmux.py --full-config` | 현재 LazyVim 원본과 설치된 플러그인으로 같은 시나리오 통과. 다운로드·Mason/parser 자동 설치와 Lua bytecode cache를 검사에서 차단. 전체 설정 모드에서는 lazy.load로 navigator를 로드하고 config/키맵을 직접 다시 적용하지 않는다. 일반 캐시 경로/GUI 전체 기능을 검증했다고 주장하지 않음 |
-| 실제 mux 함수 별도 smoke (5.1과 7) | 임시 data 경로의 dotfiles 이름 서버에서 세션 생성·reload binding 원본 경로 확인. 비TTY attach 버전 출력은 GUI attach 성공 근거로 사용하지 않음 |
+| 실제 mux 함수 별도 smoke (5.1과 7) | 임시 data 경로의 dotfiles 이름 서버에서 두 세션 생성·각 세션을 명시적으로 대상으로 한 reload binding 원본 경로 확인. 비TTY attach 버전 출력은 GUI attach 성공 근거로 사용하지 않음 |
 | 모의 `tests/check_environment.py` | macOS/Linux/WSL 설정의 origin/main 비교 및 Windows opt-in/부재/잘못된 marker 검사 통과 |
 | 실제 Python unittest discover | 14개 검사 성공, POSIX ACL 검사 1개는 Windows에서 skip |
 | 모의 `tests/psmux-foreground.lua` | OSC 실행·정지·재개·종료 및 비대상 OS/승인/서버의 미실행 검사 통과 |
@@ -67,3 +67,9 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 - WezTerm 실제 Ctrl+Space·Ctrl+h/j/k/l, detach/attach, fzf 선택 UI, copy mode 한글 clipboard, 기존 Alt/Esc·IME 동작을 확인한다.
 - 깨끗한 새 장비의 전체 설치, macOS/WSL/Linux 실기기는 미검증이다. 이 PR을 새 장비 설치 재현성 완료로 표시하지 않는다.
 - merge는 요청되지 않았으며 수행하지 않는다. 로컬 구성요소의 설치/자동검사 결과는 `.local/setup-state.json`에 별도로 보존한다.
+
+## 제출 상태
+
+- 2026-10-06 10:22 +09:00 (KST): 구현 커밋 `c39073f`를 SSH로 `feat/windows-psmux`에 push했다. Git 작성자 값은 저장소의 기존 .gitconfig에서 이번 커밋 프로세스에만 전달했다.
+- repo-scoped wrapper의 draft PR 생성은 해당 체크아웃의 `.local/gh-token` 부재로 실행되지 않았다. 본문은 Git 제외 `.local/pr-windows-psmux.md`에 준비했다. 토큰 준비 후 열린 PR과 번호 충돌 확인·PR 제출·역링크 기록이 남는다.
+- 로컬 적용과 자동검사는 완료했지만 물리 GUI/IME와 깨끗한 새 장비 설치 검증은 남아 있다. 작업 상태를 완료/리뷰 대기로 표시하지 않는다.
