@@ -219,14 +219,14 @@ end))
                     'select-pane ' + {'C-h':'-L', 'C-j':'-D', 'C-k':'-U', 'C-l':'-R'}[name])
 
             def press(name):
-                terminal_bytes({'C-h': b'\x08', 'C-j': b'\x0a', 'C-k': b'\x0b', 'C-l': b'\x0c'}[name])
+                terminal_bytes({'C-h': b'\x1bh', 'C-j': b'\x0a', 'C-k': b'\x0b', 'C-l': b'\x0c'}[name])
 
             before_win = state['win']
-            dispatch('C-h')
+            press('C-h')
             until(lambda: (current := load_state(live_path)) and current.get('win') != before_win,
-                  'CLI Ctrl-h dispatch did not reach Neovim internal split')
+                  'Alt-h-encoded Ctrl-h did not reach Neovim internal split')
             assert run('display-message', '-p', '#{pane_id}') == original
-            print('PASS: CLI Ctrl-h dispatch forwards to internal Neovim split')
+            print('PASS: attached-client Alt-h-encoded Ctrl-h forwards to internal Neovim split')
             press('C-l')
             until(lambda: (load_state(live_path) or {}).get('win') == before_win,
                   'Raw Ctrl-l input did not return to right split')
@@ -235,10 +235,33 @@ end))
                   'Neovim did not leave for the neighboring pane')
             print('PASS: raw Ctrl-l input traverses Neovim then psmux')
             assert run('display-message', '-p', condition) == '0'
-            dispatch('C-h')
+            press('C-h')
             until(lambda: run('display-message', '-p', '#{pane_id}') == original,
-                  'Shell CLI Ctrl-h dispatch did not select Neovim pane')
-            print('PASS: shell CLI Ctrl-h dispatch returns to Neovim')
+                  'Shell Alt-h-encoded Ctrl-h did not select Neovim pane')
+            print('PASS: attached-client shell Alt-h-encoded Ctrl-h returns to Neovim')
+            left = run('split-window', '-h', '-d', '-P', '-F', '#{pane_id}', '-t', original,
+                       '--', pwsh, '-NoProfile', '-File', str(temp / 'wait.ps1'))
+            # psmux 3.3.8 ignores split-window -b horizontally; place panes explicitly.
+            run('swap-pane', '-s', original, '-t', left)
+            run('select-pane', '-t', original)
+            assert int(run('display-message', '-p', '-t', left, '#{pane_left}')) < int(run('display-message', '-p', '-t', original, '#{pane_left}'))
+            Path(str(live_path) + '.insert').write_text('prepare', encoding='ascii')
+            until(lambda: (current := load_state(live_path)) and current.get('mode', '').startswith('i') and current.get('line') == 'ab',
+                  'Insert-mode left navigation preparation failed')
+            press('C-h')
+            until(lambda: (load_state(live_path) or {}).get('win') != before_win,
+                  'Encoded Ctrl-h did not leave insert mode for the left internal split')
+            press('C-h')
+            until(lambda: run('display-message', '-p', '#{pane_id}') == left,
+                  'Encoded Ctrl-h did not move to the left shell pane: ' + run('list-panes', '-F', '#{pane_id} #{pane_left} #{pane_active}'))
+            assert (load_state(live_path) or {}).get('mode') == 'n'
+            run('select-pane', '-t', original)
+            run('kill-pane', '-t', left)
+            press('C-l')
+            until(lambda: (load_state(live_path) or {}).get('win') == before_win,
+                  'Could not return to the right internal split')
+            assert (load_state(live_path) or {}).get('line') == 'ab'
+            print('PASS: encoded Ctrl-h leaves insert mode and traverses left splits without deleting text')
             # Ordinary Backspace (DEL) must still edit, never select another pane.
             assert (load_state(live_path) or {}).get('mode') == 'n'
             Path(str(live_path) + '.insert').write_text('prepare', encoding='ascii')

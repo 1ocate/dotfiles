@@ -120,6 +120,11 @@ if selected_environment == 'windows-powershell' then
                 binary:close()
                 setting['default_prog'] = { executable_path, '-NoLogo', '-NoProfile',
                     '-File', windows_repo .. '/scripts/start-psmux.ps1' }
+                -- Disambiguate Ctrl+h from Backspace in the native ConPTY client.
+                table.insert(keybind, { key = 'h', mods = 'CTRL',
+                    action = wezterm.action{ SendString='\x1bh' } })
+                table.insert(keybind, { key = 'l', mods = 'CTRL',
+                    action = wezterm.action{ SendString='\x0c' } })
             elseif binary then
                 binary:close()
             end

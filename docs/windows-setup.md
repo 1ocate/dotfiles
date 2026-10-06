@@ -151,6 +151,10 @@ Unix tmux의 Bash 프로젝트 키 `F/D`, `expr/grep/cut` 창 교환 `N/P`, `:!c
 
 Ctrl+H가 Ctrl+Backspace 이벤트로 전달되는 경로를 위해 두 입력을 같은 왼쪽 이동에 연결합니다. 표준 ConPTY helper의 raw 0x08은 modifier 없는 Backspace로도 해석되므로 자동 검사 결과를 모든 터미널의 물리 Ctrl+H 검증으로 간주하지 않습니다. 일반 Backspace는 유지되지만 Ctrl+Backspace의 단어 삭제는 psmux pane에서 사용할 수 없습니다.
 
+승인된 Windows PowerShell에서 psmux가 활성화되고 실행 파일이 있을 때 WezTerm은 Ctrl+h를 Alt+h 입력으로 전달하고 psmux가 왼쪽 이동으로 처리합니다. Ctrl+l은 오른쪽 이동 입력을 명시적으로 전달합니다. 일반 Backspace는 변환하지 않습니다. 이 psmux 설정에서는 Alt+h도 왼쪽 이동으로 예약됩니다. WezTerm 키 설정은 탭 전체에 적용되므로 psmux 종료 후 일반 PowerShell fallback과 별도로 연 SSH·다른 탭에서도 Ctrl+h는 Alt+h로 전달됩니다. 이 탭들에는 psmux 이동 바인딩이 없으며 기존 Ctrl+h 편집 동작을 보장하지 않습니다. 비활성화하면 WezTerm의 기본 입력으로 돌아갑니다.
+
+변경 반영은 Neovim에서 파일을 저장한 뒤 `Ctrl+Space` → `r`로 psmux 원본을 다시 읽고, WezTerm에서 `Ctrl+Shift+r`로 설정을 다시 읽습니다. 설치 스크립트를 재실행할 필요는 없습니다.
+
 상하 분할은 Ctrl+J/K, 좌우 분할은 Ctrl+H/L로 이동합니다. 삽입 모드에서 반복 Ctrl+L 뒤 Escape가 멈추는 psmux/ConPTY 입력 문제를 피하기 위해, Neovim이 삽입 모드를 표시한 동안만 Esc와 이동 키를 Ctrl+\ 다음 Ctrl+N으로 일반 모드에 복귀시켜 처리합니다. Neovim 터미널 모드의 Escape는 변환하지 않습니다.
 
 WezTerm의 Ctrl+V 붙여넣기, AutoHotkey Alt·Esc/IME 동작은 기존과 같습니다. Ctrl+Space는 pane의 PSReadLine 메뉴 완성보다 psmux prefix로 먼저 처리되며, 중첩 환경에는 prefix를 두 번 눌러 전달합니다.
@@ -166,6 +170,6 @@ pwsh -NoProfile -File .\scripts\setup-psmux.ps1 -Disable
 
 현재 LazyVim 설정을 함께 읽는 검사는 `py -3 -B tests/windows-psmux.py --full-config`로 실행합니다. 자동 다운로드·설치와 Lua bytecode cache를 차단한 검사이며, 일반 캐시 경로나 GUI 전체 기능 검증과 구분합니다. 셸 함수의 승인·경로 검사는 PowerShell 5.1/7에서 `tests/psmux-runtime.ps1`, 다른 환경의 설정 격리는 `py -3 -B tests/check_environment.py`로 확인합니다.
 
-자동 검사는 Ctrl+K/L·Backspace·Esc의 실제 attached-client 입력과 Ctrl+H/J의 CLI 명령 전달을 구분합니다. 표준 ConPTY에서 raw Ctrl+J의 LF가 Enter로 해석되는 경로와 GUI 물리 키·IME는 별도 확인이 필요합니다.
+자동 검사는 Ctrl+H(Alt+h 형식)/K/L·Backspace·Esc의 실제 attached-client 입력과 Ctrl+J의 CLI 명령 전달을 구분합니다. 표준 ConPTY에서 raw Ctrl+J의 LF가 Enter로 해석되는 경로와 GUI 물리 키·IME는 별도 확인이 필요합니다.
 
 Neovim은 승인된 Windows의 dotfiles psmux 안에서만 OSC 133 실행·종료·삽입 모드 표시를 사용합니다. LSP/terminal job 자식 프로세스가 있어도 pane의 전경 프로그램을 Neovim으로 유지하고, 종료·중지 시 해제합니다. 전체 설정 검사는 LazyVim을 통해 navigator를 로드하며 키맵을 직접 다시 덮어쓰지 않습니다.

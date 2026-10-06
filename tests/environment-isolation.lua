@@ -160,6 +160,15 @@ for _, feature in ipairs({
   local terminal = wezterm_config(root, scenario)
   local launched = terminal.default_prog[4] == '-File'
   assert(launched == (feature.expect == true), feature.label .. ' startup differs')
+  local ctrl_h, ctrl_l
+  for _, key in ipairs(terminal.keys) do
+    if key.key == 'h' and key.mods == 'CTRL' then ctrl_h = key.action end
+    if key.key == 'l' and key.mods == 'CTRL' then ctrl_l = key.action end
+  end
+  assert((ctrl_h ~= nil) == launched, feature.label .. ' Ctrl+h opt-in differs')
+  if ctrl_h then assert(ctrl_h.SendString == '\x1bh', 'Wrong Ctrl+h encoding') end
+  assert((ctrl_l ~= nil) == launched, feature.label .. ' Ctrl+l opt-in differs')
+  if ctrl_l then assert(ctrl_l.SendString == '\x0c', 'Wrong Ctrl+l encoding') end
   print('PASS: psmux ' .. feature.label .. ' startup')
 end
 _G.vim, os.getenv, io.open = real_vim, real_getenv, real_open

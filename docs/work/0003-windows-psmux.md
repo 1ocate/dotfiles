@@ -78,6 +78,11 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 
 ## Ctrl+H 입력 경로 후속 수정
 
+### 좌우 pane 이동 재요청
+
+- 2026-10-06 KST: 사용자는 prefix 없는 Ctrl+h/l로 좌우 분할 pane 이동을 요청했다. 기준 `fc7e559`, 실행 환경 windows-powershell, origin/main `38d1473`이다. 사용자 `nvim/lazy-lock.json` 변경과 Neovim junction을 보존한다.
+- 분석·계획: 기존 C-h/C-BSpace 별칭은 표준 ConPTY의 modifier 없는 Backspace 해석을 해결하지 못한다. 실제 attached client에 명시적 Ctrl+h CSI-u 입력을 보내 좌우 Neovim/셸 이동과 일반 Backspace 보존을 확인한다. 성공하면 승인·활성화된 Windows psmux 시작 경로에만 WezTerm 입력 변환을 추가한다. prefix 창 이동, Unix 설정과 설치·실사용 서버 적용은 범위 밖이다. ADR 0003의 제안에 입력 담당 계층과 변경 이유를 보완하고 기존 draft PR #10을 갱신한다.
+
 ### Ctrl+K·분할 후 Esc 후속 분석
 
 - 2026-10-06 KST: 사용자가 위아래 분할의 Ctrl+K 실패와 Neovim에서 literal `^L` 입력·Esc 실패를 보고했다. 실행 환경은 windows-powershell, 기준은 `75cf568`이다. 기존 staged Ctrl+H 수정 및 사용자 lockfile 변경을 보존한다. 최신 main은 fetch로 확인한다.
@@ -101,3 +106,8 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 - 원본만 수정했으며 이번 후속 작업에서 사용자 서버 reload·설치·프로필 적용·Neovim 재시작은 수행하지 않았다. 반영하려면 저장 후 Neovim을 다시 실행하고 psmux prefix+r로 원본 설정을 다시 읽는다. 관련 수정은 기존 draft PR #10에 제출하며 merge하지 않는다.
 
 - 2026-10-06T14:38+09:00 (KST): 수정 커밋 `1026d48`을 SSH로 같은 작업 브랜치에 push하고 [draft PR #10](https://github.com/1ocate/dotfiles/pull/10)의 한국어 제목·본문을 갱신했다. GitHub에서 OPEN/draft와 head 일치를 확인했다. 사용자 lockfile만 미커밋 변경으로 남겼으며 merge·실사용 재로드는 수행하지 않았다.
+
+- 2026-10-06 KST: CSI-u와 F13은 표준 ConPTY에서 도달하지 않아 제외했다. Alt+h 형식은 실제 attached client의 Neovim 내부 왼쪽 이동·셸에서 Neovim pane 복귀를 통과했다. WezTerm opt-in 분기에서 Ctrl+h를 해당 형식으로, Ctrl+l을 raw 0x0c로 전달하도록 명시했다. psmux M-h root/prefix 별칭으로 기존 탐색과 prefix window 동작을 보존하며 Alt+h 예약·PowerShell fallback의 입력 차이를 ADR과 사용 지침에 적었다.
+- 추가 삽입 모드 왼쪽 검사에서 수평 split-window -b가 실제로 오른쪽 pane을 만드는 fixture 문제를 발견했다. 새 pane을 swap-pane으로 왼쪽에 배치하고 좌표를 확인한 뒤 입력을 검증하도록 수정했다. 최초 실패를 입력 성공 근거로 사용하지 않는다. sandbox에서는 기존 headless 외부 이동도 실패하여 격리 ConPTY 검증을 승인된 실행으로 수행했다.
+
+- 2026-10-06T15:46+09:00 (KST): 최종 windows-powershell 미커밋 diff에서 `py -3 -u tests/windows-psmux.py`와 `--full-config` 모두 통과했다. 실제 attached-client Alt+h 형식의 Ctrl+h로 내부 왼쪽 이동·외부 pane 복귀·삽입 모드 왼쪽 이동과 문자 보존을 확인했으며 raw Ctrl+l 오른쪽 이동·Backspace·Esc·격리 서버 종료·사용자 lockfile 보존도 통과했다. `py -3 -B tests/check_environment.py`, Lua loadfile, 실제 WezTerm show-keys의 h/l 전달, `git diff --check` 통과. 독립 읽기 전용 리뷰의 Alt+h 예약·다른 탭 영향을 반영했다. 물리 WezTerm 키/IME 및 macOS/WSL/Linux 실기기는 미검증이다. 사용자 서버 reload·설치·설정 연결은 수행하지 않았으며 사용 지침에 재로드 방법을 적었다. 기존 draft PR #10으로 제출한다.
