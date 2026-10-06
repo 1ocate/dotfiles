@@ -117,3 +117,5 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 - 2026-10-06T15:59+09:00 (KST): 사용자가 “powershell 환경에서 tmux 동작확인 완료. 커밋 후 pr merge준비”를 요청했다. 실행 환경은 windows-powershell, 기준 HEAD는 `05711b1`, fetch한 origin/main은 `38d1473`이다. PR #10의 원격 head가 로컬 HEAD와 일치하며 충돌 없음(`MERGEABLE`/`CLEAN`), 등록된 CI check와 승인 리뷰는 없다.
 - 분석·계획: 후속 입력 수정은 이미 커밋·push되어 있다. 이번에는 사용자 실제 동작 확인을 같은 기록에 추가하고 문서 diff·링크를 검증한 뒤 명시적 파일 stage, 커밋·SSH push, 한국어 PR 본문 갱신과 draft 해제를 수행한다. 새 설계 결정은 없고 ADR 0003은 병합 전 제안 상태를 유지한다. 플러그인 일괄 업데이트인 기존 사용자 `nvim/lazy-lock.json` 변경은 보존·제외한다.
 - 검증 범위: 사용자 보고를 Windows PowerShell tmux의 실제 사용 확인 근거로 기록하며 자동 검사를 재실행한 것으로 쓰지 않는다. 개별 키·GUI·clipboard·IME 시나리오와 재로드 방식은 보고에 명시되지 않았다. 앞선 자동 검사 근거를 유지하고 macOS/WSL/Linux 실기기 및 깨끗한 새 장비 전체 설치는 미검증으로 남긴다. 실제 merge·자동 merge·설치·설정 적용은 이번 요청 범위에 포함하지 않는다.
+
+- 2026-10-06T16:01+09:00 (KST): 작업 기록 링크·diff 검토와 git diff --check 및 staged diff 검사를 통과했다. 검증 확인 기록을 5e82223으로 커밋·SSH push하고 PR #10의 한국어 본문을 갱신했다. draft 해제 후 GitHub에서 isDraft=false, MERGEABLE/CLEAN과 원격 head 일치를 확인했다. 등록된 CI check는 없다. 사용자 lockfile 변경만 보존했으며 실제 merge·자동 merge·환경 적용은 수행하지 않았다. 다음 단계는 사용자의 최종 PR 리뷰와 병합 결정이다.
