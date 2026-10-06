@@ -82,7 +82,7 @@ OS별 선택 설치나 자동 복구 기능은 없습니다.
 | 파일·텍스트 검색 | `fzf`, `fd`, `ripgrep` (`rg`) |
 | 언어 서버 | Node.js 등 각 언어 도구의 실행 환경 |
 | Treesitter 파서 | 플러그인 버전에 맞는 컴파일러와 빌드 환경 |
-| tmux 이동 | tmux |
+| tmux 이동 | Unix tmux / Windows 선택 기능 psmux (`tmux.exe`) |
 | 아이콘 표시 | 설정에 맞는 Nerd Font |
 
 첫 실행에서는 플러그인이 다운로드될 수 있습니다.
@@ -111,6 +111,8 @@ Homebrew/MacPorts 경로와 개인 pnpm 경로, SSH 호스트 단축키가 포�
 
 zsh 설정은 Oh My Zsh, Powerlevel10k, zsh-syntax-highlighting을 참조합니다.
 `install`은 이 zsh 설정과 WezTerm 설정을 자동으로 연결하지 않습니다.
+
+Windows PowerShell에서는 선택 기능 psmux로 Neovim/pane 이동과 프로젝트 세션을 연결합니다. 설치·키·해제 방법은 [Windows psmux 사용 지침](docs/windows-setup.md#psmux와-neovim-pane-이동)을 따릅니다.
 
 tmux prefix는 `<C-Space>`입니다. `<C-h/j/k/l>`로 pane을 이동하고 prefix 이후 `|`와 `-`로 분할합니다.
 복사 모드의 `y`는 현재 macOS의 `pbcopy`를 사용합니다.

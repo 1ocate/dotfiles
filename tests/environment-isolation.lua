@@ -92,6 +92,17 @@ local function select_scenario(scenario)
       })
       return { read = function() return content end, close = function() end }
     end
+    if path:match('/%.local/psmux%.json$') then
+      assert(scenario.id == 'windows-powershell' and scenario.choice == 'windows-powershell',
+        'psmux state was read outside the approved PowerShell branch')
+      if not scenario.mux then return nil end
+      local content = scenario.mux_corrupt and 'invalid-json' or real_vim.json.encode(scenario.mux)
+      return { read = function() return content end, close = function() end }
+    end
+    if path:match('/Programs/psmux/3%.3%.8/psmux%.exe$') then
+      assert(scenario.id == 'windows-powershell', 'Unix checked a Windows executable')
+      return scenario.binary and { close = function() end } or nil
+    end
     return real_open(path, mode)
   end
 end
@@ -131,6 +142,34 @@ for _, choice in ipairs({
     assert(terminal.default_domain == nil)
   end
   print("PASS: " .. choice.label .. " selection does not force PowerShell")
+end
+for _, feature in ipairs({
+  { label = 'enabled', enabled = true, binary = true, expect = true },
+  { label = 'disabled', enabled = false, binary = true },
+  { label = 'wrong host', enabled = true, host = 'other-host', binary = true },
+  { label = 'missing binary', enabled = true },
+  { label = 'string enabled', enabled = 'true', binary = true },
+  { label = 'invalid feature JSON', enabled = true, binary = true, corrupt = true },
+  { label = 'unknown schema', enabled = true, binary = true, schema = 9 },
+}) do
+  local scenario = { id = 'windows-powershell', triple = 'x86_64-pc-windows-msvc',
+    choice = 'windows-powershell', binary = feature.binary, mux_corrupt = feature.corrupt,
+    mux = { schemaVersion = feature.schema or 1, host = feature.host or 'fixture-host',
+      enabled = feature.enabled, version = '3.3.8' } }
+  select_scenario(scenario)
+  local terminal = wezterm_config(root, scenario)
+  local launched = terminal.default_prog[4] == '-File'
+  assert(launched == (feature.expect == true), feature.label .. ' startup differs')
+  local ctrl_h, ctrl_l
+  for _, key in ipairs(terminal.keys) do
+    if key.key == 'h' and key.mods == 'CTRL' then ctrl_h = key.action end
+    if key.key == 'l' and key.mods == 'CTRL' then ctrl_l = key.action end
+  end
+  assert((ctrl_h ~= nil) == launched, feature.label .. ' Ctrl+h opt-in differs')
+  if ctrl_h then assert(ctrl_h.SendString == '\x1bh', 'Wrong Ctrl+h encoding') end
+  assert((ctrl_l ~= nil) == launched, feature.label .. ' Ctrl+l opt-in differs')
+  if ctrl_l then assert(ctrl_l.SendString == '\x0c', 'Wrong Ctrl+l encoding') end
+  print('PASS: psmux ' .. feature.label .. ' startup')
 end
 _G.vim, os.getenv, io.open = real_vim, real_getenv, real_open
 print("Baseline comparison complete; no plugins, shell commands or host settings were modified.")
