@@ -7,8 +7,8 @@
 - 실행 환경: windows-powershell
 - 범위: Windows Terminal JSON 원본·안전한 연결 어댑터, Windows 설치의 터미널 선택, psmux 등록 실패 안내, 관련 사용 문서·검증
 - 비대상: macOS/WSL/Linux 설정 적용, 사용자 lazy-lock 변경, 기존 설치 전체 재실행, OS 기본 앱 설정 변경, PR #12의 원격 Esc 런타임 해결
-- 관련 ADR: [ADR 0004](../adr/0004-windows-terminal.md), [ADR 0002](../adr/0002-native-windows-adapters.md), [ADR 0003](../adr/0003-windows-psmux.md)
-- 관련 PR: [PR #13](https://github.com/1ocate/dotfiles/pull/13) (draft). 열린 PR #11(작업 0004)의 분석을 참고하고 #12(작업 0005)의 별도 SSH Esc 조사를 침범하지 않는다.
+- 관련 ADR: [ADR 0005](../adr/0005-terminal-esc-ime.md), [ADR 0004](../adr/0004-windows-terminal.md), [ADR 0002](../adr/0002-native-windows-adapters.md), [ADR 0003](../adr/0003-windows-psmux.md)
+- 관련 PR: [PR #13](https://github.com/1ocate/dotfiles/pull/13) (병합), Esc 후속 [draft PR #14](https://github.com/1ocate/dotfiles/pull/14). 열린 PR #11(작업 0004)의 분석을 참고하고 #12(작업 0005)의 별도 SSH Esc 조사를 침범하지 않는다.
 
 ## 분석과 계획
 
@@ -81,3 +81,5 @@ WezTerm Lua 문법 검사 통과. 첫 `tests/environment-isolation.lua` 실행�
 - 정적 검토: 기존 Esc 입력 통과·key-up·IME 함수·Alt/Windows 교환 등은 보존했다. 활성 창 두 실행 파일만 처리하고 셸·tmux·터미널 JSON에는 추가 호출하지 않는다. 사용 지침과 AGENTS의 대상 범위를 맞췄다.
 - 한계: 실제 한글 조합 중 Esc, 영어 유지, Neovim/mux/SSH 및 다른 앱 물리 키는 GUI 미검증이다. 다른 OS 실기기와 새 장비 설치도 미검증이다. GUI 검증을 위해 한글 입력 후 Esc를 누르고 다음 입력이 영어인지, Neovim이 정상 모드로 돌아오는지 확인한다.
 - 제출 도구: 현재 `py -3`가 설치 Python을 찾지 못해 설치된 Python 3.13 실행 파일로 동일한 `scripts/gh-local.py` wrapper를 호출한다. 기존 GitHub CLI 경로는 해당 명령 프로세스의 PATH에만 추가하며 전역 인증·PATH는 변경하지 않는다.
+
+2026-10-07 KST: 최종 diff·문서 상대 링크·`git diff --check` 통과 후 `7ecc9d0`을 SSH push하고 [draft PR #14](https://github.com/1ocate/dotfiles/pull/14)를 제출했다. 현재 호스트 적용은 완료했고 물리 키·IME GUI 확인은 남아 있다. 사용자 lockfile·폰트는 커밋에서 제외했고 merge는 수행하지 않았다. Git 작성자 설정 부재는 저장소 `.gitconfig`의 기존 작성자를 해당 커밋 명령에만 지정하여 해결했으며 전역/로컬 Git 설정은 바꾸지 않았다.

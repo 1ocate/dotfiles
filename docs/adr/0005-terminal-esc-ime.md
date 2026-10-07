@@ -3,7 +3,7 @@
 - 상태: 제안
 - 작성일: 2026-10-07
 - 범위: windows-powershell
-- 관련 작업: [작업 0006](../work/0006-windows-terminal.md)
+- 관련 작업·PR: [작업 0006](../work/0006-windows-terminal.md), [draft PR #14](https://github.com/1ocate/dotfiles/pull/14)
 - 선행 결정: [ADR 0004](0004-windows-terminal.md)의 WezTerm 전용 Esc 범위를 변경하는 후속 결정. 나머지 터미널 선택·설정 연결 결정은 유지한다.
 - 요청 근거: 사용자가 Windows Terminal에서도 Esc 영어 전환을 실제 적용하도록 명시적으로 요청했다. 로컬 적용 승인과 PR 병합·GUI 검증은 구분한다.
 
