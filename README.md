@@ -25,6 +25,7 @@ Windows 설치·연결 명령과 의존성·복구 방법은 [Windows 네이티�
 | [`nvim/`](nvim/) | LazyVim 기반 Neovim 설정과 플러그인 구성 |
 | [`fish/`](fish/), [`.zshrc`](.zshrc), [`.p10k.zsh`](.p10k.zsh) | 셸 환경, 단축키, 프롬프트 설정 |
 | [`.wezterm.lua`](.wezterm.lua), [`alacritty.toml`](alacritty.toml) | 터미널 색상, 글꼴, 키 입력 설정 |
+| [`windows-terminal/settings.json`](windows-terminal/settings.json) | Windows 네이티브 Windows Terminal 설정 원본 |
 | [`tmux/tmux.conf`](tmux/tmux.conf) | tmux 창 이동, 복사 모드, 세션 키맵 |
 | [`scripts/t`](scripts/t) | fzf로 디렉터리를 선택하고 tmux 세션 생성·전환 |
 | [`.hammerspoon/`](.hammerspoon/) | macOS 창 관리와 한글 입력 상태 표시·전환 |
@@ -123,7 +124,11 @@ tmux prefix는 `<C-Space>`입니다. `<C-h/j/k/l>`로 pane을 이동하고 prefi
 
 ## 운영체제별 범위와 현재 제약
 
-### Windows에서 WezTerm 적용
+### Windows에서 터미널 적용
+
+Windows 네이티브 기본은 Windows Terminal이며 [설정 연결·사용 지침](docs/windows-terminal.md)을 따릅니다. `scripts/setup-windows.ps1`은 기본 Windows Terminal, `-Terminal wezterm`은 기존 WezTerm을 선택합니다. Windows Terminal의 설정 디렉터리는 저장소 `windows-terminal/`을 junction으로 참조하고 runtime 파일은 Git에서 제외합니다. psmux는 선택 기능이며 PowerShell 탭에서 `mux`로 시작합니다. Windows Terminal의 Ctrl+V는 편집기에 전달하고 붙여넣기는 Ctrl+Shift+V를 사용합니다.
+
+WezTerm을 선택하는 경우:
 
 Windows는 사용자 홈의 loader로 저장소 `.wezterm.lua`를 읽습니다. 승인된 PowerShell 선택에서는 네이티브 셸을 사용하고, 명시적인 WSL 선택은 발견한 도메인을 사용합니다. 등록·연결·옵션과 제한은 Windows 사용 지침에서 확인합니다. macOS·Linux의 기존 기본 셸은 유지하며 tmux·프로젝트 전환의 대체는 아직 포함하지 않습니다.
 

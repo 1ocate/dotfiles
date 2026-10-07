@@ -1,10 +1,11 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 Native Windows bootstrap based on the configuration verified on 2026-10-03.
 Run -Plan to review without installing or changing anything.
 #>
 [CmdletBinding()]
 param(
+    [ValidateSet('windows-terminal', 'wezterm')][string]$Terminal = 'windows-terminal',
     [switch]$Plan,
     [switch]$Check,
     [switch]$ApprovePowerShell,
@@ -31,13 +32,18 @@ function Resolve-AutoHotkeyStartup {
     return $answer -match '^(?i:y|yes)$'
 }
 
+if ($env:OS -ne 'Windows_NT') { throw 'This setup requires native Windows.' }
+
 $repoPath = Split-Path -Parent $PSScriptRoot
+$terminalPackage = if ($Terminal -eq 'windows-terminal') { 'Microsoft.WindowsTerminal' } else { 'wez.wezterm' }
+$terminalCommand = if ($Terminal -eq 'windows-terminal') { 'wt' } else { 'wezterm' }
+$terminalAdapter = if ($Terminal -eq 'windows-terminal') { 'use-windows-terminal.ps1' } else { 'use-wezterm.ps1' }
 $packages = @(
     'Git.Git',
     'Microsoft.PowerShell',
     'JanDeDobbeleer.OhMyPosh',
     'AutoHotkey.AutoHotkey',
-    'wez.wezterm',
+    $terminalPackage,
     'Neovim.Neovim',
     'OpenJS.NodeJS.LTS',
     'BurntSushi.ripgrep.MSVC',
@@ -54,11 +60,13 @@ if ($Plan) {
     Write-Output 'First setup requires -ApprovePowerShell; later runs reuse the local host selection.'
     if (-not $SkipPackages) { Write-Output ('Install missing winget packages: ' + ($packages -join ', ')) }
     if ($WithPsmux) { & (Join-Path $PSScriptRoot 'setup-psmux.ps1') -Plan }
-    Write-Output 'Connect WezTerm and Neovim to this checkout, backing up previous settings.'
+    Write-Output "Connect $Terminal and Neovim to this checkout, backing up previous settings."
+    if ($Terminal -eq 'windows-terminal') { & (Join-Path $PSScriptRoot $terminalAdapter) -Plan }
+    else { Write-Output ('WezTerm loader source: ' + (Join-Path $repoPath '.wezterm.lua')) }
     Write-Output 'Add Oh My Posh initialization to the 5.1 and 7 user profiles.'
     if (-not $SkipGitCompletion) { & (Join-Path $PSScriptRoot 'setup-git-completion.ps1') -Plan }
     Write-Output 'Set CurrentUser RemoteSigned only if it is currently Undefined or Restricted.'
-    if (-not $SkipFonts) { Write-Output 'Install Meslo Nerd Font if absent.' }
+    if (-not $SkipFonts) { & (Join-Path $PSScriptRoot 'setup-meslo-font.ps1') -Plan }
     if (-not $SkipPlugins) { Write-Output 'Install/restore Neovim plugins from lazy-lock.json and install syntax parsers/tools.' }
     if (-not $SkipAutoHotkey) { Write-Output 'Start the AutoHotkey v2 script in the background.' }
     if ($RegisterAutoHotkeyStartup) { Write-Output 'Register the optional AutoHotkey login shortcut.' }
@@ -66,8 +74,14 @@ if ($Plan) {
     return
 }
 
-if ($env:OS -ne 'Windows_NT') { throw 'This temporary setup is for native Windows only.' }
-foreach ($relativePath in @('.wezterm.lua', 'environment.lua', 'autoHotKey.ahk', 'nvim/init.lua', 'nvim/lazy-lock.json', 'scripts/use-wezterm.ps1', 'scripts/use-neovim.ps1', 'scripts/setup-neovim.lua', 'scripts/windows-environment.ps1', 'scripts/environment.py', 'scripts/setup-git-completion.ps1', 'powershell/git-completion.ps1')) {
+if (-not $SkipFonts) {
+    foreach ($fontSource in @('fonts/meslo.json', 'scripts/setup-meslo-font.ps1')) {
+        if (-not (Test-Path -LiteralPath (Join-Path $repoPath $fontSource) -PathType Leaf)) { throw "Required font source not found: $fontSource" }
+    }
+}
+
+$terminalSources = if ($Terminal -eq 'windows-terminal') { @('windows-terminal/settings.json', 'scripts/use-windows-terminal.ps1') } else { @('.wezterm.lua', 'environment.lua', 'scripts/use-wezterm.ps1') }
+foreach ($relativePath in ($terminalSources + @( 'autoHotKey.ahk', 'nvim/init.lua', 'nvim/lazy-lock.json', 'scripts/use-neovim.ps1', 'scripts/setup-neovim.lua', 'scripts/windows-environment.ps1', 'scripts/environment.py', 'scripts/setup-git-completion.ps1', 'powershell/git-completion.ps1'))) {
     if (-not (Test-Path -LiteralPath (Join-Path $repoPath $relativePath) -PathType Leaf)) {
         throw "Required file not found: $relativePath"
     }
@@ -79,10 +93,10 @@ function Update-SetupPath {
 }
 
 function Test-SetupPrerequisites {
-    $requiredCommands = @('wezterm', 'nvim', 'pwsh', 'oh-my-posh')
+    $requiredCommands = @($terminalCommand, 'nvim', 'pwsh', 'oh-my-posh')
     if (-not $SkipGitCompletion) { $requiredCommands += 'git' }
     if (-not $SkipPlugins) { $requiredCommands += @('git', 'node', 'npm', 'rg', 'fd', 'fzf', 'gcc', 'python') }
-    $missing = @($requiredCommands | Where-Object { -not (Get-Command $_ -ErrorAction SilentlyContinue) })
+    $missing = @($requiredCommands | Where-Object { -not (Get-Command $_ -CommandType Application -ErrorAction SilentlyContinue) })
     if (-not $SkipAutoHotkey -or $RegisterAutoHotkeyStartup) {
         $candidates = @(
             (Join-Path $env:LOCALAPPDATA 'Programs/AutoHotkey/v2/AutoHotkey64.exe'),
@@ -106,7 +120,7 @@ $nvimTarget = [System.IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'nvim')
 if ($nvimSource -eq $nvimTarget -or $nvimSource.StartsWith($nvimTarget + [System.IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or $nvimTarget.StartsWith($nvimSource + [System.IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
     throw 'Neovim source and target must be separate, non-nested directories.'
 }
-if ([System.IO.Path]::GetFullPath((Join-Path $repoPath '.wezterm.lua')) -eq [System.IO.Path]::GetFullPath((Join-Path ([Environment]::GetFolderPath('UserProfile')) '.wezterm.lua'))) {
+if ($Terminal -eq 'wezterm' -and [System.IO.Path]::GetFullPath((Join-Path $repoPath '.wezterm.lua')) -eq [System.IO.Path]::GetFullPath((Join-Path ([Environment]::GetFolderPath('UserProfile')) '.wezterm.lua'))) {
     throw 'WezTerm source and target must differ; move the checkout outside the user profile root.'
 }
 if ($Check) {
@@ -114,6 +128,9 @@ if ($Check) {
     Write-WindowsSelectionStatus -RepoPath $repoPath
     Update-SetupPath
     Test-SetupPrerequisites
+    if ($Terminal -eq 'windows-terminal') { & (Join-Path $PSScriptRoot $terminalAdapter) -Check }
+    else { Write-Output ('WezTerm loader target: ' + (Join-Path ([Environment]::GetFolderPath('UserProfile')) '.wezterm.lua')) }
+    if (-not $SkipFonts) { & (Join-Path $PSScriptRoot 'setup-meslo-font.ps1') -Check }
     if ($WithPsmux) { & (Join-Path $PSScriptRoot 'setup-psmux.ps1') -Check }
     if (-not $SkipGitCompletion) { & (Join-Path $PSScriptRoot 'setup-git-completion.ps1') -Check }
     return
@@ -141,13 +158,14 @@ if (-not $SkipPackages) {
 }
 Update-SetupPath
 Test-SetupPrerequisites
+if (-not $SkipFonts) { & (Join-Path $PSScriptRoot 'setup-meslo-font.ps1') }
 if ($WithPsmux) { & (Join-Path $PSScriptRoot 'setup-psmux.ps1') -InstallOnly -SkipInstall:$SkipPackages }
 
 if (-not $SkipGitCompletion) {
     & (Join-Path $PSScriptRoot 'setup-git-completion.ps1') -SkipInstall:$SkipPackages
 }
 
-& (Join-Path $PSScriptRoot 'use-wezterm.ps1')
+& (Join-Path $PSScriptRoot $terminalAdapter)
 & (Join-Path $PSScriptRoot 'use-neovim.ps1')
 
 $documentsPath = [Environment]::GetFolderPath('MyDocuments')
@@ -180,18 +198,6 @@ if ((Get-ExecutionPolicy -Scope CurrentUser) -in @('Undefined', 'Restricted')) {
     }
 }
 
-if (-not $SkipFonts) {
-    $fontFound = $false
-    foreach ($fontFolder in @((Join-Path $env:WINDIR 'Fonts'), (Join-Path $env:LOCALAPPDATA 'Microsoft/Windows/Fonts'))) {
-        if (Get-ChildItem -LiteralPath $fontFolder -Filter '*Meslo*Nerd*.ttf' -ErrorAction SilentlyContinue) {
-            $fontFound = $true
-        }
-    }
-    if (-not $fontFound) {
-        & oh-my-posh font install meslo
-        if ($LASTEXITCODE -ne 0) { throw 'Meslo font installation failed.' }
-    }
-}
 
 if (-not $SkipPlugins) {
     $nvim = (Get-Command nvim -ErrorAction Stop).Source
@@ -245,5 +251,7 @@ if (-not $SkipAutoHotkey -or $RegisterAutoHotkeyStartup) {
         }
     }
 }
-Write-Output 'Windows setup complete. Reopen WezTerm to pick up the refreshed PATH and PowerShell 7.'
+Write-Output "Windows setup complete. Reopen $Terminal to pick up the refreshed PATH and PowerShell 7."
+if ($Terminal -eq 'windows-terminal') { Write-Output 'Choose Windows Terminal as the default terminal application in Windows Settings if desired; this setup does not change that system setting.' }
+if ($WithPsmux) { Write-Output 'Open a new PowerShell 7 tab and run mux to use the repository psmux settings.' }
 Write-Output 'Copilot authentication and language-specific runtimes are configured separately.'

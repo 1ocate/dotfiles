@@ -37,6 +37,11 @@ local fonts = {
     'D2Coding',
 }
 
+-- Match the exact font prepared by the native Windows installer.
+if selected_environment == 'windows-powershell' then
+    table.insert(fonts, 1, 'MesloLGMDZ Nerd Font Mono')
+end
+
 local font_rules = {
     {
         italic = false,
