@@ -1,6 +1,6 @@
 # 0006: Windows Terminal 기본 사용과 Git 설정 관리
 
-- 상태: 진행 중
+- 상태: 리뷰 대기
 - 요청·배경: PC 세팅 중 Windows Terminal의 tmux 기본 설정 및 mux 등록 실패를 확인했다. 사용자는 Windows에서는 Windows Terminal을 사용하도록 세팅하는 방향과 PR을 요청했다.
 - 시작일: 2026-10-07
 - 기준: main/origin/main 73bbe35, feat/windows-terminal
@@ -8,7 +8,7 @@
 - 범위: Windows Terminal JSON 원본·안전한 연결 어댑터, Windows 설치의 터미널 선택, psmux 등록 실패 안내, 관련 사용 문서·검증
 - 비대상: macOS/WSL/Linux 설정 적용, 사용자 lazy-lock 변경, 기존 설치 전체 재실행, OS 기본 앱 설정 변경, WezTerm Esc/IME 범위 확장, PR #12의 원격 Esc 런타임 해결
 - 관련 ADR: [ADR 0004](../adr/0004-windows-terminal.md), [ADR 0002](../adr/0002-native-windows-adapters.md), [ADR 0003](../adr/0003-windows-psmux.md)
-- 관련 PR: 제출 후 갱신. 열린 PR #11(작업 0004)의 분석을 참고하고 #12(작업 0005)의 별도 SSH Esc 조사를 침범하지 않는다.
+- 관련 PR: [PR #13](https://github.com/1ocate/dotfiles/pull/13) (draft). 열린 PR #11(작업 0004)의 분석을 참고하고 #12(작업 0005)의 별도 SSH Esc 조사를 침범하지 않는다.
 
 ## 분석과 계획
 
@@ -63,3 +63,5 @@
 WezTerm Lua 문법 검사 통과. 첫 `tests/environment-isolation.lua` 실행은 필수 `DOTFILES_BASELINE` 미지정으로 시작 단계에서 중단했고, 최신 origin/main을 임시 `.local` 사본으로 export하여 재실행하니 macOS/Linux/WSL baseline 비교와 Windows Mono 선택·미승인/다른 host 격리·psmux 시나리오가 모두 통과했다. 다른 OS 실기기 검증이 아닌 Windows의 모의 검사다.
 
 통합 독립 재검토에서 폰트 충돌·진행 기록·rollback·Windows 전용 Mono 선택을 확인하고 남은 blocker가 없었다. 폰트 GUI 선택·실제 native 등록과 새 장비 전체 설치는 계속 미검증이다.
+
+2026-10-07 KST: 검증된 변경을 `ee45d9b`로 커밋·SSH push하고 [draft PR #13](https://github.com/1ocate/dotfiles/pull/13)을 제출했다. 사용자 lockfile과 추가 비-Mono 폰트 파일은 stage/commit하지 않았다. 실사용 적용·merge는 수행하지 않았다. 남은 GUI/실제 폰트 등록/신규 장비 검증은 PR의 미검증 범위다.

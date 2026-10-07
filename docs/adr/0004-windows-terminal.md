@@ -3,7 +3,7 @@
 - 상태: 제안
 - 작성일: 2026-10-07
 - 적용 범위: windows-powershell
-- 관련 작업·PR: [작업 0006](../work/0006-windows-terminal.md), PR 제출 후 연결
+- 관련 작업·PR: [작업 0006](../work/0006-windows-terminal.md), [draft PR #13](https://github.com/1ocate/dotfiles/pull/13)
 - 채택 근거: 사용자가 Windows에서는 Windows Terminal을 사용하도록 세팅하는 방향을 명시했다. 구현 PR의 병합과 실사용 적용은 별도로 기록한다.
 - 대체 관계: ADR 0002의 Windows 기본 터미널 선택만 변경하는 후속 결정. Neovim·psmux 원본 및 macOS/WSL 구성은 유지한다.
 
