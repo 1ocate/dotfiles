@@ -7,7 +7,7 @@
 - 실행 환경: `windows-powershell`; 현재 호스트의 유효한 선택과 구성요소 진행 기록 확인.
 - 적용 범위·비대상: Windows 읽기 전용 진단과 평가 문서. 설치, 프로필·링크·렌더러 적용, lockfile 수정, 기존 세션 종료는 제외한다. macOS·WSL의 기존 동작을 유지하며 네이티브 Linux는 미검증이다.
 - 관련 ADR: [ADR 0002](../adr/0002-native-windows-adapters.md), [ADR 0003](../adr/0003-windows-psmux.md). 이번 결과는 비교·개선 제안이며 공통 터미널 변경을 채택하지 않으므로 새 ADR은 작성하지 않는다.
-- 관련 PR: 준비 중
+- 관련 PR: [PR #11](https://github.com/1ocate/dotfiles/pull/11)
 
 ## 분석과 미확인 사항
 
@@ -35,11 +35,12 @@
 | --- | --- | --- | --- |
 | `73bbe35` 설정과 기존 호스트 프로필 | windows-powershell 실제 실행 | pwsh 프로필 유무 5회, prompt 저장소 안/밖 각 5회, 초기화 구성요소 분리, Oh My Posh debug/version | bare 중앙값 227.4ms, profile 2443.0ms, repo prompt 293.2ms. GUI/ConPTY 렌더링 지연은 미측정 |
 | 같은 설정 | windows-powershell 읽기 전용 | Neovim junction, WezTerm loader, 도구 버전, 로컬 선택·구성요소 상태 | 현재 체크아웃 연결 확인. 설치·연결·세션 생성/종료 없음 |
+| 4b2b479 및 PR 연결 기록 diff | Windows 문서 검증 | 로컬 링크 검사, git diff --check, 독립 리뷰 | 통과. 문서 네 파일만 커밋, 기존 사용자 lockfile 변경 제외. 기본 prompt 5회 비교값도 평가 표에 기록 |
 | 미커밋 문서 diff | Windows 정적 리뷰 | windows_reviewer: 터미널/psmux/AHK 키 경계와 공식 sendInput 문서 검토 | Ctrl+h, Ctrl+Space, Ctrl+Backspace, Ctrl+V와 IME 이전 제약 반영. 다른 OS 및 GUI 실기기 테스트 아님 |
 
 ## 남은 일과 종료 근거
 
-분석 문서·재현 명령 작성과 로컬 검증 완료. PR 제출·병합 상태를 확인한다. GUI 성능 비교와 실제 설정 적용은 후속 요청 범위이며 이 분석 PR의 완료 조건으로 오인하지 않는다.
+분석 문서·재현 명령 작성과 로컬 검증 완료. PR #11 제출 완료, 병합은 사용자 리뷰를 기다린다. GUI 성능 비교와 실제 설정 적용은 후속 요청 범위이며 이 분석 PR의 완료 조건으로 오인하지 않는다.
 
 ## 측정 재현 방법
 
