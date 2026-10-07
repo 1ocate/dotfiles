@@ -59,6 +59,7 @@ Windows Terminal의 `font.face`는 `MesloLGMDZ Nerd Font Mono`, 크기는 `11`�
 | 키 | 동작·담당 |
 | --- | --- |
 | `Ctrl+Space` → `\|` / `-` | psmux 좌우 / 상하 분할. Windows Terminal은 키를 선점하지 않음 |
+| prefix → `Shift+F` | 현재 pane 경로에서 `t` 프로젝트 선택을 새 PowerShell 창으로 실행 |
 | prefix → `h/j/k/l` | psmux pane 이동 |
 | `Ctrl+h/j/k/l` | 기존 psmux/Neovim 이동. 터미널의 물리 입력 경로는 별도 검증 |
 | `Alt+h` | 기존 psmux 왼쪽 이동 대체. psmux 밖에는 터미널의 기본 입력 유지 |
