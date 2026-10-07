@@ -124,6 +124,8 @@ WSL의 기존 동작도 유지 범위가 확정되면 회귀 검증 대상으로
 
 ## 참고
 
+- [Windows 터미널 성능 분석과 대안·공통 설정 제안](windows-terminal-performance.md)
+
 - [프로젝트 구성과 현재 설정 안내](../README.md)
 - [WezTerm 기능](https://wezterm.org/)
 - [WezTerm workspace](https://wezterm.org/recipes/workspaces.html)
