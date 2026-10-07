@@ -173,3 +173,11 @@ pwsh -NoProfile -File .\scripts\setup-psmux.ps1 -Disable
 자동 검사는 Ctrl+H(Alt+h 형식)/K/L·Backspace·Esc의 실제 attached-client 입력과 Ctrl+J의 CLI 명령 전달을 구분합니다. 표준 ConPTY에서 raw Ctrl+J의 LF가 Enter로 해석되는 경로와 GUI 물리 키·IME는 별도 확인이 필요합니다.
 
 Neovim은 승인된 Windows의 dotfiles psmux 안에서만 OSC 133 실행·종료·삽입 모드 표시를 사용합니다. LSP/terminal job 자식 프로세스가 있어도 pane의 전경 프로그램을 Neovim으로 유지하고, 종료·중지 시 해제합니다. 전체 설정 검사는 LazyVim을 통해 navigator를 로드하며 키맵을 직접 다시 덮어쓰지 않습니다.
+
+### SSH 원격 Vim에서 Esc가 전달되지 않을 때
+
+로컬 Neovim 삽입 모드 보정은 SSH 뒤의 원격 Vim 모드를 감지하지 않습니다. Esc 문제 조사와 실제·합성 재현 범위는 [작업 0005](work/0005-psmux-ssh-escape.md)에 기록합니다. 현재 원격 문제를 해결한 runtime 변경은 없습니다.
+
+원격 Vim에서 임시로 Ctrl+\ 다음 Ctrl+N을 눌러 일반 모드로 복귀할 수 있습니다. 기본 설정의 Vim은 `vim -u NONE -i NONE`으로 실행해 사용자 매핑·플러그인의 영향을 분리합니다. 기본 설정에서만 정상이라면 기존 Vim에서 `:verbose imap <Esc>`로 매핑 정의를 확인합니다. 원격 tmux 사용 여부도 함께 확인합니다. 원격 설정 파일이나 개인 인증을 자동 수정하지 않습니다.
+
+로컬 입력 전달 비교는 `py -3 -B tests/psmux-escape.py --wezterm`으로 수행합니다. 기존 psmux 3.3.8과 테스트 전용 .NET Framework 컴파일러를 사용하고 임시 namespace/data에만 테스트 서버를 만듭니다. 실제 SSH를 연결하거나 사용자 세션을 재설정하지 않습니다. 기본 PASS는 합성 modifier stress의 해결을 뜻하지 않으며 `--require-all`은 알려진 입력 유실도 실패로 노출합니다. GUI/IME·실제 원격 Vim 확인은 별도입니다.
