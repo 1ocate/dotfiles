@@ -1,6 +1,6 @@
 # 0003: Windows PowerShell에 psmux 적용
 
-- 상태: 리뷰 대기 (기본 namespace 구현·자동 검증 완료, Codex 재시작·GUI 확인 및 Windows Terminal 연결 승인 대기)
+- 상태: 리뷰 대기 (기본 namespace·F/D 지연 개선 제출, 사용자 mux D 적용 확인; F 전환·격리 D 실패 원인·GUI 및 Windows Terminal 연결은 후속 확인)
 - 요청·배경: 호환성 확인 후 사용자가 PowerShell 로컬 적용과 변경 파일을 모은 PR 제출을 요청했다. Neovim 연동을 우선한다.
 - 시작일: 2026-10-06
 - 기준: main `38d1473`, `feat/windows-psmux`; fetch 후 origin/main 일치, 기존 사용자 변경 없음
@@ -8,7 +8,7 @@
 - 범위: Windows psmux 설치·설정·PowerShell 함수·WezTerm 시작, Neovim 이동 검증과 PR
 - 비대상: macOS/WSL tmux 변경, 플러그인 업데이트, 다른 health 경고, 재부팅 복원
 - 관련 ADR: [ADR 0003](../adr/0003-windows-psmux.md)
-- 관련 PR: [PR #10](https://github.com/1ocate/dotfiles/pull/10), [작업 브랜치](https://github.com/1ocate/dotfiles/tree/feat/windows-psmux)
+- 관련 PR: [PR #10](https://github.com/1ocate/dotfiles/pull/10)(병합), [PR #16](https://github.com/1ocate/dotfiles/pull/16)(현재 구현·검증), [PR #15](https://github.com/1ocate/dotfiles/pull/15)(선행 F 연결·제한 안내)
 
 ## 분석과 미확인 사항
 
@@ -61,7 +61,7 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 | 모의 `tests/psmux-foreground.lua` | OSC 실행·정지·재개·종료 및 비대상 OS/승인/서버의 미실행 검사 통과 |
 | 문법·정적 | PowerShell AST, Lua loadfile, git diff --check, macOS/windows/독립 reviewer 검토. 지적된 사항 수정 |
 
-## 남은 일
+## 초기 PR #10 제출 당시 남은 일
 
 - [PR #10](https://github.com/1ocate/dotfiles/pull/10)에서 변경과 미검증 범위를 검토하고 병합을 결정한다.
 - 사용자가 PowerShell tmux 동작 확인 완료를 보고했다. 개별 시나리오 목록은 제공되지 않았으므로 fzf 선택 UI, copy mode 한글 clipboard, 기존 Alt/Esc·IME의 개별 검증 완료를 추가로 주장하지 않는다.
@@ -229,3 +229,15 @@ Windows Terminal 실제 연결: 기존 stable LocalState는 일반 디렉터리�
 2026-10-08 KST 새 창 생성 지연 조사: 사용자가 Ctrl+Shift+C로 새 세션을 추가할 때 느리다고 보고했다. 저장소 psmux 설정은 prefix `C-Space` 다음 `c`에서 `new-window -c #{pane_current_path}`를 실행한다. `.wezterm.lua`에는 Ctrl+Shift+C 사용자 바인딩이 없으며 설치된 WezTerm 유효 키맵은 이 조합을 CopyTo Clipboard로 처리한다. Windows Terminal 저장 설정에도 해당 바인딩은 없다. 키 전달 계층을 혼동하지 않도록 사용자가 Ctrl+Space를 먼저 누르는지 확인 중이다.
 
 격리된 ConPTY에서 prefix+c 새 PowerShell 창이 프롬프트 명령을 처리하기까지 2987.9ms(1회)였으며, 이후 runtime `warm on`을 설정한 상태에서 첫 창 3889.4ms, psmux가 spare shell을 채운 뒤 둘째 창 881.5ms(각 1회)였다. 이 비교는 표본 하나씩이며 session startup 비용·메모리와 통합한 결과가 아니다. 현재 `tmux/psmux.conf`의 `warm off`가 기본 창마다 PowerShell profile 초기화를 동기적으로 기다리게 하는 주요 지연 후보로 확인됐다. 아직 원본 설정은 바꾸지 않았고 startup 추가 시간/백그라운드 shell 비용 및 사용자가 누르는 실제 키를 더 확인한다.
+
+### 적용 결과와 PR 제출 범위 정리
+
+2026-10-08 KST 재개 계획: 사용자가 지금까지 적용한 변경의 PR 정리·제출을 요청하고 mux에서 D 적용도 확인했다고 보고했다. 기준 HEAD a95e49f, 실행 환경 windows-powershell. 최신 origin/main을 fetch하고 기존 PR과 실제 diff를 확인하여 같은 PR #16에 기록 정정과 기존 구현을 제출한다. ADR 0006의 기존 제안 구현에 대한 검증 기록 정리이며 새 결정이나 runtime 변경은 없다. 사용자 lazy-lock.json 갱신과 미추적 폰트 파일은 보존하고 이번 psmux PR에는 포함하지 않는다.
+
+검증 상태 정정: mux에서 D 적용은 사용자의 실사용 확인으로 기록한다. 정확한 터미널 앱·입력 순서·client 목록은 이번 보고에 포함되지 않았으므로 그 세부사항까지 검증했다고 확대하지 않는다. 앞선 격리 ConPTY D 전환 실패 관측은 당시 결과로 보존하지만 현재 실사용 D를 일괄 실패/미해결로 설명하지 않는다. 해당 격리 실패의 원인 규명은 남아 있다. F 선택 후 전환 재신고, GUI h/IME/클립보드, 다른 OS 및 새 장비 설치는 이번 D 확인으로 완료 처리하지 않는다.
+
+제출 범위: 기본 namespace 전환과 원본 config 소유권 검사, 프로젝트 이름의 예약 __ 회피, 기존 Neovim 입력 보정 유지, F/D 직접 PowerShell 실행 및 r 재등록, 관련 자동 검사·ADR·사용 안내를 PR #16에서 검토한다. 새 창 지연의 warm on은 조사만 수행했고 원본에 적용하지 않았으므로 구현 완료 항목에 포함하지 않는다. Windows Terminal junction 연결은 이전 승인 거부 후 미적용 상태를 유지한다. PR 제출은 리뷰 대기이며 merge·실제 설치·사용자 서버 reload는 수행하지 않는다.
+
+2026-10-08 KST 이번 정리 검증: Windows PowerShell 7 `pwsh -NoProfile -File tests/psmux-runtime.ps1`, `nvim --headless -u NONE -i NONE -l tests/psmux-foreground.lua`, `python -B tests/check_environment.py` 및 `git diff --check` 통과. runtime은 임시 fixture에서 승인·소유권·이름·prompt 보존을, foreground와 환경 검사는 headless/모의 격리를 확인했다. 실제 attached-client 전체 검사를 이번에 재실행한 것으로 기록하지 않는다. 최신 origin/main 1f1bf3d 확인, PR #16 본문을 현재 결과와 한계 중심으로 다시 작성한다. 열린 #15는 선행 F 연결로 #16과 중복되므로 별도 병합을 권장하지 않으며, #11 성능 분석·#12 SSH Esc 조사·#2 과거 설정 기준선은 별도 검토 대상으로 구분한다. #7/#10/#13/#14는 이미 병합됨을 GitHub 조회로 확인했다.
+
+2026-10-08 KST 독립 정적 리뷰: 제출을 막는 문제는 발견되지 않았다. D 사용자 확인과 격리 실패의 분리, F/GUI/다른 OS 미완료 표기 및 사용자 변경 제외를 확인했다. 초기 PR #10의 남은 일은 과거 기록임을 표시했고 작은따옴표 경로 한계를 PR 본문에 유지했다. 총괄이 GitHub에서 #15/#16 실제 본문과 변경 파일을 비교해 #16을 현재 구현 검토 대상으로 정리했다.
