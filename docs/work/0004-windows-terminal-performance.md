@@ -68,3 +68,19 @@ foreach ($probeMode in @('bare', 'profile')) {
 ```
 
 저장소 밖 비교는 마지막 자식 셸 명령 앞에 `Set-Location $env:TEMP;`를 추가했다. 구성요소는 새 `-NoProfile` 셸에서 `. ./powershell/git-completion.ps1`, `oh-my-posh init pwsh --eval | Invoke-Expression`, `. ./powershell/psmux.ps1`을 순서대로 각각 Stopwatch로 측정했다. `oh-my-posh debug` 출력은 세그먼트 시간만 추려 기록했고 prompt·개인 경로 전체는 공개 기록에 복제하지 않았다.
+
+
+## 프로젝트 실행 지연 재평가
+
+2026-10-08 KST: 사용자 보고상 세션 전환은 현재 정상이며, 다음 목표로 fzf 선택부터 세션 시작까지의 지연 개선 가능성을 조사했다. main 1f1bf3d와 PR #16 85a4896을 구분했다. 실사용 원본을 전환하지 않기 위해 기존 문서 PR #11 branch를 .local/performance-review worktree에서 최신 main과 통합했다. 작업 목록 충돌은 0004와 0006을 모두 보존했다. 현재 source checkout의 사용자 lockfile·폰트는 수정/stage하지 않았다.
+
+실제 windows-powershell 측정: py -3 -B .local/mux-shell-latency.py에서 새 자식 셸의 bare/full-profile/mux-only+Ready 각 5회와 구성요소 각 5회를 측정했다. 원본 함수는 현재 호스트의 Ready를 확인했다. bare 246.9ms, full-profile 2188.2ms, mux-only 778.7ms; git completion 870.3ms, OMP init 862.1ms, mux loader 214.4ms, 첫 prompt 405.6ms 중앙값. components는 각 새 NoProfile child에서 git/OMP/mux/prompt 순서로 측정하며 전체 startup과 단순 합산하지 않는다. root 성능 실행은 순차 진행했다. 하위 ConPTY probe의 초기 시도는 startup에서 실패해 유효한 동시 성능 표본을 얻지 못했다.
+
+py -3 -B .local/mux-native-latency.py는 고유 temp registry에서 latency-0..4 세션의 new-session/has-session/show-environment/bind-key r source-file을 반복했다. 중앙값 135.2/39.3/38.0/36.1ms. new-session 반환은 실제 interactive prompt 준비 완료가 아니다. 생성한 이름만 kill-session으로 종료했다. pwsh -NoLogo -NoProfile -File .local/mux-directory-latency.ps1은 현재 roots 파일·루트와 바로 아래 폴더 생성(후보 2개) 및 fzf --filter를 반복하여 중앙값 5.6/19.3ms였다. 첫 목록 생성은 41.1ms이며 대규모·원격 경로에 일반화하지 않는다.
+
+재현 구간: 기존 측정 재현 방법의 bare/profile 명령을 각 5회 실행하며 mux-only는 새 NoProfile child에서 현재 checkout powershell/psmux.ps1을 dot-source한 뒤 Get-DotfilesMuxStatus.Status가 Ready인지 확인했다. 디렉터리 생성은 Invoke-DotfilesProject의 동일 roots/Test-Path/Get-Item/Get-ChildItem/Sort-Object 구간, fzf 비교는 생성한 배열을 fzf --filter '^'에 전달했다. native 검사는 새 절대 temp PSMUX_DATA_DIR를 사용하고 TMUX/TMUX_PANE/PSMUX_* 라우팅 변수를 제거한 자식에서 -f 원본 conf new-session -d -s <자체 이름> -c <checkout>, has-session -t =<이름>, -t <이름> show-environment, -t <이름> bind-key r source-file <원본>을 Stopwatch와 동등한 perf_counter로 감쌌다. scratch probe는 실사용 설정 원본으로 설치하거나 commit하지 않는다.
+
+판단: fzf 자체보다 프로필 초기화가 큰 개선 후보다. lazy Git completion/OMP init 시점 조정의 개선 여지를 제시하되 실제 기능 보존·첫 Tab/첫 prompt·사용자 t override·취소 셸·h/Esc·한글 경로·신규/기존 세션 통합은 후속 runtime 구현에서 검증해야 한다. 이번 요청은 가능성 평가이며 런타임/사용자 프로필/원본 연결은 바꾸지 않았다. 새 구조 결정의 채택은 하지 않는다.
+
+
+2026-10-08 KST 통합 리뷰·한계: independent_reviewer는 수치·비동등 비교·전체 흐름 미측정의 구분이 적절함을 확인했으나 과거 문서의 Windows Terminal JSON/fragment 도입 및 WezTerm 전용 Esc 설명이 통합 main과 불일치한다고 지적했다. 현재 settings.json+junction 구현, Windows Terminal 일반 pwsh 후 mux 실행, AHK 실행 시 두 터미널 Esc 처리로 갱신했다. latency_probe의 ConPTY 측정은 4회 모두 공개 고정 오류 Could not create the psmux session. 이후 main attach timeout으로 성공 시간 표본 0이었다. 임시 registry와 helper의 생성·정리만 확인했고 실패를 런타임 해결 또는 GUI 성능 근거로 사용하지 않는다. 최초 원시 출력 진단은 auto-review가 개인 경로·프로필 노출 위험으로 거부했으므로 공개 오류 문자열/성공 bool만 추출한 안전한 진단으로 대체했다. 사용자 설정이나 인증 전문은 출력하지 않았다. root diff에는 기존 lockfile·폰트만 남으며 네 변경 문서의 상대 링크/충돌 표식·diff-check를 검증했다. PR #11에 이번 평가를 제출하고 실제 최적화·새 pane prompt/물리 GUI 시간 비교는 후속 작업이다.
