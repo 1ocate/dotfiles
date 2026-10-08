@@ -225,3 +225,7 @@ Windows Terminal 실제 연결: 기존 stable LocalState는 일반 디렉터리�
 남은 한계: 실제 물리 Ctrl+Space, 직접 D의 프로젝트 전환, F 선택 후 실제 client 전환, GUI h/IME/clipboard, 다른 OS는 이번 변경 기준 미검증이다. 전체 projects 검사는 main/실제 checkout session 이름의 전역 mutex가 사용자 세션과 겹칠 수 있어 실행하지 않았다. 이전 검사 성공을 이번 diff의 성공으로 확대하지 않는다. 실행 파일·checkout 경로의 작은따옴표는 미검증이다. 사용자 서버 reload/설치/링크 변경은 없으며 PR #16 draft를 유지한다.
 
 2026-10-08 KST D 격리 후속 검증: private PSMUX_DATA_DIR의 고유 ConPTY 세션에서 실제 D dispatcher를 실행했다. 저장소 경로의 대상 세션은 생성됐지만 기존 source client가 계속 attached 상태였고 D 대상에는 client가 붙지 않았다. 사용자 세션이나 기본 registry를 조회·변경하지 않았다. 테스트용 t 대체 주입은 명령 인용을 검증하지 못해 근거로 삼지 않는다. 따라서 D 전환은 여전히 실패/미해결로 표기하고 draft를 유지한다. 다음 조사에서는 Invoke-DotfilesMux 실행 프로세스의 `switch-client` 응답과 대상 client 목록을 분리해 측정하고, native switch-client 최신 client routing과 원본 launcher의 동일한 전환 검사를 비교한다. 원인은 확정하지 않았다.
+
+2026-10-08 KST 새 창 생성 지연 조사: 사용자가 Ctrl+Shift+C로 새 세션을 추가할 때 느리다고 보고했다. 저장소 psmux 설정은 prefix `C-Space` 다음 `c`에서 `new-window -c #{pane_current_path}`를 실행한다. `.wezterm.lua`에는 Ctrl+Shift+C 사용자 바인딩이 없으며 설치된 WezTerm 유효 키맵은 이 조합을 CopyTo Clipboard로 처리한다. Windows Terminal 저장 설정에도 해당 바인딩은 없다. 키 전달 계층을 혼동하지 않도록 사용자가 Ctrl+Space를 먼저 누르는지 확인 중이다.
+
+격리된 ConPTY에서 prefix+c 새 PowerShell 창이 프롬프트 명령을 처리하기까지 2987.9ms(1회)였으며, 이후 runtime `warm on`을 설정한 상태에서 첫 창 3889.4ms, psmux가 spare shell을 채운 뒤 둘째 창 881.5ms(각 1회)였다. 이 비교는 표본 하나씩이며 session startup 비용·메모리와 통합한 결과가 아니다. 현재 `tmux/psmux.conf`의 `warm off`가 기본 창마다 PowerShell profile 초기화를 동기적으로 기다리게 하는 주요 지연 후보로 확인됐다. 아직 원본 설정은 바꾸지 않았고 startup 추가 시간/백그라운드 shell 비용 및 사용자가 누르는 실제 키를 더 확인한다.
