@@ -147,13 +147,16 @@ WezTerm을 새로 열면 `main` 세션을 만들거나 다시 연결합니다. �
 | `Ctrl+h/j/k/l` | 왼쪽·아래·위·오른쪽 이동; Neovim 삽입 모드는 종료 후 이동, fzf에는 키 전달 |
 | `Esc` | Neovim 삽입 모드 종료; 다른 모드와 셸에는 원래 Escape 전달 |
 | prefix 다음 `h/j/k/l`, `n/p`, `Space` | pane, 창, 직전 창 이동 |
+| prefix 다음 `Shift+F` (대문자 `F`) | 현재 pane 경로의 새 PowerShell 창에서 `t` 프로젝트 선택 |
 | prefix 다음 `r` | 현재 체크아웃 psmux 설정 다시 읽기 |
 | prefix 다음 `v`, 복사 모드 `v/q/y` | 복사 모드, 선택·블록 선택·Windows clipboard 복사 |
 | prefix 다음 `d`, 다시 `mux` | detach 후 세션 재연결 |
 
+현재 psmux 3.3.8에는 이름 있는 namespace의 `switch-client`가 대상 세션을 찾지 못하는 결함이 있습니다. 따라서 psmux 내부에서 `t`로 프로젝트를 선택하면 세션은 생성되어도 자동 전환은 실패할 수 있습니다. F로 선택기가 열리는 것과 선택 후 전환 성공은 구분합니다. 오류의 세션 이름을 확인하고 prefix → `d`로 detach한 뒤 바깥 PowerShell에서 `Invoke-DotfilesMux -Session '<오류에 표시된 세션 이름>'`으로 연결합니다. 기존 세션을 종료·삭제할 필요는 없습니다. 바깥 PowerShell의 `t <경로>`는 세션 attach 경로를 사용합니다. 자동 전환 수정은 아직 미완료입니다.
+
 프로젝트 목록을 따로 관리하려면 `.local/project-paths.txt`에 검색 루트를 한 줄에 하나씩 절대 경로로 적습니다. 공백·한글 경로를 지원하며 Unix `~/.project_path`의 공백 구분/eval 형식은 읽지 않습니다. 같은 폴더 이름도 전체 경로의 해시로 세션을 구분합니다. 기존 사용자 `mux`/`t` 명령이 있으면 보존하므로 `Invoke-DotfilesMux`/`Invoke-DotfilesProject` 전체 이름을 사용합니다.
 
-Unix tmux의 Bash 프로젝트 키 `F/D`, `expr/grep/cut` 창 교환 `N/P`, `:!cat` 입력은 이 Windows 설정에 포함하지 않습니다. Windows에서는 `t`를 사용합니다.
+프로젝트 선택은 Unix와 같은 prefix → 대문자 `F`로 실행합니다. 새 PowerShell은 기존 프로필을 읽고 `t`를 호출하므로 사용자 `t`가 있으면 그 명령을 실행합니다. 선택에는 `fzf`가 필요하며 없으면 안내 오류가 표시됩니다. 취소하거나 명령이 끝나면 새 PowerShell 창이 남습니다. Unix의 `D`, `expr/grep/cut` 창 교환 `N/P`, `:!cat` 입력은 Windows 설정에 포함하지 않습니다.
 
 Ctrl+H가 Ctrl+Backspace 이벤트로 전달되는 경로를 위해 두 입력을 같은 왼쪽 이동에 연결합니다. 표준 ConPTY helper의 raw 0x08은 modifier 없는 Backspace로도 해석되므로 자동 검사 결과를 모든 터미널의 물리 Ctrl+H 검증으로 간주하지 않습니다. 일반 Backspace는 유지되지만 Ctrl+Backspace의 단어 삭제는 psmux pane에서 사용할 수 없습니다.
 

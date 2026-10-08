@@ -119,3 +119,51 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 - 검증 범위: 사용자 보고를 Windows PowerShell tmux의 실제 사용 확인 근거로 기록하며 자동 검사를 재실행한 것으로 쓰지 않는다. 개별 키·GUI·clipboard·IME 시나리오와 재로드 방식은 보고에 명시되지 않았다. 앞선 자동 검사 근거를 유지하고 macOS/WSL/Linux 실기기 및 깨끗한 새 장비 전체 설치는 미검증으로 남긴다. 실제 merge·자동 merge·설치·설정 적용은 이번 요청 범위에 포함하지 않는다.
 
 - 2026-10-06T16:01+09:00 (KST): 작업 기록 링크·diff 검토와 git diff --check 및 staged diff 검사를 통과했다. 검증 확인 기록을 5e82223으로 커밋·SSH push하고 PR #10의 한국어 본문을 갱신했다. draft 해제 후 GitHub에서 isDraft=false, MERGEABLE/CLEAN과 원격 head 일치를 확인했다. 등록된 CI check는 없다. 사용자 lockfile 변경만 보존했으며 실제 merge·자동 merge·환경 적용은 수행하지 않았다. 다음 단계는 사용자의 최종 PR 리뷰와 병합 결정이다.
+
+### 프로젝트 선택 F 단축키 후속 계획
+
+2026-10-08 KST: 사용자가 기존 tmux의 `Ctrl+Space` → `Shift+F` 프로젝트 선택을 Windows에도 연결하도록 요청했다. 실행 환경은 windows-powershell, 최신 main은 `66a85b7`, 현재 원본 기준은 `870706c`다. 사용자 lockfile·폰트를 보존하고 직전 Esc 적용 원본을 유지하기 위해 `fix/psmux-project-key`를 PR #14 브랜치 위에서 작업하며 후속 PR의 base를 `fix/windows-terminal-esc`로 지정한다. 기존 ADR 0003의 PowerShell 프로젝트 함수와 키 입력 책임을 재사용하므로 새 구조 결정은 없다.
+
+분석: Unix 설정은 `bind-key -r F new-window t`를 제공하지만 psmux에는 F 호출이 없다. Windows의 `t`는 프로필에서 등록되어 있으므로 새 PowerShell 7 창이 프로필을 읽고 `t`를 실행하도록 연결한다. 현재 pane 경로를 유지하고 검색 경로는 기존 `.local/project-paths.txt`를 사용한다. 기존 사용자 t가 있으면 기존 정책대로 그 명령을 보존한다.
+
+계획: 대문자 F만 바인딩 → 별도 namespace 서버에서 설정 로드·F 매핑·실제 새 창의 프로젝트 선택기 시작 확인 → 기존 runtime 격리 검사 → 현재 dotfiles 서버에 F 바인딩만 적용하고 조회 검증 → 로컬 결과·문서 갱신 → diff·커밋·push·draft PR. 다른 키·셸 프로필·설치·OS·사용자 세션은 변경하지 않는다. 물리 prefix 입력과 fzf 선택·취소·프로젝트 전환은 자동 검증과 구분한다.
+
+### 프로젝트 선택 F 구현·적용 검증
+
+2026-10-08 KST, windows-powershell, 후속 미커밋 diff:
+
+- 원본: `tmux/psmux.conf`에 prefix 대문자 F → 현재 pane 경로의 새 창 → `pwsh -NoLogo -NoExit -Command t`를 추가했다. 프로필·기존 사용자 t·프로젝트 검색 목록을 재사용하며 macOS/WSL/Linux의 Unix 원본은 수정하지 않았다. 새 셸은 선택 취소·명령 종료 후 남도록 한다.
+- 실제 격리 검증: 고유 namespace 서버에서 원본 설정 로드 성공, `list-keys`의 prefix F 확인. 동일한 `new-window` 명령으로 한글·공백 경로에서 프로필이 로드된 PowerShell을 실행한 뒤 `list-panes`의 foreground가 fzf임을 확인했다. 취소 입력 C-c를 전송했고 검증 namespace만 종료했다. 사용자 세션은 생성·종료하지 않았다. 물리 키 dispatcher 경로를 검증한 것으로 쓰지 않는다.
+- 기존 검사: PowerShell 7에서 `tests/psmux-runtime.ps1` 통과. 승인·호스트·OS 격리, 사용자 mux/t 보존, 고정 PATH, 공백·한글 경로 및 프로젝트 세션 이름, prompt 내용·오류 상태 보존을 확인했다. `git diff --check` 통과.
+- 실제 적용: 현재 호스트의 환경 승인·psmux 활성화 상태 Ready와 기존 dotfiles 서버를 확인하고 `bind-key -r F new-window -c '#{pane_current_path}' 'pwsh -NoLogo -NoExit -Command t'`만 적용했다. `list-keys`로 매핑을 다시 확인했고 이전 F 및 결과는 `.local/psmux-project-key-before.txt`, `.local/psmux-project-key.json`에 기록했다. 이전 호스트 setup-state·다른 키·프로필·자동시작은 변경하지 않았다.
+- 미검증: 실제 Ctrl+Space → Shift+F 물리 입력, 사용자 fzf 선택·취소 UI와 선택 후 세션 이동은 GUI 미검증이다. 다른 OS 실기기·새 장비 설치도 미검증으로 남긴다. 직전 Esc 적용 원본을 유지하기 위해 후속 PR은 #14 브랜치 기반이며 해당 PR 병합 후 base를 main으로 변경한다.
+
+2026-10-08 KST: 독립 읽기 전용 리뷰에서 정적 blocker는 없었으나 live CLI와 설정 파서의 인수 차이를 추가 검증하도록 권고했다. 실제 격리 attached-client에 prefix+F를 입력하니 초기 CLI 바인딩은 따옴표를 잃어 새 PowerShell만 열고 t는 실행하지 않았다. 매핑 조회만으로 완료를 주장하지 않고 실패를 수정했다.
+
+- 검증 서버에 `bind-key -r F new-window -c "'#{pane_current_path}'" "'pwsh -NoLogo -NoExit -Command t'"`로 명령 전체의 따옴표를 보존하여 적용한 뒤 실제 attached-client dispatcher에서 fzf foreground를 확인했다. 자동 입력 도구의 NUL 제약 때문에 검증 서버만 prefix를 Ctrl+B로 바꾸어 Ctrl+B → F를 전송했다. 사용자 서버의 Ctrl+Space와 물리 키 검증은 여전히 미검증이다. 한글·공백 현재 경로도 유지되었다. 검증 서버만 종료했다.
+- 성공한 동일 CLI 형태로 현재 dotfiles 서버의 F를 다시 적용하고 명령 전체가 따옴표로 보존된 list-keys 출력과 로컬 결과 기록을 확인했다. 원본 설정 파일은 이미 명령 전체를 따옴표로 지정하므로 별도 코드 수정은 필요하지 않았다. 이후 prefix → r로 원본을 읽어도 같은 명령이 유지된다.
+
+2026-10-08 KST: 검증한 변경을 `e5fb126`으로 커밋·SSH push하고 #14 브랜치 기반 [draft PR #15](https://github.com/1ocate/dotfiles/pull/15)를 제출했다. 사용자 lockfile·폰트는 포함하지 않았고 merge는 수행하지 않았다.
+
+### 사용자 F 동작 확인과 시작 지연 분석
+
+2026-10-08 KST: 사용자가 F 실행 확인 완료를 보고하고 시작이 늦은 이유를 질문했다. 기준은 `718174f`, 실행 환경은 windows-powershell, 최신 main은 `66a85b7`이며 PR #15는 열린 draft다. 사용자 보고는 F 기본 실행 확인 근거로 반영하고 선택·취소·세션 이동의 개별 시나리오까지 완료로 확대하지 않는다. 분석은 프로필 로드 비용을 측정하고 기록하는 범위이며 실행 방식·프로필·키맵 최적화는 적용하지 않는다.
+
+- 실제 측정: PowerShell 7 새 프로세스 3회. `-NoProfile -Command exit`는 392/291/286ms, 프로필을 읽는 `-Command exit`는 2532/2282/2256ms였다. 두 조건은 같은 Start-Process/Wait 방법으로 비교했으며 end-to-end F 키부터 UI 표시까지의 측정은 아니다.
+- 현재 fallback 검색 범위인 체크아웃의 하위 디렉터리 조회는 28ms, `fzf --version` 실행은 37ms였다. 별도 프로젝트 루트 파일은 없었다. fzf UI 표시 시간을 측정한 것으로 쓰지 않는다.
+- 별도 `-NoProfile` 셸에서 실제 프로필의 구성요소를 한 번씩 분리 측정했다: posh-git loader 692ms, oh-my-posh 초기화 871ms, psmux loader 194ms. 단일 표본이며 파일 캐시·실행 시점에 따라 변한다. 현재 F는 새 PowerShell에서 전체 프로필을 읽으므로 프롬프트·Git 완성 초기화가 주요 시작 비용이다.
+- 개선 후보: 프로젝트 선택용 실행은 전체 프로필 대신 필요한 psmux 함수만 읽는 경로로 분리할 수 있다. 다만 기존 사용자 t 보존, 선택/취소 후 남는 셸의 프롬프트·완성 경험을 함께 설계해야 하므로 이번 원인 질문만으로 변경하지 않았다.
+
+### 프로젝트 세션 전환 실패 후속 분석·계획
+
+2026-10-08 KST: 사용자가 t에서 `can't find session` 및 psmux.ps1의 attach/switch 실패를 보고했다. 기준은 `f9216ea`, 환경은 windows-powershell이다. 최신 main `1f1bf3d`에서 #14 병합을 확인했고 후속 #15를 main 기준으로 정리한다. 사용자 lockfile·폰트·모든 기존 세션은 보존한다.
+
+분석: 실제 사용자 서버에서 오류 대상 세션이 존재했다. 별도 namespace의 두 세션에서도 has-session은 성공하지만 switch-client는 일반 이름·=이름·전체 namespace 접두사 이름 모두 실패했다. 공식 v3.3.8의 server SwitchClientTarget은 list_session_names()를 호출하고, 해당 함수는 list_session_names_ns(None)을 통해 __가 포함된 namespaced 항목을 제외한다. 이는 생성·프로젝트 해시 문제가 아니라 pinned psmux의 namespace 전환 결함이다. 앞선 F 검증은 fzf 시작까지만 확인했고 프로젝트 선택 후 전환은 미검증이었으므로 동작 확인 보고를 전환 성공 근거로 확대하지 않는다.
+
+계획: 일반 오류를 세션 보존·수동 연결 안내로 구분 → 사용 문서의 현재 제약·임시 연결 방법 기록 → 기존 runtime 검사·PowerShell AST 검사 → 원인/미해결 상태를 draft #15에 반영. namespace 격리 제거, 사용자 세션 재생성·종료, 설치·업그레이드·데이터 경로 이전은 수행하지 않는다. 자동 전환의 근본 해결은 upstream 수정 버전 또는 별도 격리 방식 검증이 필요하며 완료로 기록하지 않는다.
+
+근거: [v3.3.8 SwitchClientTarget](https://github.com/psmux/psmux/blob/v3.3.8/src/server/mod.rs#L4878), [v3.3.8 세션 목록 namespace 필터](https://github.com/psmux/psmux/blob/v3.3.8/src/session.rs#L2033).
+
+2026-10-08 KST 검증: 수정한 함수의 -L 대상과 TMUX 허용 문자열만 고유 검증 namespace로 치환한 별도 프로세스에서 실제 native switch 실패를 재현했다. 새 오류가 대상 이름·세션 보존·바깥 Invoke-DotfilesMux 연결 명령을 포함함을 확인했고 실패 뒤 has-session으로 대상 보존을 확인했다. 별도 실제 attached-client에서는 바깥 attach-session -t =target이 지정한 namespaced 대상에 연결됨을 list-clients로 확인했다. 검증 namespace만 정리했다. PowerShell 7의 기존 runtime 검사·AST와 diff-check 통과. 실제 사용자 세션 전환·삭제·설치·업그레이드는 수행하지 않았다. 기존 셸은 이전 함수 정의를 유지할 수 있으므로 새 오류 안내를 읽으려면 새 셸 또는 `. .\powershell\psmux.ps1` 재로드가 필요하지만 자동 전환 결함은 이 변경으로 해결되지 않는다.
+
+2026-10-08 KST: 통합된 후속 diff의 독립 읽기 전용 검토에서 blocker는 없었다. 세션 이름 검증·복구 명령 인용·Windows gate·자동 전환 미해결 고지를 확인했다. 문서 상대 링크 검사 통과. 수정된 오류 안내와 분석은 기존 draft PR #15에 반영한다.
