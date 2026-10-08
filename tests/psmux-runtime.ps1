@@ -16,22 +16,41 @@ function Save-TestStates {
     $feature | ConvertTo-Json | Set-Content -LiteralPath $featurePath -Encoding UTF8
 }
 function Assert-NoActivation {
-    . $runtime
+    $beforePath = $env:Path
+    $output = . $runtime
+    if ($output) { throw 'Unapproved profile emitted unsolicited output.' }
     if (Get-Command Invoke-DotfilesMux -ErrorAction SilentlyContinue) { throw 'Unapproved runtime activated.' }
+    $status = Get-DotfilesMuxStatus
+    if ($status.Status -ne 'Blocked' -or -not $status.Reason -or -not $status.Action -or $status.Repository -ne $testRoot) { throw 'Blocked runtime lacks actionable diagnostics rooted in its checkout.' }
+    if ($env:Path -ne $beforePath) { throw 'Diagnostics changed PATH.' }
 }
 Assert-NoActivation
+if ((Get-DotfilesMuxStatus).Reason -notmatch 'missing or invalid') { throw 'Missing records not diagnosed.' }
 Save-TestStates
 $selection.environment='windows-wsl'; Save-TestStates; Assert-NoActivation
 $selection.environment='windows-powershell'; $selection.host='other-host'; Save-TestStates; Assert-NoActivation
+if ((Get-DotfilesMuxStatus).Reason -notmatch 'Environment host differs') { throw 'Environment host mismatch not diagnosed.' }
 $selection.host=[Environment]::MachineName; $selection.approved='true'; Save-TestStates; Assert-NoActivation
+if ((Get-DotfilesMuxStatus).Reason -notmatch 'boolean true') { throw 'String approval not diagnosed.' }
 $selection.approved=$true; $feature.host='other-host'; Save-TestStates; Assert-NoActivation
+if ((Get-DotfilesMuxStatus).Reason -notmatch 'psmux host differs') { throw 'Feature host mismatch not diagnosed.' }
 $feature.host=[Environment]::MachineName; $feature.enabled=$false; Save-TestStates; Assert-NoActivation
 $feature.enabled='true'; Save-TestStates; Assert-NoActivation
 $feature.enabled=$true; Save-TestStates
+$originalLocalAppData = $env:LOCALAPPDATA
+try {
+    $env:LOCALAPPDATA = $testRoot
+    Assert-NoActivation
+    if ((Get-DotfilesMuxStatus).Reason -notmatch 'executable is missing') { throw 'Missing pinned binaries not diagnosed.' }
+} finally { $env:LOCALAPPDATA = $originalLocalAppData }
 function global:t { 'user-project-command' }
 function global:mux { 'user-mux-command' }
 . $runtime
 if (-not (Get-Command Invoke-DotfilesMux -ErrorAction SilentlyContinue)) { throw 'Approved runtime did not activate; installed binaries required.' }
+$stateBefore = @((Get-FileHash $selectionPath).Hash, (Get-FileHash $featurePath).Hash)
+$status = Get-DotfilesMuxStatus
+if ($status.Status -ne 'Ready' -or -not $status.PsmuxPresent -or -not $status.TmuxPresent) { throw 'Valid runtime prerequisites not diagnosed.' }
+if ($stateBefore[0] -ne (Get-FileHash $selectionPath).Hash -or $stateBefore[1] -ne (Get-FileHash $featurePath).Hash) { throw 'Diagnostics wrote approval records.' }
 if ((t) -ne 'user-project-command' -or (mux) -ne 'user-mux-command') { throw 'Existing user commands were overwritten.' }
 $expectedTmux = Join-Path $env:LOCALAPPDATA 'Programs/psmux/3.3.8/tmux.exe'
 if ((Get-Command tmux).Source -ne $expectedTmux) { throw 'Pinned tmux.exe is not first on PATH.' }
@@ -69,4 +88,5 @@ try {
 if($statusPrompt -ne 'success=False;exit=7'){throw "Prompt command status changed: $statusPrompt"}
 Write-Output 'PASS: pane prompt preserves user content and resets stale editor identity once.'
 Write-Output 'PASS: runtime approvals, host/environment isolation, user commands, pinned PATH, Unicode paths and stable distinct project names.'
+Write-Output 'PASS: explicit read-only diagnostics explain missing records, host mismatch and invalid approval without profile output.'
 Write-Output "Only temporary test files were written: $testRoot"

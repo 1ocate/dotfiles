@@ -11,6 +11,10 @@
 
 ## 분석과 미확인 사항
 
+2026-10-08 재개: 프로젝트 선택부터 세션 시작까지의 지연 개선 가능성을 요청했다. 실행 환경은 windows-powershell, 최신 main은 1f1bf3d, 측정할 실사용 원본은 PR #16의 85a4896이다. 사용자가 세션 전환이 현재 정상이라고 보고했으나 간헐 실패의 원인은 미확정이다. 실사용 체크아웃과 사용자 lockfile·폰트를 유지하고 문서 PR #11의 별도 worktree에서 분석 기록을 갱신한다. 실제 사용자 프로필·원본 연결·세션·설치는 변경하지 않는다.
+
+분석 계획: (1) 프로필 유무의 자식 셸 시작과 Git completion/Oh My Posh/mux loader 비용을 반복 측정한다. (2) private PSMUX_DATA_DIR와 숨겨진 ConPTY helper에서 원본 F→fzf 관측, 선택→신규 세션 연결, 기존 세션 재사용을 분리한다. 사람의 선택 대기와 폴링 CLI 비용을 표시한다. (3) 임시 자식 셸에서 mux loader만 사용하는 경로를 비교해 개선 여지를 판단한다. 사용자 t override·prompt·취소 후 셸 보존·승인 및 원본 config 판별을 빼는 실험을 기능 동등한 구현으로 취급하지 않는다. (4) 결과·대안·남은 검증을 같은 문서 PR에 제출한다. 이번 범위는 평가이며 runtime 최적화나 새 구조 결정의 채택은 포함하지 않는다.
+
 현재 WezTerm은 네이티브 PowerShell과 선택 기능 psmux를 시작한다. 로컬 프로필에는 Git completion, Oh My Posh, psmux 원본 로더가 있다. 렌더링, 프로필 초기화, prompt, psmux 입력 경로를 구분해야 한다. 실제 타이핑·스크롤 지연, GPU 사용과 물리 키/IME 반응은 headless 명령으로 확정할 수 없다.
 
 ## 계획과 완료 조건

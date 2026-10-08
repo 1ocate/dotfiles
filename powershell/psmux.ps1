@@ -1,6 +1,61 @@
 ﻿# Runtime source, loaded by both user profiles and the WezTerm launcher.
 if ($env:OS -ne 'Windows_NT') { return }
 $dotfilesMuxRepo = Split-Path -Parent $PSScriptRoot
+$muxStatusReader = {
+    [CmdletBinding()]
+    param()
+    $reasons = @()
+    $actions = @()
+    $environment = $null
+    $feature = $null
+    try {
+        $environment = Get-Content -LiteralPath (Join-Path $dotfilesMuxRepo '.local/environment.json') -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json
+    } catch {
+        $reasons += 'Environment record is missing or invalid.'
+        $actions += 'Review the host environment selection using scripts/environment.py; do not copy another host approval.'
+    }
+    try {
+        $feature = Get-Content -LiteralPath (Join-Path $dotfilesMuxRepo '.local/psmux.json') -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json
+    } catch {
+        $reasons += 'psmux feature record is missing or invalid.'
+        $actions += 'Review the optional psmux setup in README.md.'
+    }
+    if ($environment) {
+        if ($environment.schemaVersion -ne 1 -or $environment.environment -ne 'windows-powershell') { $reasons += 'Environment record does not select supported Windows PowerShell.' }
+        if ($environment.approved -isnot [bool] -or $environment.approved -ne $true) { $reasons += 'Environment approval must be boolean true.' }
+        if ($environment.host -ne [Environment]::MachineName) { $reasons += 'Environment host differs from this computer.' }
+    }
+    if ($feature) {
+        if ($feature.schemaVersion -ne 1) { $reasons += 'psmux record schema is unsupported.' }
+        if ($feature.enabled -isnot [bool] -or $feature.enabled -ne $true) { $reasons += 'psmux activation must be boolean true.' }
+        if ($feature.host -ne [Environment]::MachineName) { $reasons += 'psmux host differs from this computer.' }
+    }
+    $bin = Join-Path $env:LOCALAPPDATA 'Programs/psmux/3.3.8'
+    $psmuxPresent = Test-Path -LiteralPath (Join-Path $bin 'psmux.exe') -PathType Leaf
+    $tmuxPresent = Test-Path -LiteralPath (Join-Path $bin 'tmux.exe') -PathType Leaf
+    if (-not $psmuxPresent -or -not $tmuxPresent) { $reasons += 'Pinned psmux/tmux 3.3.8 executable is missing.' }
+    $pwshPresent = [bool](Get-Command pwsh -CommandType Application -ErrorAction SilentlyContinue)
+    if (-not $pwshPresent) { $reasons += 'PowerShell 7 (pwsh), required by psmux panes, is missing.' }
+    if ($reasons.Count) {
+        $actions += 'Review the local records and README.md. Host or approval changes require explicit approval; this command does not change them.'
+    }
+    [pscustomobject]@{
+        Status = $(if ($reasons.Count) { 'Blocked' } else { 'Ready' })
+        Reason = $(if ($reasons.Count) { $reasons -join ' ' } else { 'Runtime prerequisites are valid; open a new PowerShell tab after setup.' })
+        Action = $(if ($actions.Count) { ($actions | Select-Object -Unique) -join ' ' } else { 'Run mux; existing user mux/t commands are preserved.' })
+        Repository = $dotfilesMuxRepo
+        CurrentHost = [Environment]::MachineName
+        Environment = $environment.environment
+        EnvironmentHost = $environment.host
+        Approved = $environment.approved
+        FeatureHost = $feature.host
+        Enabled = $feature.enabled
+        PsmuxPresent = $psmuxPresent
+        TmuxPresent = $tmuxPresent
+        PowerShell7Present = $pwshPresent
+    }
+}.GetNewClosure()
+Set-Item Function:\global:Get-DotfilesMuxStatus -Value $muxStatusReader
 try {
     $muxEnvironment = Get-Content (Join-Path $dotfilesMuxRepo '.local/environment.json') -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json
     $muxFeature = Get-Content (Join-Path $dotfilesMuxRepo '.local/psmux.json') -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json

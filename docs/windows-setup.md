@@ -12,12 +12,14 @@ winget과 공통 등록 도구 실행용 Python 3.10 이상을 먼저 준비하�
 | --- | --- |
 | Python 3.10 이상 (`py -3` 또는 `python`) | 환경 등록·계획·점검·승인 확인에 필수. winget 준비 단계 이전에 필요 |
 | winget | 패키지 설치 시 필수. 준비된 의존성을 사용할 때 `-SkipPackages`로 설치 생략 |
-| WezTerm, Neovim, PowerShell 7, Oh My Posh | 전체 설치의 사전 점검에 필수. 런타임 셸만 PowerShell 7 부재 시 Windows PowerShell 5.1로 폴백 |
+| 선택한 터미널(기본 Windows Terminal / `-Terminal wezterm`), Neovim, PowerShell 7, Oh My Posh | 전체 설치의 사전 점검에 필수. Windows Terminal은 PowerShell 7 필수. WezTerm 선택의 런타임 셸만 5.1로 폴백 |
 | Git, Node.js·npm, rg, fd, fzf, GCC, Python | 플러그인·검색·parser·Mason 도구 준비 시 필수. 현재 컴파일러는 WinLibs. `-SkipPlugins`로 준비 생략 가능 |
 | AutoHotkey v2 | 현재 실행 또는 로그인 등록 시 필수. 실행만 생략하려면 `-SkipAutoHotkey`, 등록 옵션도 지정하지 않음 |
-| Meslo Nerd Font | 아이콘·화면용 선택 준비. 없으면 설치를 시도하며 `-SkipFonts`로 생략 가능 |
+| MesloLGMDZ Nerd Font Mono | `fonts/meslo.json`의 고정 원본·SHA-256으로 사용자 범위 준비. 파일·등록을 점검하며 `-SkipFonts`로 생략 가능 |
 
 winget은 설치된 패키지를 유지하며 없는 패키지는 공급되는 버전을 설치합니다. 버전 숫자를 고정하지 않습니다. 현재 패키지 ID 목록의 원본은 [setup-windows.ps1](../scripts/setup-windows.ps1)입니다. 개별 기능 생략 옵션은 패키지 목록을 줄이지 않으므로 패키지를 전혀 설치하지 않을 때는 `-SkipPackages`도 지정합니다. 각 프로젝트의 LSP·포맷 런타임은 추가로 필요할 수 있습니다.
+
+폰트는 [Windows Terminal 폰트 지침](windows-terminal.md#지정-폰트)을 따릅니다. `-SkipPackages`는 winget만 생략하며 폰트 다운로드는 `-SkipFonts`로 별도 생략합니다. 다른 Meslo 변형의 존재를 지정된 Mono 변형 설치 완료로 판단하지 않습니다.
 
 ## 계획·점검과 최초 설치
 
@@ -36,7 +38,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 
 
 설치 프로그램이 필요하면 관리자 승인 창이 표시될 수 있습니다. 회사 정책으로 설치·다운로드·스크립트 실행이 막히면 해당 단계에서 중단합니다. Bypass는 시작하는 프로세스에만 적용되며 조직 정책을 해제하지 않습니다. 다운로드에는 winget 공급 서버, GitHub, npm·Python 패키지 저장소 등의 접근이 필요합니다.
 
-설치 후 WezTerm을 새로 열고 `nvim`을 실행합니다. 첫 플러그인·parser 준비에는 다운로드·컴파일 시간이 걸릴 수 있습니다. 새 장비 전체 설치는 미검증이며 검증의 근거·남은 범위는 작업 0002에서 확인합니다. 재현성 완료의 판단은 [공통 신규 설치 기준](setup-guardrails.md#신규-장비-설치와-재현성-검증)을 따릅니다.
+설치 후 선택한 터미널을 새로 열고 `nvim`을 실행합니다. 첫 플러그인·parser 준비에는 다운로드·컴파일 시간이 걸릴 수 있습니다. 새 장비 전체 설치는 미검증이며 검증의 근거·남은 범위는 작업 0002에서 확인합니다. 재현성 완료의 판단은 [공통 신규 설치 기준](setup-guardrails.md#신규-장비-설치와-재현성-검증)을 따릅니다.
 
 ## 기존 환경 등록과 선택 옵션
 
@@ -65,6 +67,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 
 
 기본 AutoHotkey 동작은 현재 실행입니다. 대화형 세팅에서는 로그인 자동 시작 등록 여부를 묻고, `y` 또는 `yes`로 답할 때만 바로가기를 작성합니다(기본 아니오). `-RegisterAutoHotkeyStartup`은 질문 없이 등록하고, `-SkipAutoHotkeyStartup`은 질문과 등록을 생략합니다. 두 옵션은 함께 지정할 수 없습니다. 비대화형 실행에서는 명시 등록 옵션이 없으면 등록하지 않습니다. `-Plan`·`-Check`는 질문하거나 등록하지 않습니다. `-SkipAutoHotkey`는 현재 실행과 질문을 생략하지만 명시 등록 옵션은 유효합니다. 생략·거절 시 기존 바로가기는 제거하지 않습니다. `-SkipFonts`·`-SkipPlugins`는 해당 준비 단계를 생략합니다. 개별 옵션은 프로필 변경·설정 연결을 생략하지 않습니다. 사용자 실행 정책이 Undefined/Restricted이면 CurrentUser RemoteSigned로 설정합니다.
 
+## 터미널 선택
+
+Windows 네이티브 기본은 Windows Terminal입니다. 기존 WezTerm 사용을 유지하려면 계획·점검·설치 명령에 `-Terminal wezterm`을 지정합니다. 선택한 터미널만 설치·필수 점검·연결하며 다른 터미널의 기존 설정은 수정하지 않습니다. psmux는 어느 선택에서도 `-WithPsmux`로 준비하는 별도 기능입니다. Windows Terminal 탭에서는 기존 PowerShell 프로필을 읽고 `mux`로 세션을 시작합니다. 설정 JSON·junction·백업·키 입력·복구는 [Windows Terminal 사용 지침](windows-terminal.md)을 따릅니다. OS 기본 터미널 설정을 자동 변경하지 않습니다.
+
 ## 설정 원본과 런타임 동작
 
 Windows loader는 `wezterm.GLOBAL.dotfiles_repo`로 체크아웃 경로를 원본에 전달합니다. WezTerm에는 Lua `debug` 라이브러리가 없으므로 경로 판별에 사용하지 않습니다. 이 변경 전 loader를 사용하는 장비는 원본 업데이트 후 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/use-wezterm.ps1`로 반드시 다시 연결해야 합니다. 기존 파일은 백업되며 다른 설치 단계는 실행하지 않습니다. 원본 직접 로드는 `wezterm.config_dir`을 사용합니다.
@@ -73,7 +79,7 @@ Windows loader는 `wezterm.GLOBAL.dotfiles_repo`로 체크아웃 경로를 원�
 
 Windows PowerShell용 WezTerm은 `TERM=xterm-256color`를 전달하여 Git 페이저의 `'wezterm': unknown terminal type` 오류를 방지합니다. 변경 후 새 탭을 열어 `$env:TERM`과 `git log`를 확인하세요. 기존 탭의 환경 변수는 바뀌지 않습니다. macOS·WSL·Linux의 기존 터미널 값은 유지합니다. 설정 항목은 [WezTerm term 문서](https://wezterm.org/config/lua/config/term.html)를 참고하세요.
 
-전체 설치 대신 필요한 설정만 연결할 때는 Python과 해당 프로그램을 먼저 준비하고 다음 어댑터를 사용할 수 있습니다. 최초 선택 이후 명령은 현재 호스트의 승인을 재사용합니다. 두 명령은 패키지·프로필 준비를 하지 않습니다.
+전체 설치 대신 필요한 설정만 연결할 때는 Python과 해당 프로그램을 먼저 준비하고 다음 어댑터를 사용할 수 있습니다. 최초 선택 이후 명령은 현재 호스트의 승인을 재사용합니다. 연결 어댑터는 패키지·프로필 준비를 하지 않습니다. Windows Terminal 연결에는 `scripts/use-windows-terminal.ps1`을 사용합니다.
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\use-neovim.ps1 -ApprovePowerShell
@@ -93,7 +99,7 @@ Neovim과 WezTerm은 Windows에서 현재 호스트의 저장된 선택을 읽�
 Windows 호스트가 명시적으로 WSL을 선택했다면 WezTerm은 발견한 첫 WSL 도메인과 fish 로그인 셸을 사용합니다. 발견한 도메인이 없으면 기본 도메인을 강제하지 않습니다. 특정 배포판·사용자 홈 경로를 고정하지 않으며 WSL 설치나 선택 전환을 자동으로 수행하지 않습니다. 회사 정책으로 WSL이 금지된 호스트에서는 이 방식을 사용하지 않습니다.
 
 - 왼쪽 Alt와 Windows 키를 교환합니다. 교환 후 Alt 위치의 `Alt+Space`는 한영 전환, `Alt+C/V`는 복사·붙여넣기입니다.
-- WezTerm에서만 Esc 원래 입력을 통과시키고 키를 놓을 때 영문 상태를 설정합니다. 이미 영문이면 유지하며 다른 앱의 Esc는 그대로입니다.
+- WezTerm과 Windows Terminal에서 Esc 원래 입력을 통과시키고 키를 놓을 때 영문 상태를 설정합니다. 이미 영문이면 유지하며 다른 앱의 Esc는 그대로입니다.
 - Neovim의 yank는 승인된 PowerShell 환경에서 Windows 클립보드로 전달하고 F9로 연동을 켜거나 끕니다.
 - 내부 셸은 PowerShell 7을 우선 사용하고 Windows 실행 별칭을 처리합니다.
 - Copilot·CopilotChat은 비활성화 상태를 유지합니다. 향후 활성화하더라도 Windows의 선택적인 `make tiktoken` 빌드는 생략합니다.

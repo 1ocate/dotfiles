@@ -1,0 +1,60 @@
+﻿{
+  "$schema": "https://aka.ms/terminal-profiles-schema",
+  "defaultProfile": "{50f83d45-b3c1-4dbf-9f09-ec33a3c4e972}",
+  "profiles": {
+    "list": [
+      {
+        "guid": "{50f83d45-b3c1-4dbf-9f09-ec33a3c4e972}",
+        "name": "Dotfiles PowerShell",
+        "commandline": "pwsh.exe -NoLogo",
+        "startingDirectory": "%USERPROFILE%",
+        "environment": {
+          "TERM": "xterm-256color"
+        },
+        "font": {
+          "face": "MesloLGMDZ Nerd Font Mono",
+          "size": 11
+        },
+        "colorScheme": "Dotfiles"
+      }
+    ]
+  },
+  "schemes": [
+    {
+      "name": "Dotfiles",
+      "background": "#000000",
+      "foreground": "#00CC00",
+      "cursorColor": "#00CC00",
+      "selectionBackground": "#242631",
+      "black": "#000000",
+      "red": "#454545",
+      "green": "#00CC00",
+      "yellow": "#00CC00",
+      "blue": "#026302",
+      "purple": "#55FF55",
+      "cyan": "#00CC00",
+      "white": "#00CC00",
+      "brightBlack": "#688061",
+      "brightRed": "#2FC079",
+      "brightGreen": "#90D762",
+      "brightYellow": "#FAFF00",
+      "brightBlue": "#4F7E7E",
+      "brightPurple": "#11FF25",
+      "brightCyan": "#C1FF8A",
+      "brightWhite": "#FFFFFF"
+    }
+  ],
+  "actions": [
+    {
+      "command": "unbound",
+      "keys": "ctrl+v"
+    },
+    {
+      "command": "unbound",
+      "keys": "ctrl+space"
+    }
+  ],
+  "disabledProfileSources": [
+    "Windows.Terminal.Wsl"
+  ]
+}
