@@ -194,3 +194,11 @@ Windows Terminal 실제 연결: 기존 stable LocalState는 일반 디렉터리�
 실제 진단: 현재 프로세스의 TMUX는 공식 형식의 dotfiles named namespace이고 Test-DotfilesMuxPane은 false다. 해당 서버의 prefix는 C-Space지만 D/F binding은 없었다. 모든 TMUX/PSMUX 라우팅 변수를 제거한 자식 프로세스에서 조회한 기본 namespace는 세션이 없고, `-L dotfiles list-sessions`에는 attached main만 있었다. 로컬 승인·활성화 runtime 상태는 Ready, 원본 mux/t alias는 정상이다. 따라서 이번 프로세스 재시작은 새 기본 mux 진입까지 이어지지 않았다. Codex 재시작이나 원본 reload가 기존 서버 namespace를 바꾸지 않는다는 설명과 detach → 새 PowerShell 탭 → mux → pane TMUX 확인 절차를 사용 문서·PR에 보완한다. 실제 사용자 클라이언트 detach·서버 reload·세션 종료·설정 연결은 수행하지 않는다. 새 기본 mux의 물리 D/F 확인은 아직 남아 있으며 기존 격리 검증을 재실행한 것으로 기록하지 않는다.
 
 재개 순서: (1) 이 기록과 ADR 0006, PR #16 및 실제 git status/저장된 호스트 승인 확인. (2) 사용자가 작업을 저장하고 기존 named mux를 종료하거나 detach한 뒤 새 터미널의 mux로 기본 main을 열고 Codex를 재실행. 기존 세션 종료는 사용자 수행을 기다리고 자동 kill-server 금지. (3) 새 환경에서 실제 Ctrl+Space → F/D/r, tmux list-sessions, 프로젝트 전환/복귀, h/l split 이동·insert Esc·Backspace를 사용자 GUI에서 확인. WezTerm과 Windows Terminal의 h 입력 경로는 다르므로 각 앱의 확인 결과를 구분한다. (4) Windows Terminal 백업/junction/진행 기록 아카이브 승인 답을 확인하기 전에는 적용하지 않고, 명시적 승인 후 기존 script로 적용·Check 및 실제 target 확인. (5) 실제 clipboard/IME까지 확인하고 draft 해제·병합 준비를 판단한다. merge는 별도 사용자 요청이다.
+
+### 세션 전환 미해결 재신고 조사
+
+2026-10-08 KST: 사용자가 이전 mux 세션 전환 문제가 해결되지 않았다고 재신고했다. 기준 HEAD 500b928, windows-powershell, fetch로 확인한 origin/main 1f1bf3d, PR #16은 열린 draft다. 사용자 lazy-lock.json 변경과 미추적 폰트는 보존한다. 현재 진단 프로세스에는 TMUX/PSMUX pane 변수가 없고 실제 호스트 기본/named dotfiles list-sessions 출력도 비었다. runtime prerequisites는 Ready다. 이전 named pane 잔류 진단을 이번 원인으로 확정할 수 없다.
+
+계획: 실패하는 키/명령과 터미널·화면 반응을 사용자에게 확인하면서 private PSMUX_DATA_DIR의 원본 launcher/t/F/D 흐름을 재검증한다. 실패가 재현되면 관련 runtime과 키 설정을 수정하고 PR #16에 반영한다. 재현되지 않으면 GUI 입력과 실제 사용자 pane 연결 정보를 구분하여 추가 진단한다. 기존 사용자 세션·프로필·설정 링크·설치는 변경하지 않는다. ADR 0006의 제안 구현을 조사하는 범위이며 새 구조 결정은 아직 없다.
+
+2026-10-08 KST 재검증 결과: py -3 -B tests/windows-psmux-projects.py exit 0. private registry에서 원본 launcher/main, 한글·공백 t 생성과 실제 client 전환/복귀, F dispatcher/fzf 선택·취소 셸 보존, D checkout 전환, r reload, 다른 config 세션 거부·보존, 테스트 세션 정리와 사용자 lockfile/프로젝트 목록 보존을 통과했다. F/D/r 입력은 기존 검사와 같이 임시 Ctrl+B이며 물리 Ctrl+Space는 미검증이다. 현재 mux/t alias와 WezTerm 원본 loader도 정상이다. wezterm cli list는 stale GUI socket 연결 실패로 활성 pane 조회를 못했다. 이번 조사에서는 runtime 결함을 재현하지 못했으며 실제 실패 명령/키·터미널·화면 반응 답을 기다린다. 해결 완료로 기록하지 않고 PR #16 draft를 유지한다. 실제 사용자 환경 적용은 수행하지 않았다.
