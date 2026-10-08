@@ -119,3 +119,22 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 - 검증 범위: 사용자 보고를 Windows PowerShell tmux의 실제 사용 확인 근거로 기록하며 자동 검사를 재실행한 것으로 쓰지 않는다. 개별 키·GUI·clipboard·IME 시나리오와 재로드 방식은 보고에 명시되지 않았다. 앞선 자동 검사 근거를 유지하고 macOS/WSL/Linux 실기기 및 깨끗한 새 장비 전체 설치는 미검증으로 남긴다. 실제 merge·자동 merge·설치·설정 적용은 이번 요청 범위에 포함하지 않는다.
 
 - 2026-10-06T16:01+09:00 (KST): 작업 기록 링크·diff 검토와 git diff --check 및 staged diff 검사를 통과했다. 검증 확인 기록을 5e82223으로 커밋·SSH push하고 PR #10의 한국어 본문을 갱신했다. draft 해제 후 GitHub에서 isDraft=false, MERGEABLE/CLEAN과 원격 head 일치를 확인했다. 등록된 CI check는 없다. 사용자 lockfile 변경만 보존했으며 실제 merge·자동 merge·환경 적용은 수행하지 않았다. 다음 단계는 사용자의 최종 PR 리뷰와 병합 결정이다.
+
+### tmux 호환 명령과 기본 namespace 전환 검증 계획
+
+2026-10-08 KST: 사용자가 namespace가 기존 tmux와 구별하기 위한 것인지, tmux 명령으로 사용할 때도 문제가 발생하는지 검증을 요청했다. 실행 환경은 windows-powershell, 기준 HEAD·최신 origin/main은 `1f1bf3d`다. 열린 프로젝트 F 작업 PR #15의 namespace 전환 실패 분석을 참고하되 병합하거나 적용하지 않는다. 현재 체크아웃은 main으로 변경되어 있어 이번 검증을 최신 main 기반 `fix/psmux-session-validation`에서 진행한다. 기존 사용자 lockfile·폰트는 보존한다.
+
+분석: 현재 Windows PATH의 tmux.exe와 psmux.exe는 모두 설치된 psmux 3.3.8 디렉터리에 있다. 파일 해시는 서로 다르므로 같은 바이너리라고 단정하지 않고 실행 결과로 호환성과 서버 공유를 확인한다. 기존 Unix `scripts/t`는 기본 namespace를 사용하고 D는 해당 함수에 설정 저장소 경로를 넘기는 키다. `-L dotfiles`는 설정 저장소 경로를 의미하지 않는다.
+
+계획: 각 검증 프로세스에 고유한 절대 PSMUX_DATA_DIR을 지정하고 실제 사용자 데이터와 분리한다. psmux/tmux 명령 × 기본/named namespace의 네 조건에서 생성·목록·한글/공백 작업 경로·실제 attached-client 왕복 전환을 비교한다. 반대쪽 실행 파일에서도 생성한 세션 조회가 되는지 확인하고 존재하지 않는 대상의 오류와 기존 세션 보존도 검사한다. 검증용 세션은 이름을 지정해 종료하며 bare kill-server를 사용하지 않는다. 재현 가능한 검사를 저장하고 결과·제약을 같은 기록에 추가한 뒤 검증 PR을 제출한다. 설치·원본 런타임·namespace 정책·기존 세션은 바꾸지 않으므로 새 ADR은 필요하지 않다. 현재 t 함수의 -L 제거와 GUI 키·다른 OS는 이번 검증 범위 밖이다.
+
+2026-10-08 KST 추가 요청·검증 결과: 사용자가 다른 psmux와의 분리가 필수인지 확인을 요청했다. psmux 자체에는 필수 조건이 아니다. 설치된 psmux.exe와 tmux.exe 모두 `-V`에서 psmux 3.3.8/66cf613을 보고하며, 같은 PSMUX_DATA_DIR과 namespace의 세션을 양쪽 실행 파일에서 조회·조작할 수 있었다. 두 실행 파일의 해시는 다르므로 파일 동일성은 주장하지 않는다. 이는 현재 Windows tmux가 Unix tmux와 별개의 엔진이 아니라 psmux 호환 진입점임을 보여준다. `-L dotfiles`는 다른 psmux 사용과의 선택적 분리이며 Unix tmux와 구별하기 위한 필수 장치가 아니다.
+
+- 실제 native 검증: `tests/windows-psmux-sessions.py`는 기존 ConPTY helper를 재사용하고 네 조건마다 고유 PSMUX_DATA_DIR을 만들었다. 각 실행 파일에서 기본 namespace와 named namespace로 두 세션을 생성하고 반대쪽 명령에서도 조회했다. 한글·공백 작업 경로를 확인하고 실제 클라이언트를 source에 붙여 전환을 실행했다.
+- 기본 namespace: psmux와 tmux 모두 `switch-client -t =project` 성공과 실제 클라이언트 이동을 확인했다. 각 조건에서 추가 3회 왕복 전환을 수행하고 존재하지 않는 대상의 실패·현재 연결 및 두 세션 보존도 확인했다.
+- named namespace: psmux와 tmux 모두 대상이 있어도 `can't find session: project`, exit 1이었다. 클라이언트는 source에 남았고 세션은 보존되었다. 반대쪽 실행 파일과 일반 이름·전체 namespace 접두사 이름을 사용해도 실패했다. named 조건의 실패를 버그 재현 성공으로 기록하며 기능 통과로 표현하지 않는다.
+- 초기 검증 도구의 정리 판정은 list-sessions가 세션이 없어도 exit 0인 것을 반영하지 못해 중단됐다. 출력이 비었는지 기다리도록 수정한 뒤 네 조건 전체를 재실행해 통과했다. 각 조건의 생성한 두 이름만 kill-session으로 정리하고 모든 helper 종료와 세션 목록 비움을 확인했다. bare kill-server·사용자 세션 종료는 실행하지 않았다. 사용자 lockfile은 byte 비교로 보존을 확인했다.
+- 현재 설정의 의존성: powershell/psmux.ps1의 타 namespace 진입 차단·prompt marker, nvim/lua/config/psmux.lua의 foreground marker가 dotfiles namespace에 묶여 있다. 런타임에서 -L만 제거하면 안전하지 않다. 기본 namespace 전환은 후속 설계·어댑터 변경·기존 세션 보존 계획이 필요하며 이번 검증에서 적용하지 않았다. 기본 namespace를 다른 psmux 사용과 공유하면 세션 이름과 설정 책임을 공유한다는 비용이 있다. 서로 다른 사용자/호스트/WSL tmux와 분리를 위해 이 label이 반드시 필요한 것은 아니다.
+- 범위·한계: Windows 네이티브 pinned 3.3.8의 실제 attached-client 세션 비교와 정적 어댑터 분석이다. 현재 t/fzf/F/D 전체 흐름, 기존 사용자 namespace에서의 전환, 실제 WezTerm·Windows Terminal 물리 키·IME, Neovim 통합, 다른 OS 실기기·새 장비 설치를 검증한 것으로 확대하지 않는다. namespace 정책·의존성·프로필·자동 시작을 변경하지 않았으며 포크가 필수라는 앞선 제안을 기본 namespace 대안 검증 결과로 보완한다.
+
+2026-10-08 KST 최종 검토: 독립 읽기 전용 리뷰에서 실제 list-clients 이동을 확인하는 비교 방식과 범위 표기에 blocker가 없었다. 정리 명령 timeout에도 helper 종료를 수행하고 통신 오류를 빈 세션 목록으로 오인하지 않도록 권고를 반영했다. 버전 확인도 임시 registry를 사용한다. 기존 설정·세션은 그대로 두고 검증 코드와 기록만 제출한다. 이번 작업의 상태는 리뷰 대기이며 PR 제출 후 링크를 추가한다.
