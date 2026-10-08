@@ -154,3 +154,21 @@ WezTerm은 기존 launcher를 통해 같은 Invoke-DotfilesMux를 호출하므�
 완료 조건: 실제 저장소 wrapper의 mux 시작과 t 경로 지정·fzf 선택/취소, F/D를 제공할 경우 실제 키 dispatcher와 선택 후 세션 이동, Neovim 내부/외부 pane 이동·삽입 모드/Esc·prompt reset을 기본 namespace에서 검증한다. 기존 named 세션을 종료하는 것 자체는 -L 선택을 변경하지 않는다. 앞선 최소 설정 session matrix만으로 전체 통합 완료를 선언하지 않는다. macOS/WSL/Linux와 물리 GUI/IME는 실행 근거 없이 완료로 기록하지 않는다.
 
 2026-10-08 KST: Windows 읽기 전용 리뷰에서도 전환 방향이 타당함을 확인했다. 필수 보완은 PowerShell·Neovim psmux 감지 변경, 기존 기본 세션의 config 책임 확인, 필요 시 F/D 연결과 전체 흐름 검증이다. launcher·설치 연결·클립보드·IME는 직접 변경할 필요가 없다는 검토를 반영했다. 리뷰는 정적이며 이번 검토로 실제 적용 완료를 선언하지 않는다. 검토 기록을 기존 PR #16에 추가하며 runtime 수정은 후속 구현 단계로 남긴다.
+
+### 초기 namespace 결정·입력 회귀·원본 연결 재검토
+
+2026-10-08 KST: 사용자가 초기 namespace 결정부터 확인하고 h split 이동·Neovim insert Esc 문제 해결에 필요한지 재검토하며, 실제 설정이 저장소 원본에 링크되어 변경이 Git에 남아야 한다고 요청했다. 기준 `1ef95ac`, windows-powershell, 최신 main `1f1bf3d`를 fetch했다. 사용자 lockfile·폰트는 보존한다. 이번 검토는 역사·실제 링크의 읽기 전용 점검과 필요 시 임시 데이터 경로의 실험에 한정하고 사용자 세션 종료·설치·원본 런타임 적용은 하지 않는다.
+
+계획: 최초 c39073f의 ADR/코드와 h/Esc 후속 수정 1026d48·05711b1을 대조한다. namespace의 격리/적용 대상 판별 역할과 실제 ConPTY 입력 보정을 구분한다. Neovim junction, WezTerm/PowerShell loader 및 Windows Terminal 대상 경로가 현재 체크아웃을 가리키는지 실제 상태로 확인한다. 기본 namespace에서도 입력 보정을 유지하는 실험은 .local scratch와 고유 PSMUX_DATA_DIR에서만 수행하며 실험 사본을 설치·기본 설정 원본으로 사용하지 않는다. 보정 없애기와 namespace 제거를 혼동하지 않고 실행·정적·모의 근거를 구분해 같은 검증 PR #16에 남긴다. 새로운 구조 결정은 역사 검토 후 ADR로 제안해야 하며 이번 문서로 과거 결정 이유를 새로 만들어 쓰지 않는다.
+
+2026-10-08 KST 역사 재검토 결과: 최초 구현 c39073f에서 이미 -L dotfiles와 foreground/prompt namespace gate를 사용했다. insert Esc 수정 1026d48과 h/l 전달 수정 05711b1은 이후에 들어갔으며 namespace는 변경하지 않았다. 최초 ADR의 명시 근거는 이름 있는 서버와 bare kill-server 금지, 승인된 Windows 범위이며, namespace의 대안 비교·필수성 근거는 없다. 기존 psmux·설정과의 분리를 선택한 설계 의도로 읽는 것은 초기 기록과 코드에서의 추론이다. 기존 Unix tmux와 구별하기 위한 필수 장치였다고 확정했던 앞선 설명은 과도했다. h는 ConPTY의 Backspace 해석을 피하는 Alt+h 운반/M-h 연결, Esc는 OSC133 nvim-insert 감지와 Ctrl+\\ Ctrl+N 처리로 수정됐다. 이 보정 자체는 이름 있는 namespace를 필요로 하지 않지만 현재 적용 대상 gate는 해당 이름에 의존한다.
+
+현재 호스트 원본 연결의 실제 점검: Neovim의 %LOCALAPPDATA%/nvim은 이 체크아웃 nvim junction이며 init.lua 해시도 원본과 일치했다. %USERPROFILE%/.wezterm.lua는 독립 설정 복사본이 아니라 저장소 .wezterm.lua를 dofile하는 loader다. PowerShell 5.1/7 profile은 저장소 powershell/psmux.ps1을 dot-source하는 loader이며 psmux 함수는 저장소 tmux/psmux.conf를 -f로 직접 읽는다. 디렉터리 symlink/junction 또는 원본을 실행하는 loader라는 기존 원칙을 충족한다. 파일을 링크 대상에서 수정해도 Git diff에 남는 원본 구조를 namespace 정책과 별개로 유지해야 한다.
+
+Windows Terminal stable의 현재 LocalState는 일반 디렉터리이고 settings.json도 일반 파일이다. scripts/use-windows-terminal.ps1 -Check가 existing-directory를 보고했으며 저장소 연결 완료로 간주하지 않는다. 호스트 진행 기록도 다른 호스트의 과거 상태라고 진단하므로 해당 기록만으로 실제 연결을 보증하지 않는다. 원본 연결을 복구할 때 기존 설정을 먼저 백업하고 승인된 환경 선택·현재 호스트 진행 기록을 분리해야 한다. 이 검토에서 junction 교체·프로필 변경·설치를 실행하지 않았다.
+
+2026-10-08 KST 실제 기본 namespace 키 회귀 실험: .local/namespace-key-review scratch에서 기존 tests/windows-psmux.py 기반 검사에 -L을 쓰지 않고 현재 원본 options/navigator/psmux 키 설정을 읽었다. Neovim config.psmux만 package.preload로 임시 gate를 제공했으며 승인된 Windows, 공식 default TMUX 형식, PSMUX_SESSION을 검사하도록 바꿨다. OSC/autocmd와 Alt+h/M-h·Ctrl+l 전송·nvim-insert/Esc 보정은 유지했다. 실제 ConPTY 최소 구성과 오프라인 현재 LazyVim 구성(--full-config)이 각각 23개/exit 0을 통과했다. Ctrl+h 우회 전송의 내부/외부 이동, insert 이동 문자 보존, 반복 Ctrl+l 후 raw 단일 Esc 정상 모드 복귀, Backspace, terminal Esc 유지, foreground clear, navigator routing, 한글·공백 경로를 확인했다. 다운로드·lockfile 변경 없이 private data 경로에서 생성한 세션만 이름 지정 종료했다. 사용자 세션·원본 runtime은 변경하지 않았다. 이는 대체 gate의 실험이지 저장소 구현/물리 WezTerm·Windows Terminal 입력의 완료 판정은 아니다.
+
+별도 실제 pane 환경 검사에서도 -f로 지정한 원본 tmux/psmux.conf 경로가 PSMUX_CONFIG_FILE에 유지됨을 확인했다. TMUX와 PSMUX_SESSION은 psmux 여부를, 원본 설정 경로 동일성은 이 저장소의 보정 적용 범위를 판별하는 후보다. 다른 기본 psmux를 무조건 포함하지 않도록 원본 경로 정규화·현재 승인/활성화·잘못된 marker/다른 원본의 negative 검증을 후속 구현 완료 조건에 추가한다. 해당 경로 동일성 gate는 아직 코드로 구현·검증하지 않았다.
+
+재검토 결론: namespace는 h/Esc 입력 보정 자체의 필수 조건이 아니며 기본 namespace에서도 기존 보정 유지가 실제 실험으로 가능했다. 다만 초기 결정의 적용 대상 분리 역할은 필요하므로 그 역할까지 제거하면 안 된다. 기본 namespace 정책은 새 ADR에서 범위 판별 방식·기존 기본 서버 책임·검증 조건과 함께 제안한 뒤 구현해야 한다. 원본 연결은 별도 불변 조건으로 유지하며 Windows Terminal의 발견된 독립 설정은 실제 연결 복구 대상으로 남긴다. 역사 검토·실험·현재 링크 점검 결과는 PR #16에 갱신하고, 이번 요청의 검토 단계에서 설치/사용자 환경 연결/세션 종료는 수행하지 않는다.
