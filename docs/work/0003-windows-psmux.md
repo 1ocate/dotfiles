@@ -138,3 +138,5 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 - 범위·한계: Windows 네이티브 pinned 3.3.8의 실제 attached-client 세션 비교와 정적 어댑터 분석이다. 현재 t/fzf/F/D 전체 흐름, 기존 사용자 namespace에서의 전환, 실제 WezTerm·Windows Terminal 물리 키·IME, Neovim 통합, 다른 OS 실기기·새 장비 설치를 검증한 것으로 확대하지 않는다. namespace 정책·의존성·프로필·자동 시작을 변경하지 않았으며 포크가 필수라는 앞선 제안을 기본 namespace 대안 검증 결과로 보완한다.
 
 2026-10-08 KST 최종 검토: 독립 읽기 전용 리뷰에서 실제 list-clients 이동을 확인하는 비교 방식과 범위 표기에 blocker가 없었다. 정리 명령 timeout에도 helper 종료를 수행하고 통신 오류를 빈 세션 목록으로 오인하지 않도록 권고를 반영했다. 버전 확인도 임시 registry를 사용한다. 기존 설정·세션은 그대로 두고 검증 코드와 기록만 제출한다. 이번 작업의 상태는 리뷰 대기이며 PR 제출 후 링크를 추가한다.
+
+2026-10-08 KST: 최종 보강 후 네 조건의 실제 ConPTY 검사·Python 문법·git diff --check를 통과했다. 검증 코드와 기록을 `3cbe19c`으로 커밋·SSH push하고 [검증 PR #16](https://github.com/1ocate/dotfiles/pull/16)을 제출했다. 상태는 리뷰 대기다. PR #15와 #16 모두 merge하지 않았고 런타임·사용자 설정·기존 세션·lockfile·폰트를 변경하지 않았다.
