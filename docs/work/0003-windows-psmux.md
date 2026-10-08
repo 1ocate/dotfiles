@@ -142,3 +142,5 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 
 - 검증 서버에 `bind-key -r F new-window -c "'#{pane_current_path}'" "'pwsh -NoLogo -NoExit -Command t'"`로 명령 전체의 따옴표를 보존하여 적용한 뒤 실제 attached-client dispatcher에서 fzf foreground를 확인했다. 자동 입력 도구의 NUL 제약 때문에 검증 서버만 prefix를 Ctrl+B로 바꾸어 Ctrl+B → F를 전송했다. 사용자 서버의 Ctrl+Space와 물리 키 검증은 여전히 미검증이다. 한글·공백 현재 경로도 유지되었다. 검증 서버만 종료했다.
 - 성공한 동일 CLI 형태로 현재 dotfiles 서버의 F를 다시 적용하고 명령 전체가 따옴표로 보존된 list-keys 출력과 로컬 결과 기록을 확인했다. 원본 설정 파일은 이미 명령 전체를 따옴표로 지정하므로 별도 코드 수정은 필요하지 않았다. 이후 prefix → r로 원본을 읽어도 같은 명령이 유지된다.
+
+2026-10-08 KST: 검증한 변경을 `e5fb126`으로 커밋·SSH push하고 #14 브랜치 기반 [draft PR #15](https://github.com/1ocate/dotfiles/pull/15)를 제출했다. 사용자 lockfile·폰트는 포함하지 않았고 merge는 수행하지 않았다.
