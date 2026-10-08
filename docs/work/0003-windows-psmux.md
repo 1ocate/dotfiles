@@ -206,3 +206,12 @@ Windows Terminal 실제 연결: 기존 stable LocalState는 일반 디렉터리�
 2026-10-08 KST 후속 범위 확인: 사용자는 Ctrl+Space로 연 fzf에서 프로젝트 디렉터리를 선택한 후 세션이 실행되지 않는다고 설명했다. 기준 df11be4, origin/main 재fetch 1f1bf3d, PR #16 draft 유지. 호스트에는 원본 config marker와 F/D 등록이 있는 기본 main이 조회되지만 list-clients는 비었고 실제 실패 GUI client를 확인하지 못했다. 새 일반 PowerShell의 mux/t alias·pinned binary·profile loader는 정상이며 조사 프로세스/사용자·시스템 환경에서 FZF 출력 변경 옵션은 발견되지 않았다. 이 호스트 조회 결과를 실패한 pane 자체의 상태로 간주하지 않는다.
 
 읽기 전용 하위 조사: 공식 로컬 3.3.8 소스에서 앞선 native -t 호출은 부모 PowerShell TMUX를 바꾸지 않으므로 source 라우팅 상실 가설을 배제했다. switch-client는 latest_client_id에 directive를 보내므로 다중 client 조건은 남은 후보이며 client 부재에도 exit 0일 수 있다. fzf 다중 출력/쿼리 출력 옵션도 경로 lookup 실패 후보지만 현재 호스트 근거가 없다. 기존 단일 ConPTY 검증을 사용자 실패의 해결 근거로 확대하지 않는다. 사용자 실패 pane의 TMUX·세션 목록과 선택 직후 오류를 요청했고, 확보 전 추정 runtime 수정/실제 적용/서버 종료는 하지 않는다.
+
+
+### F/D 시작 지연 개선 계획
+
+2026-10-08 KST: 사용자 요청으로 별도 PR 대신 기존 PR #16에 포함한다. 기준 85a4896, origin/main 1f1bf3d, windows-powershell. F→fzf 기존 3회 약 4.69~4.86초. psmux 3.3.8의 bare pwsh 명령은 프로필을 읽는 외부 PowerShell로 감싸져 프로필이 중복 초기화된다. 전체 실행 파일 경로를 명령 전체 인용과 함께 전달한 격리 실험은 2.73/3.78/2.72초이고 취소 후 명령 실행을 통과했다. 실행 파일 경로를 runtime에서 찾고 서버 사용자 옵션에 전달하여 F/D와 r reload가 같은 직접 실행 경로를 사용하도록 수정한다. 기존 프로필·사용자 t·취소 셸을 보존하고 실제 격리 dispatcher로 검증한다. 다른 OS 설정과 사용자 세션·설치·링크는 변경하지 않는다. ADR 0006의 기존 구현을 개선하는 버그 수정으로 새 ADR은 없다.
+
+2026-10-08 KST 실험 결과: 전체 명령을 인용한 절대 실행 파일 경로를 접속 후 실제 F에 등록한 경우 3회 2725.8/3775.7/2720.1ms, 중앙값 2725.8ms였다. 기존 F 4859.7/4696.0/4693.7ms의 중앙값 대비 약 42% 감소다. 각각 실제 fzf 화면 표시와 Ctrl+C 후 파일 쓰기 명령 실행·client 유지·고유 테스트 세션 정리·사용자 lockfile/루트 목록 byte 보존을 확인했다. 관측은 ConPTY 입력/출력 polling이며 물리 Ctrl+Space와 직접 경로 D의 실제 전환은 미검증이다. bare 명령의 외부/내부 프로필 중복은 공식 3.3.8 소스에서 확인했다.
+
+원본 자동 연결 후보는 미통과: 사용자 옵션 형식 치환, config 환경 변수 치환+source-file, 접속 전 runtime bind-key 등록을 각각 시도했으나 원본 F→fzf를 확인하지 못했다. 접속 후 CLI 등록은 통과하므로 클라이언트의 원본 config 로드와 서버 바인딩 전달 경로가 남은 조사 대상이다. 실패 후보의 runtime/config 변경은 제거하여 HEAD 동작을 보존했다. 기존 PR #16 draft에 실험 기록만 포함하며 지연 해결 완료로 주장하지 않는다. 다음 단계는 원본 로드 이후에도 유지되는 직접 실행 바인딩 경로를 좁혀 구현하고 F 선택/취소·D·r 및 foreground/현재 경로 회귀를 검증하는 것이다. 프로필을 제거하거나 설치·실제 사용자 서버 reload/세션 종료를 하지 않았다. PowerShell 7 tests/psmux-runtime.ps1은 실험 중 통과했으나 제거된 후보의 실제 연결 성공을 보증하지 않는다.
