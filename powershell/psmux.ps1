@@ -88,9 +88,15 @@ function global:Invoke-DotfilesMux {
     # Quote-aware CLI writes a reload binding referencing this checkout.
     & $muxExe -L dotfiles -t $Session bind-key r source-file $muxConfig
     if ($LASTEXITCODE -ne 0) { throw 'Could not configure the psmux reload binding.' }
-    if ($env:TMUX) { & $muxExe -L dotfiles switch-client -t "=$Session" }
-    else { & $muxExe -L dotfiles attach-session -t "=$Session" }
-    if ($LASTEXITCODE -ne 0) { throw 'Could not attach/switch to the psmux session.' }
+    if ($env:TMUX) {
+        & $muxExe -L dotfiles switch-client -t "=$Session"
+        if ($LASTEXITCODE -ne 0) {
+            throw "Could not switch to psmux session '$Session'. The session is preserved. psmux 3.3.8 cannot resolve namespaced switch targets. Detach with Ctrl+Space then d; in the outer PowerShell run Invoke-DotfilesMux -Session '$Session'."
+        }
+    } else {
+        & $muxExe -L dotfiles attach-session -t "=$Session"
+        if ($LASTEXITCODE -ne 0) { throw "Could not attach to psmux session '$Session'." }
+    }
 }
 
 function global:Invoke-DotfilesProject {

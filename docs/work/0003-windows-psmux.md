@@ -153,3 +153,17 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 - 현재 fallback 검색 범위인 체크아웃의 하위 디렉터리 조회는 28ms, `fzf --version` 실행은 37ms였다. 별도 프로젝트 루트 파일은 없었다. fzf UI 표시 시간을 측정한 것으로 쓰지 않는다.
 - 별도 `-NoProfile` 셸에서 실제 프로필의 구성요소를 한 번씩 분리 측정했다: posh-git loader 692ms, oh-my-posh 초기화 871ms, psmux loader 194ms. 단일 표본이며 파일 캐시·실행 시점에 따라 변한다. 현재 F는 새 PowerShell에서 전체 프로필을 읽으므로 프롬프트·Git 완성 초기화가 주요 시작 비용이다.
 - 개선 후보: 프로젝트 선택용 실행은 전체 프로필 대신 필요한 psmux 함수만 읽는 경로로 분리할 수 있다. 다만 기존 사용자 t 보존, 선택/취소 후 남는 셸의 프롬프트·완성 경험을 함께 설계해야 하므로 이번 원인 질문만으로 변경하지 않았다.
+
+### 프로젝트 세션 전환 실패 후속 분석·계획
+
+2026-10-08 KST: 사용자가 t에서 `can't find session` 및 psmux.ps1의 attach/switch 실패를 보고했다. 기준은 `f9216ea`, 환경은 windows-powershell이다. 최신 main `1f1bf3d`에서 #14 병합을 확인했고 후속 #15를 main 기준으로 정리한다. 사용자 lockfile·폰트·모든 기존 세션은 보존한다.
+
+분석: 실제 사용자 서버에서 오류 대상 세션이 존재했다. 별도 namespace의 두 세션에서도 has-session은 성공하지만 switch-client는 일반 이름·=이름·전체 namespace 접두사 이름 모두 실패했다. 공식 v3.3.8의 server SwitchClientTarget은 list_session_names()를 호출하고, 해당 함수는 list_session_names_ns(None)을 통해 __가 포함된 namespaced 항목을 제외한다. 이는 생성·프로젝트 해시 문제가 아니라 pinned psmux의 namespace 전환 결함이다. 앞선 F 검증은 fzf 시작까지만 확인했고 프로젝트 선택 후 전환은 미검증이었으므로 동작 확인 보고를 전환 성공 근거로 확대하지 않는다.
+
+계획: 일반 오류를 세션 보존·수동 연결 안내로 구분 → 사용 문서의 현재 제약·임시 연결 방법 기록 → 기존 runtime 검사·PowerShell AST 검사 → 원인/미해결 상태를 draft #15에 반영. namespace 격리 제거, 사용자 세션 재생성·종료, 설치·업그레이드·데이터 경로 이전은 수행하지 않는다. 자동 전환의 근본 해결은 upstream 수정 버전 또는 별도 격리 방식 검증이 필요하며 완료로 기록하지 않는다.
+
+근거: [v3.3.8 SwitchClientTarget](https://github.com/psmux/psmux/blob/v3.3.8/src/server/mod.rs#L4878), [v3.3.8 세션 목록 namespace 필터](https://github.com/psmux/psmux/blob/v3.3.8/src/session.rs#L2033).
+
+2026-10-08 KST 검증: 수정한 함수의 -L 대상과 TMUX 허용 문자열만 고유 검증 namespace로 치환한 별도 프로세스에서 실제 native switch 실패를 재현했다. 새 오류가 대상 이름·세션 보존·바깥 Invoke-DotfilesMux 연결 명령을 포함함을 확인했고 실패 뒤 has-session으로 대상 보존을 확인했다. 별도 실제 attached-client에서는 바깥 attach-session -t =target이 지정한 namespaced 대상에 연결됨을 list-clients로 확인했다. 검증 namespace만 정리했다. PowerShell 7의 기존 runtime 검사·AST와 diff-check 통과. 실제 사용자 세션 전환·삭제·설치·업그레이드는 수행하지 않았다. 기존 셸은 이전 함수 정의를 유지할 수 있으므로 새 오류 안내를 읽으려면 새 셸 또는 `. .\powershell\psmux.ps1` 재로드가 필요하지만 자동 전환 결함은 이 변경으로 해결되지 않는다.
+
+2026-10-08 KST: 통합된 후속 diff의 독립 읽기 전용 검토에서 blocker는 없었다. 세션 이름 검증·복구 명령 인용·Windows gate·자동 전환 미해결 고지를 확인했다. 문서 상대 링크 검사 통과. 수정된 오류 안내와 분석은 기존 draft PR #15에 반영한다.
