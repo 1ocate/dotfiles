@@ -140,3 +140,17 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 2026-10-08 KST 최종 검토: 독립 읽기 전용 리뷰에서 실제 list-clients 이동을 확인하는 비교 방식과 범위 표기에 blocker가 없었다. 정리 명령 timeout에도 helper 종료를 수행하고 통신 오류를 빈 세션 목록으로 오인하지 않도록 권고를 반영했다. 버전 확인도 임시 registry를 사용한다. 기존 설정·세션은 그대로 두고 검증 코드와 기록만 제출한다. 이번 작업의 상태는 리뷰 대기이며 PR 제출 후 링크를 추가한다.
 
 2026-10-08 KST: 최종 보강 후 네 조건의 실제 ConPTY 검사·Python 문법·git diff --check를 통과했다. 검증 코드와 기록을 `3cbe19c`으로 커밋·SSH push하고 [검증 PR #16](https://github.com/1ocate/dotfiles/pull/16)을 제출했다. 상태는 리뷰 대기다. PR #15와 #16 모두 merge하지 않았고 런타임·사용자 설정·기존 세션·lockfile·폰트를 변경하지 않았다.
+
+### 기본 namespace 전환안 사전 검토
+
+2026-10-08 KST: 사용자는 기존 tmux 세션 이전·보존보다 named namespace를 제거해 사용할 수 있게 하는 것이 목표라고 설명한 뒤, 해당 방안으로 문제가 해결되는지 사전 검토를 요청했다. 기준은 `7004caf`, 실행 환경은 windows-powershell이며 사용자 lockfile·폰트 변경만 존재했다. 이번 단계는 계획 검토로 실행 중인 사용자 세션 종료·런타임 변경·적용은 수행하지 않는다. 검증 PR #16의 실제 기본 namespace 전환 성공은 앞선 실행 근거이며 이번 읽기 전용 검토에서 재실행한 것으로 쓰지 않는다.
+
+분석·검토 기준: 네 matrix 결과가 전환 오류 해소를 뒷받침하는지, -L 제거 외에 PowerShell 진입 차단·prompt/Neovim foreground 감지·설정 로드·자동 시작·기본 세션 재사용을 함께 변경해야 하는지 확인한다. 구현 승인은 앞선 요청에 있지만 이번 요청의 검토 단계에서는 코드나 실제 환경을 바꾸지 않는다. 기본 namespace로 동작을 변경할 때는 후속 ADR에서 기존 ADR 0003의 named 서버 선택을 명시적으로 보완해야 한다.
+
+검토 결과: 기본 namespace 사용은 pinned 3.3.8의 named 전환 결함을 피하는 타당한 방법이다. 현재 wrapper의 -L dotfiles 전체와 /dotfiles, 진입 조건을 함께 바꾸지 않으면 기본 pane에서 t가 계속 차단된다. prompt 초기화와 Neovim 모드 marker도 namespace 이름 대신 승인된 Windows·psmux 전용 감지로 전환해야 한다. 로컬 공식 소스 pane.rs의 set_tmux_env는 기본 pane에 /tmp/psmux-{server_pid}/default,{port},0 형식 TMUX와 실제 세션명 PSMUX_SESSION을 제공한다. 명령 이름만으로 Unix tmux와 구분하지 않는다.
+
+WezTerm은 기존 launcher를 통해 같은 Invoke-DotfilesMux를 호출하므로 함수의 변경으로 시작 경로도 기본 namespace로 바뀐다. 저장소의 -f tmux/psmux.conf는 계속 지정해야 한다. 기존 기본 main이 있다면 has-session에 -f를 붙이는 것만으로 그 서버의 설정이 다시 로드되지 않으므로 생성 전에 기존 기본 세션 상태와 설정 책임을 확인해야 한다. Windows Terminal 저장소 원본은 일반 pwsh이며 별도 자동 시작이 있다면 해당 로컬 호출 경로도 확인해야 한다. F/D는 현재 main의 psmux.conf에 없으므로 namespace 변경만으로 키 연결까지 구현됐다고 할 수 없다.
+
+완료 조건: 실제 저장소 wrapper의 mux 시작과 t 경로 지정·fzf 선택/취소, F/D를 제공할 경우 실제 키 dispatcher와 선택 후 세션 이동, Neovim 내부/외부 pane 이동·삽입 모드/Esc·prompt reset을 기본 namespace에서 검증한다. 기존 named 세션을 종료하는 것 자체는 -L 선택을 변경하지 않는다. 앞선 최소 설정 session matrix만으로 전체 통합 완료를 선언하지 않는다. macOS/WSL/Linux와 물리 GUI/IME는 실행 근거 없이 완료로 기록하지 않는다.
+
+2026-10-08 KST: Windows 읽기 전용 리뷰에서도 전환 방향이 타당함을 확인했다. 필수 보완은 PowerShell·Neovim psmux 감지 변경, 기존 기본 세션의 config 책임 확인, 필요 시 F/D 연결과 전체 흐름 검증이다. launcher·설치 연결·클립보드·IME는 직접 변경할 필요가 없다는 검토를 반영했다. 리뷰는 정적이며 이번 검토로 실제 적용 완료를 선언하지 않는다. 검토 기록을 기존 PR #16에 추가하며 runtime 수정은 후속 구현 단계로 남긴다.
