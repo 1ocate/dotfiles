@@ -99,7 +99,7 @@ Neovim과 WezTerm은 Windows에서 현재 호스트의 저장된 선택을 읽�
 Windows 호스트가 명시적으로 WSL을 선택했다면 WezTerm은 발견한 첫 WSL 도메인과 fish 로그인 셸을 사용합니다. 발견한 도메인이 없으면 기본 도메인을 강제하지 않습니다. 특정 배포판·사용자 홈 경로를 고정하지 않으며 WSL 설치나 선택 전환을 자동으로 수행하지 않습니다. 회사 정책으로 WSL이 금지된 호스트에서는 이 방식을 사용하지 않습니다.
 
 - 왼쪽 Alt와 Windows 키를 교환합니다. 교환 후 Alt 위치의 `Alt+Space`는 한영 전환, `Alt+C/V`는 복사·붙여넣기입니다.
-- WezTerm에서만 Esc 원래 입력을 통과시키고 키를 놓을 때 영문 상태를 설정합니다. 이미 영문이면 유지하며 다른 앱의 Esc는 그대로입니다.
+- WezTerm과 Windows Terminal에서 Esc 원래 입력을 통과시키고 키를 놓을 때 영문 상태를 설정합니다. 이미 영문이면 유지하며 다른 앱의 Esc는 그대로입니다.
 - Neovim의 yank는 승인된 PowerShell 환경에서 Windows 클립보드로 전달하고 F9로 연동을 켜거나 끕니다.
 - 내부 셸은 PowerShell 7을 우선 사용하고 Windows 실행 별칭을 처리합니다.
 - Copilot·CopilotChat은 비활성화 상태를 유지합니다. 향후 활성화하더라도 Windows의 선택적인 `make tiktoken` 빌드는 생략합니다.

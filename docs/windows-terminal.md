@@ -64,8 +64,8 @@ Windows Terminal의 `font.face`는 `MesloLGMDZ Nerd Font Mono`, 크기는 `11`�
 | `Alt+h` | 기존 psmux 왼쪽 이동 대체. psmux 밖에는 터미널의 기본 입력 유지 |
 | `Ctrl+Shift+V` | 터미널 붙여넣기 |
 | `Ctrl+V` | Neovim Visual Block 등에 전달하도록 터미널 붙여넣기 해제 |
-| `Esc` | Windows Terminal에서 원래 입력 전달. 영어 IME 전환은 기존 WezTerm 범위 유지 |
+| `Esc` | 원래 입력 전달. 저장소 AutoHotkey v2 실행 시 키를 뗄 때 영어 IME로 전환 |
 
-Windows Terminal 전역 단축키를 SSH 탭까지 바꾸지 않도록 Ctrl+h→Alt+h 전송을 추가하지 않습니다. Alt+Space의 터미널 메뉴와 기존 AutoHotkey 입력 전환, 물리 Ctrl+Space·Ctrl+h·Esc/IME는 GUI에서 별도로 확인해야 합니다. 원격 Vim Esc 문제는 [PR #12](https://github.com/1ocate/dotfiles/pull/12)의 독립 조사이며 이번 변경으로 해결됐다고 판단하지 않습니다.
+Windows Terminal 전역 단축키를 SSH 탭까지 바꾸지 않도록 Ctrl+h→Alt+h 전송을 추가하지 않습니다. Esc 영어 전환은 `autoHotKey.ahk`가 활성 Windows Terminal 또는 WezTerm 창에만 적용하며 이미 영어면 그대로 유지합니다. AutoHotkey를 실행하지 않으면 영어 전환 없이 Esc만 전달됩니다. Windows Terminal 창의 모든 탭(SSH 포함)에 적용하며 원격 서버의 IME를 변경하는 기능은 아닙니다. Alt+Space의 터미널 메뉴와 기존 AutoHotkey 입력 전환, 물리 Ctrl+Space·Ctrl+h·Esc/IME는 GUI에서 별도로 확인해야 합니다. 원격 Vim Esc 문제는 [PR #12](https://github.com/1ocate/dotfiles/pull/12)의 독립 조사이며 이번 변경으로 해결됐다고 판단하지 않습니다.
 
 공식 근거: [설정 경로](https://learn.microsoft.com/en-us/windows/terminal/install), [fragment 범위](https://learn.microsoft.com/en-us/windows/terminal/json-fragment-extensions), [단축키와 sendInput](https://learn.microsoft.com/en-us/windows/terminal/customize-settings/actions), [기본 터미널 OS 설정](https://learn.microsoft.com/en-us/windows/terminal/customize-settings/startup).

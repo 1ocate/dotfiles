@@ -1,6 +1,6 @@
 # 0004: Windows 네이티브의 주 터미널과 설정 원본 연결
 
-- 상태: 제안
+- 상태: 채택
 - 작성일: 2026-10-07
 - 적용 범위: windows-powershell
 - 관련 작업·PR: [작업 0006](../work/0006-windows-terminal.md), [draft PR #13](https://github.com/1ocate/dotfiles/pull/13)
@@ -35,3 +35,5 @@ OS 기본 터미널 선택은 Windows 시스템 설정이며 settings.json의 �
 ## 계획 변경 근거
 
 2026-10-07 KST: 파일 심볼릭 링크의 실제 생성이 Win32 1314로 거부되고 기존 설정이 보존된 것을 확인했다. 추가 권한을 요구하지 않고 source directory junction과 runtime Git 제외로 변경했다. 실제 임시 대상 검증은 작업 0006에 기록한다.
+
+2026-10-07 KST: PR #13의 main 병합(66a85b7)을 확인하여 상태를 채택으로 정리했다. 기존 Esc 전환 범위의 후속 변경은 [ADR 0005](0005-terminal-esc-ime.md)에서 별도로 다루며 나머지 결정은 유지한다.
