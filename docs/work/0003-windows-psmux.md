@@ -1,6 +1,6 @@
 # 0003: Windows PowerShell에 psmux 적용
 
-- 상태: 리뷰 대기 (사용자 PowerShell tmux 동작 확인 완료, PR 병합 준비)
+- 상태: 리뷰 대기 (기본 namespace·F/D 지연 개선 제출, 사용자 mux D 적용 확인; F 전환·격리 D 실패 원인·GUI 및 Windows Terminal 연결은 후속 확인)
 - 요청·배경: 호환성 확인 후 사용자가 PowerShell 로컬 적용과 변경 파일을 모은 PR 제출을 요청했다. Neovim 연동을 우선한다.
 - 시작일: 2026-10-06
 - 기준: main `38d1473`, `feat/windows-psmux`; fetch 후 origin/main 일치, 기존 사용자 변경 없음
@@ -8,7 +8,7 @@
 - 범위: Windows psmux 설치·설정·PowerShell 함수·WezTerm 시작, Neovim 이동 검증과 PR
 - 비대상: macOS/WSL tmux 변경, 플러그인 업데이트, 다른 health 경고, 재부팅 복원
 - 관련 ADR: [ADR 0003](../adr/0003-windows-psmux.md)
-- 관련 PR: [PR #10](https://github.com/1ocate/dotfiles/pull/10), [작업 브랜치](https://github.com/1ocate/dotfiles/tree/feat/windows-psmux)
+- 관련 PR: [PR #10](https://github.com/1ocate/dotfiles/pull/10)(병합), [PR #16](https://github.com/1ocate/dotfiles/pull/16)(현재 구현·검증), [PR #15](https://github.com/1ocate/dotfiles/pull/15)(선행 F 연결·제한 안내)
 
 ## 분석과 미확인 사항
 
@@ -61,7 +61,7 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 | 모의 `tests/psmux-foreground.lua` | OSC 실행·정지·재개·종료 및 비대상 OS/승인/서버의 미실행 검사 통과 |
 | 문법·정적 | PowerShell AST, Lua loadfile, git diff --check, macOS/windows/독립 reviewer 검토. 지적된 사항 수정 |
 
-## 남은 일
+## 초기 PR #10 제출 당시 남은 일
 
 - [PR #10](https://github.com/1ocate/dotfiles/pull/10)에서 변경과 미검증 범위를 검토하고 병합을 결정한다.
 - 사용자가 PowerShell tmux 동작 확인 완료를 보고했다. 개별 시나리오 목록은 제공되지 않았으므로 fzf 선택 UI, copy mode 한글 clipboard, 기존 Alt/Esc·IME의 개별 검증 완료를 추가로 주장하지 않는다.
@@ -119,3 +119,125 @@ navigator는 TMUX를 감지하고 tmux -S를 호출한다. 선행 portable v3.3.
 - 검증 범위: 사용자 보고를 Windows PowerShell tmux의 실제 사용 확인 근거로 기록하며 자동 검사를 재실행한 것으로 쓰지 않는다. 개별 키·GUI·clipboard·IME 시나리오와 재로드 방식은 보고에 명시되지 않았다. 앞선 자동 검사 근거를 유지하고 macOS/WSL/Linux 실기기 및 깨끗한 새 장비 전체 설치는 미검증으로 남긴다. 실제 merge·자동 merge·설치·설정 적용은 이번 요청 범위에 포함하지 않는다.
 
 - 2026-10-06T16:01+09:00 (KST): 작업 기록 링크·diff 검토와 git diff --check 및 staged diff 검사를 통과했다. 검증 확인 기록을 5e82223으로 커밋·SSH push하고 PR #10의 한국어 본문을 갱신했다. draft 해제 후 GitHub에서 isDraft=false, MERGEABLE/CLEAN과 원격 head 일치를 확인했다. 등록된 CI check는 없다. 사용자 lockfile 변경만 보존했으며 실제 merge·자동 merge·환경 적용은 수행하지 않았다. 다음 단계는 사용자의 최종 PR 리뷰와 병합 결정이다.
+
+### tmux 호환 명령과 기본 namespace 전환 검증 계획
+
+2026-10-08 KST: 사용자가 namespace가 기존 tmux와 구별하기 위한 것인지, tmux 명령으로 사용할 때도 문제가 발생하는지 검증을 요청했다. 실행 환경은 windows-powershell, 기준 HEAD·최신 origin/main은 `1f1bf3d`다. 열린 프로젝트 F 작업 PR #15의 namespace 전환 실패 분석을 참고하되 병합하거나 적용하지 않는다. 현재 체크아웃은 main으로 변경되어 있어 이번 검증을 최신 main 기반 `fix/psmux-session-validation`에서 진행한다. 기존 사용자 lockfile·폰트는 보존한다.
+
+분석: 현재 Windows PATH의 tmux.exe와 psmux.exe는 모두 설치된 psmux 3.3.8 디렉터리에 있다. 파일 해시는 서로 다르므로 같은 바이너리라고 단정하지 않고 실행 결과로 호환성과 서버 공유를 확인한다. 기존 Unix `scripts/t`는 기본 namespace를 사용하고 D는 해당 함수에 설정 저장소 경로를 넘기는 키다. `-L dotfiles`는 설정 저장소 경로를 의미하지 않는다.
+
+계획: 각 검증 프로세스에 고유한 절대 PSMUX_DATA_DIR을 지정하고 실제 사용자 데이터와 분리한다. psmux/tmux 명령 × 기본/named namespace의 네 조건에서 생성·목록·한글/공백 작업 경로·실제 attached-client 왕복 전환을 비교한다. 반대쪽 실행 파일에서도 생성한 세션 조회가 되는지 확인하고 존재하지 않는 대상의 오류와 기존 세션 보존도 검사한다. 검증용 세션은 이름을 지정해 종료하며 bare kill-server를 사용하지 않는다. 재현 가능한 검사를 저장하고 결과·제약을 같은 기록에 추가한 뒤 검증 PR을 제출한다. 설치·원본 런타임·namespace 정책·기존 세션은 바꾸지 않으므로 새 ADR은 필요하지 않다. 현재 t 함수의 -L 제거와 GUI 키·다른 OS는 이번 검증 범위 밖이다.
+
+2026-10-08 KST 추가 요청·검증 결과: 사용자가 다른 psmux와의 분리가 필수인지 확인을 요청했다. psmux 자체에는 필수 조건이 아니다. 설치된 psmux.exe와 tmux.exe 모두 `-V`에서 psmux 3.3.8/66cf613을 보고하며, 같은 PSMUX_DATA_DIR과 namespace의 세션을 양쪽 실행 파일에서 조회·조작할 수 있었다. 두 실행 파일의 해시는 다르므로 파일 동일성은 주장하지 않는다. 이는 현재 Windows tmux가 Unix tmux와 별개의 엔진이 아니라 psmux 호환 진입점임을 보여준다. `-L dotfiles`는 다른 psmux 사용과의 선택적 분리이며 Unix tmux와 구별하기 위한 필수 장치가 아니다.
+
+- 실제 native 검증: `tests/windows-psmux-sessions.py`는 기존 ConPTY helper를 재사용하고 네 조건마다 고유 PSMUX_DATA_DIR을 만들었다. 각 실행 파일에서 기본 namespace와 named namespace로 두 세션을 생성하고 반대쪽 명령에서도 조회했다. 한글·공백 작업 경로를 확인하고 실제 클라이언트를 source에 붙여 전환을 실행했다.
+- 기본 namespace: psmux와 tmux 모두 `switch-client -t =project` 성공과 실제 클라이언트 이동을 확인했다. 각 조건에서 추가 3회 왕복 전환을 수행하고 존재하지 않는 대상의 실패·현재 연결 및 두 세션 보존도 확인했다.
+- named namespace: psmux와 tmux 모두 대상이 있어도 `can't find session: project`, exit 1이었다. 클라이언트는 source에 남았고 세션은 보존되었다. 반대쪽 실행 파일과 일반 이름·전체 namespace 접두사 이름을 사용해도 실패했다. named 조건의 실패를 버그 재현 성공으로 기록하며 기능 통과로 표현하지 않는다.
+- 초기 검증 도구의 정리 판정은 list-sessions가 세션이 없어도 exit 0인 것을 반영하지 못해 중단됐다. 출력이 비었는지 기다리도록 수정한 뒤 네 조건 전체를 재실행해 통과했다. 각 조건의 생성한 두 이름만 kill-session으로 정리하고 모든 helper 종료와 세션 목록 비움을 확인했다. bare kill-server·사용자 세션 종료는 실행하지 않았다. 사용자 lockfile은 byte 비교로 보존을 확인했다.
+- 현재 설정의 의존성: powershell/psmux.ps1의 타 namespace 진입 차단·prompt marker, nvim/lua/config/psmux.lua의 foreground marker가 dotfiles namespace에 묶여 있다. 런타임에서 -L만 제거하면 안전하지 않다. 기본 namespace 전환은 후속 설계·어댑터 변경·기존 세션 보존 계획이 필요하며 이번 검증에서 적용하지 않았다. 기본 namespace를 다른 psmux 사용과 공유하면 세션 이름과 설정 책임을 공유한다는 비용이 있다. 서로 다른 사용자/호스트/WSL tmux와 분리를 위해 이 label이 반드시 필요한 것은 아니다.
+- 범위·한계: Windows 네이티브 pinned 3.3.8의 실제 attached-client 세션 비교와 정적 어댑터 분석이다. 현재 t/fzf/F/D 전체 흐름, 기존 사용자 namespace에서의 전환, 실제 WezTerm·Windows Terminal 물리 키·IME, Neovim 통합, 다른 OS 실기기·새 장비 설치를 검증한 것으로 확대하지 않는다. namespace 정책·의존성·프로필·자동 시작을 변경하지 않았으며 포크가 필수라는 앞선 제안을 기본 namespace 대안 검증 결과로 보완한다.
+
+2026-10-08 KST 최종 검토: 독립 읽기 전용 리뷰에서 실제 list-clients 이동을 확인하는 비교 방식과 범위 표기에 blocker가 없었다. 정리 명령 timeout에도 helper 종료를 수행하고 통신 오류를 빈 세션 목록으로 오인하지 않도록 권고를 반영했다. 버전 확인도 임시 registry를 사용한다. 기존 설정·세션은 그대로 두고 검증 코드와 기록만 제출한다. 이번 작업의 상태는 리뷰 대기이며 PR 제출 후 링크를 추가한다.
+
+2026-10-08 KST: 최종 보강 후 네 조건의 실제 ConPTY 검사·Python 문법·git diff --check를 통과했다. 검증 코드와 기록을 `3cbe19c`으로 커밋·SSH push하고 [검증 PR #16](https://github.com/1ocate/dotfiles/pull/16)을 제출했다. 상태는 리뷰 대기다. PR #15와 #16 모두 merge하지 않았고 런타임·사용자 설정·기존 세션·lockfile·폰트를 변경하지 않았다.
+
+### 기본 namespace 전환안 사전 검토
+
+2026-10-08 KST: 사용자는 기존 tmux 세션 이전·보존보다 named namespace를 제거해 사용할 수 있게 하는 것이 목표라고 설명한 뒤, 해당 방안으로 문제가 해결되는지 사전 검토를 요청했다. 기준은 `7004caf`, 실행 환경은 windows-powershell이며 사용자 lockfile·폰트 변경만 존재했다. 이번 단계는 계획 검토로 실행 중인 사용자 세션 종료·런타임 변경·적용은 수행하지 않는다. 검증 PR #16의 실제 기본 namespace 전환 성공은 앞선 실행 근거이며 이번 읽기 전용 검토에서 재실행한 것으로 쓰지 않는다.
+
+분석·검토 기준: 네 matrix 결과가 전환 오류 해소를 뒷받침하는지, -L 제거 외에 PowerShell 진입 차단·prompt/Neovim foreground 감지·설정 로드·자동 시작·기본 세션 재사용을 함께 변경해야 하는지 확인한다. 구현 승인은 앞선 요청에 있지만 이번 요청의 검토 단계에서는 코드나 실제 환경을 바꾸지 않는다. 기본 namespace로 동작을 변경할 때는 후속 ADR에서 기존 ADR 0003의 named 서버 선택을 명시적으로 보완해야 한다.
+
+검토 결과: 기본 namespace 사용은 pinned 3.3.8의 named 전환 결함을 피하는 타당한 방법이다. 현재 wrapper의 -L dotfiles 전체와 /dotfiles, 진입 조건을 함께 바꾸지 않으면 기본 pane에서 t가 계속 차단된다. prompt 초기화와 Neovim 모드 marker도 namespace 이름 대신 승인된 Windows·psmux 전용 감지로 전환해야 한다. 로컬 공식 소스 pane.rs의 set_tmux_env는 기본 pane에 /tmp/psmux-{server_pid}/default,{port},0 형식 TMUX와 실제 세션명 PSMUX_SESSION을 제공한다. 명령 이름만으로 Unix tmux와 구분하지 않는다.
+
+WezTerm은 기존 launcher를 통해 같은 Invoke-DotfilesMux를 호출하므로 함수의 변경으로 시작 경로도 기본 namespace로 바뀐다. 저장소의 -f tmux/psmux.conf는 계속 지정해야 한다. 기존 기본 main이 있다면 has-session에 -f를 붙이는 것만으로 그 서버의 설정이 다시 로드되지 않으므로 생성 전에 기존 기본 세션 상태와 설정 책임을 확인해야 한다. Windows Terminal 저장소 원본은 일반 pwsh이며 별도 자동 시작이 있다면 해당 로컬 호출 경로도 확인해야 한다. F/D는 현재 main의 psmux.conf에 없으므로 namespace 변경만으로 키 연결까지 구현됐다고 할 수 없다.
+
+완료 조건: 실제 저장소 wrapper의 mux 시작과 t 경로 지정·fzf 선택/취소, F/D를 제공할 경우 실제 키 dispatcher와 선택 후 세션 이동, Neovim 내부/외부 pane 이동·삽입 모드/Esc·prompt reset을 기본 namespace에서 검증한다. 기존 named 세션을 종료하는 것 자체는 -L 선택을 변경하지 않는다. 앞선 최소 설정 session matrix만으로 전체 통합 완료를 선언하지 않는다. macOS/WSL/Linux와 물리 GUI/IME는 실행 근거 없이 완료로 기록하지 않는다.
+
+2026-10-08 KST: Windows 읽기 전용 리뷰에서도 전환 방향이 타당함을 확인했다. 필수 보완은 PowerShell·Neovim psmux 감지 변경, 기존 기본 세션의 config 책임 확인, 필요 시 F/D 연결과 전체 흐름 검증이다. launcher·설치 연결·클립보드·IME는 직접 변경할 필요가 없다는 검토를 반영했다. 리뷰는 정적이며 이번 검토로 실제 적용 완료를 선언하지 않는다. 검토 기록을 기존 PR #16에 추가하며 runtime 수정은 후속 구현 단계로 남긴다.
+
+### 초기 namespace 결정·입력 회귀·원본 연결 재검토
+
+2026-10-08 KST: 사용자가 초기 namespace 결정부터 확인하고 h split 이동·Neovim insert Esc 문제 해결에 필요한지 재검토하며, 실제 설정이 저장소 원본에 링크되어 변경이 Git에 남아야 한다고 요청했다. 기준 `1ef95ac`, windows-powershell, 최신 main `1f1bf3d`를 fetch했다. 사용자 lockfile·폰트는 보존한다. 이번 검토는 역사·실제 링크의 읽기 전용 점검과 필요 시 임시 데이터 경로의 실험에 한정하고 사용자 세션 종료·설치·원본 런타임 적용은 하지 않는다.
+
+계획: 최초 c39073f의 ADR/코드와 h/Esc 후속 수정 1026d48·05711b1을 대조한다. namespace의 격리/적용 대상 판별 역할과 실제 ConPTY 입력 보정을 구분한다. Neovim junction, WezTerm/PowerShell loader 및 Windows Terminal 대상 경로가 현재 체크아웃을 가리키는지 실제 상태로 확인한다. 기본 namespace에서도 입력 보정을 유지하는 실험은 .local scratch와 고유 PSMUX_DATA_DIR에서만 수행하며 실험 사본을 설치·기본 설정 원본으로 사용하지 않는다. 보정 없애기와 namespace 제거를 혼동하지 않고 실행·정적·모의 근거를 구분해 같은 검증 PR #16에 남긴다. 새로운 구조 결정은 역사 검토 후 ADR로 제안해야 하며 이번 문서로 과거 결정 이유를 새로 만들어 쓰지 않는다.
+
+2026-10-08 KST 역사 재검토 결과: 최초 구현 c39073f에서 이미 -L dotfiles와 foreground/prompt namespace gate를 사용했다. insert Esc 수정 1026d48과 h/l 전달 수정 05711b1은 이후에 들어갔으며 namespace는 변경하지 않았다. 최초 ADR의 명시 근거는 이름 있는 서버와 bare kill-server 금지, 승인된 Windows 범위이며, namespace의 대안 비교·필수성 근거는 없다. 기존 psmux·설정과의 분리를 선택한 설계 의도로 읽는 것은 초기 기록과 코드에서의 추론이다. 기존 Unix tmux와 구별하기 위한 필수 장치였다고 확정했던 앞선 설명은 과도했다. h는 ConPTY의 Backspace 해석을 피하는 Alt+h 운반/M-h 연결, Esc는 OSC133 nvim-insert 감지와 Ctrl+\\ Ctrl+N 처리로 수정됐다. 이 보정 자체는 이름 있는 namespace를 필요로 하지 않지만 현재 적용 대상 gate는 해당 이름에 의존한다.
+
+현재 호스트 원본 연결의 실제 점검: Neovim의 %LOCALAPPDATA%/nvim은 이 체크아웃 nvim junction이며 init.lua 해시도 원본과 일치했다. %USERPROFILE%/.wezterm.lua는 독립 설정 복사본이 아니라 저장소 .wezterm.lua를 dofile하는 loader다. PowerShell 5.1/7 profile은 저장소 powershell/psmux.ps1을 dot-source하는 loader이며 psmux 함수는 저장소 tmux/psmux.conf를 -f로 직접 읽는다. 디렉터리 symlink/junction 또는 원본을 실행하는 loader라는 기존 원칙을 충족한다. 파일을 링크 대상에서 수정해도 Git diff에 남는 원본 구조를 namespace 정책과 별개로 유지해야 한다.
+
+Windows Terminal stable의 현재 LocalState는 일반 디렉터리이고 settings.json도 일반 파일이다. scripts/use-windows-terminal.ps1 -Check가 existing-directory를 보고했으며 저장소 연결 완료로 간주하지 않는다. 호스트 진행 기록도 다른 호스트의 과거 상태라고 진단하므로 해당 기록만으로 실제 연결을 보증하지 않는다. 원본 연결을 복구할 때 기존 설정을 먼저 백업하고 승인된 환경 선택·현재 호스트 진행 기록을 분리해야 한다. 이 검토에서 junction 교체·프로필 변경·설치를 실행하지 않았다.
+
+2026-10-08 KST 실제 기본 namespace 키 회귀 실험: .local/namespace-key-review scratch에서 기존 tests/windows-psmux.py 기반 검사에 -L을 쓰지 않고 현재 원본 options/navigator/psmux 키 설정을 읽었다. Neovim config.psmux만 package.preload로 임시 gate를 제공했으며 승인된 Windows, 공식 default TMUX 형식, PSMUX_SESSION을 검사하도록 바꿨다. OSC/autocmd와 Alt+h/M-h·Ctrl+l 전송·nvim-insert/Esc 보정은 유지했다. 실제 ConPTY 최소 구성과 오프라인 현재 LazyVim 구성(--full-config)이 각각 23개/exit 0을 통과했다. Ctrl+h 우회 전송의 내부/외부 이동, insert 이동 문자 보존, 반복 Ctrl+l 후 raw 단일 Esc 정상 모드 복귀, Backspace, terminal Esc 유지, foreground clear, navigator routing, 한글·공백 경로를 확인했다. 다운로드·lockfile 변경 없이 private data 경로에서 생성한 세션만 이름 지정 종료했다. 사용자 세션·원본 runtime은 변경하지 않았다. 이는 대체 gate의 실험이지 저장소 구현/물리 WezTerm·Windows Terminal 입력의 완료 판정은 아니다.
+
+별도 실제 pane 환경 검사에서도 -f로 지정한 원본 tmux/psmux.conf 경로가 PSMUX_CONFIG_FILE에 유지됨을 확인했다. TMUX와 PSMUX_SESSION은 psmux 여부를, 원본 설정 경로 동일성은 이 저장소의 보정 적용 범위를 판별하는 후보다. 다른 기본 psmux를 무조건 포함하지 않도록 원본 경로 정규화·현재 승인/활성화·잘못된 marker/다른 원본의 negative 검증을 후속 구현 완료 조건에 추가한다. 해당 경로 동일성 gate는 아직 코드로 구현·검증하지 않았다.
+
+재검토 결론: namespace는 h/Esc 입력 보정 자체의 필수 조건이 아니며 기본 namespace에서도 기존 보정 유지가 실제 실험으로 가능했다. 다만 초기 결정의 적용 대상 분리 역할은 필요하므로 그 역할까지 제거하면 안 된다. 기본 namespace 정책은 새 ADR에서 범위 판별 방식·기존 기본 서버 책임·검증 조건과 함께 제안한 뒤 구현해야 한다. 원본 연결은 별도 불변 조건으로 유지하며 Windows Terminal의 발견된 독립 설정은 실제 연결 복구 대상으로 남긴다. 역사 검토·실험·현재 링크 점검 결과는 PR #16에 갱신하고, 이번 요청의 검토 단계에서 설치/사용자 환경 연결/세션 종료는 수행하지 않는다.
+
+2026-10-08 KST 구현 계획: 사용자가 원하는 완료 기준은 부분 실험이 아니라 모든 작업 기능의 정상 동작임을 명확히 했다. 기본 namespace와 원본 설정 동일성 판별을 ADR 0006에서 제안하고 실제 저장소 runtime/Neovim 원본을 변경한다. 기존 h/l/insert/Esc 보정은 유지하고 F/D를 연결한다. 현재 다른 원본의 기본 세션은 덮어쓰지 않는다. 테스트 담당은 네 기존 통합·격리 검사만 수정하고 총괄은 runtime/키맵/문서/원본 연결 및 PR을 담당한다. 검증은 private PSMUX_DATA_DIR에서 실제 launcher·wrapper·t/fzf/dispatcher와 기존 Neovim 키 검사까지 이어서 실행한다. Windows Terminal 실제 원본 연결은 명시된 원본 연결 요구에 따라 기존 설정과 이전 호스트 기록을 백업하고 현재 승인된 호스트에서 연결·조회 검증하며, 물리 GUI/IME는 자동 완료로 쓰지 않는다. 사용자 lockfile·폰트·인증·다른 OS·의존성 버전은 변경하지 않는다.
+
+2026-10-08 KST 전체 흐름 검사 보완: 실제 원본 launcher/main은 성공했지만 한글·공백 경로의 t 전환이 실패했다. 이름의 비ASCII 문자를 각각 _로 치환해 생성한 ___project는 namespace 구분자로 예약된 __를 포함하므로 기본 세션 목록에서도 제외됐다. 기본/named matrix의 ASCII 이름만으로 모든 경로를 검증하지 못한 누락을 실제 흐름에서 발견했다. 프로젝트 이름의 반복 underscore를 하나로 줄이고 양끝 underscore를 정리하며 명시 Session 인수의 __도 거부하도록 수정한다. 기존 이름의 해시 충돌 방지와 mux/t 보존은 유지한다. 초기 테스트 도구의 ~ 경로 해석/CLI command 인수/CP949 진단 문제도 수정했고, 성공하지 않은 시도를 통과 근거로 쓰지 않는다.
+
+### 기본 namespace 구현 검증 및 Codex 재시작 인계
+
+2026-10-08 KST: 실제 저장소 원본으로 기본 namespace를 구현했다. mux/t 유지, 공식 pane 신호·원본 config 동일성으로 보정 범위를 구분하고 다른 config의 기존 기본 세션은 거부한다. h/l·OSC133 insert/Esc 보정은 유지했고 F/D를 연결했다. D의 중첩 셸 인용이 실제 dispatcher에서 실패하여 원본 Invoke-DotfilesConfigProject가 기존 t에 저장소 경로를 전달하도록 수정했다. 한글 생성 이름의 __도 예약 구분자를 피하도록 수정하고 직접 __ 인수는 native 호출 전 거부한다.
+
+검증 결과(windows-powershell, 현재 미커밋 diff): 원본 tests/windows-psmux.py 최소/오프라인 LazyVim --full-config 각 23개 통과. PowerShell 5.1과 7 runtime 검사에서 승인·호스트·사용자 mux/t 보존·config 소유권·normalized/foreign/missing/relative marker·예약 __/한글 이름·prompt 오류 상태 보존 통과. Lua foreground lifecycle와 원본 경로 negative 검사 통과. tests/windows-psmux-projects.py에서 실제 원본 launcher/main → 한글·공백 t 생성/전환 → 돌아오기 → 실제 F dispatcher/fzf 선택 → 전환 → 취소/PowerShell pane 생존 → D 원본 checkout 전환 → r 원본 reload를 검사한다. 다른 config 세션 거부·보존 및 private 세션 정리, 사용자 lockfile/프로젝트 루트 byte 보존도 포함한다. F/D/r의 실제 dispatcher는 private fixture prefix만 Ctrl+B로 바꾸어 입력했고 원본 prefix C-Space와 r 후 원본 복귀를 조회한다. 물리 Ctrl+Space 입력을 확인했다고 확대하지 않는다. 실제 WezTerm show-keys에서 기존 Ctrl+h Alt+h/ Ctrl+l 전달도 확인했다. Python check_environment의 네 OS 모의·선택/opt-in 격리, 문법·문서 상대링크·diff-check 통과. macOS/Windows 읽기 전용 리뷰와 최종 독립 리뷰에서 blocker는 없었고 취소 셸 생존·정리 통신 오류 판정을 보강했다. 다른 OS 실기기·물리 GUI·IME·클립보드는 미검증이다.
+
+Windows Terminal 실제 연결: 기존 stable LocalState는 일반 디렉터리로 미연결이다. use-windows-terminal.ps1 -ArchivePreviousProgress로 백업/junction 연결과 이전 호스트 기록 아카이브를 적용하려는 호출은 자동 승인 검토에서 '구체적인 연결·아카이브 부작용에 대한 명시적 승인이 부족'하다는 이유로 거부됐다. 거부된 명령 전체는 실행되지 않았고 문서 갱신만 안전한 별도 호출로 완료했다. 사용자에게 해당 작업을 구체적으로 설명해 비동기 승인을 요청했으며 아직 답이 없으므로 우회·재시도하지 않는다. 현재 Neovim junction·WezTerm/PowerShell loader·psmux -f 원본 참조는 유지한다.
+
+사용자가 현재 Codex가 mux 위에서 실행되므로 필요한 경우 자신이 mux를 종료하고 Codex를 다시 실행하겠다고 설명했다. 사용자 mux/터미널/Codex 프로세스는 종료하지 않는다. 이번 source 수정은 기존 프로세스가 읽은 함수·named namespace를 소급 변경하지 않으므로 새 프로세스에서 확인해야 한다. 현재 브랜치 fix/psmux-session-validation과 PR #16에 코드·ADR·검증·인계 기록을 제출하고 GUI/연결 확인이 남아 있으므로 draft로 전환한다. PR #15는 병합하지 않는다. 사용자 lockfile·폰트는 stage하지 않는다.
+
+### 재시작 후 D/F 실패의 실제 연결 진단
+
+2026-10-08 KST: 사용자가 재시작 후 Ctrl+Space D/F 모두 실패한다고 보고했다. 기준 HEAD `e0aede1`, windows-powershell이며 fetch 후 origin/main은 `1f1bf3d`, PR #16은 열린 draft다. 사용자 lockfile·폰트 변경은 보존한다. 분석·계획은 실제 연결 namespace와 키 등록을 읽기 전용으로 확인하고, 기존 서버가 남아 있으면 세션 삭제 없이 새 기본 mux로 진입하는 안내를 보완하는 것이다. ADR 0006의 기존 결정에 따른 안내 수정으로 새 ADR은 필요하지 않다.
+
+실제 진단: 현재 프로세스의 TMUX는 공식 형식의 dotfiles named namespace이고 Test-DotfilesMuxPane은 false다. 해당 서버의 prefix는 C-Space지만 D/F binding은 없었다. 모든 TMUX/PSMUX 라우팅 변수를 제거한 자식 프로세스에서 조회한 기본 namespace는 세션이 없고, `-L dotfiles list-sessions`에는 attached main만 있었다. 로컬 승인·활성화 runtime 상태는 Ready, 원본 mux/t alias는 정상이다. 따라서 이번 프로세스 재시작은 새 기본 mux 진입까지 이어지지 않았다. Codex 재시작이나 원본 reload가 기존 서버 namespace를 바꾸지 않는다는 설명과 detach → 새 PowerShell 탭 → mux → pane TMUX 확인 절차를 사용 문서·PR에 보완한다. 실제 사용자 클라이언트 detach·서버 reload·세션 종료·설정 연결은 수행하지 않는다. 새 기본 mux의 물리 D/F 확인은 아직 남아 있으며 기존 격리 검증을 재실행한 것으로 기록하지 않는다.
+
+재개 순서: (1) 이 기록과 ADR 0006, PR #16 및 실제 git status/저장된 호스트 승인 확인. (2) 사용자가 작업을 저장하고 기존 named mux를 종료하거나 detach한 뒤 새 터미널의 mux로 기본 main을 열고 Codex를 재실행. 기존 세션 종료는 사용자 수행을 기다리고 자동 kill-server 금지. (3) 새 환경에서 실제 Ctrl+Space → F/D/r, tmux list-sessions, 프로젝트 전환/복귀, h/l split 이동·insert Esc·Backspace를 사용자 GUI에서 확인. WezTerm과 Windows Terminal의 h 입력 경로는 다르므로 각 앱의 확인 결과를 구분한다. (4) Windows Terminal 백업/junction/진행 기록 아카이브 승인 답을 확인하기 전에는 적용하지 않고, 명시적 승인 후 기존 script로 적용·Check 및 실제 target 확인. (5) 실제 clipboard/IME까지 확인하고 draft 해제·병합 준비를 판단한다. merge는 별도 사용자 요청이다.
+
+### 세션 전환 미해결 재신고 조사
+
+2026-10-08 KST: 사용자가 이전 mux 세션 전환 문제가 해결되지 않았다고 재신고했다. 기준 HEAD 500b928, windows-powershell, fetch로 확인한 origin/main 1f1bf3d, PR #16은 열린 draft다. 사용자 lazy-lock.json 변경과 미추적 폰트는 보존한다. 현재 진단 프로세스에는 TMUX/PSMUX pane 변수가 없고 실제 호스트 기본/named dotfiles list-sessions 출력도 비었다. runtime prerequisites는 Ready다. 이전 named pane 잔류 진단을 이번 원인으로 확정할 수 없다.
+
+계획: 실패하는 키/명령과 터미널·화면 반응을 사용자에게 확인하면서 private PSMUX_DATA_DIR의 원본 launcher/t/F/D 흐름을 재검증한다. 실패가 재현되면 관련 runtime과 키 설정을 수정하고 PR #16에 반영한다. 재현되지 않으면 GUI 입력과 실제 사용자 pane 연결 정보를 구분하여 추가 진단한다. 기존 사용자 세션·프로필·설정 링크·설치는 변경하지 않는다. ADR 0006의 제안 구현을 조사하는 범위이며 새 구조 결정은 아직 없다.
+
+2026-10-08 KST 재검증 결과: py -3 -B tests/windows-psmux-projects.py exit 0. private registry에서 원본 launcher/main, 한글·공백 t 생성과 실제 client 전환/복귀, F dispatcher/fzf 선택·취소 셸 보존, D checkout 전환, r reload, 다른 config 세션 거부·보존, 테스트 세션 정리와 사용자 lockfile/프로젝트 목록 보존을 통과했다. F/D/r 입력은 기존 검사와 같이 임시 Ctrl+B이며 물리 Ctrl+Space는 미검증이다. 현재 mux/t alias와 WezTerm 원본 loader도 정상이다. wezterm cli list는 stale GUI socket 연결 실패로 활성 pane 조회를 못했다. 이번 조사에서는 runtime 결함을 재현하지 못했으며 실제 실패 명령/키·터미널·화면 반응 답을 기다린다. 해결 완료로 기록하지 않고 PR #16 draft를 유지한다. 실제 사용자 환경 적용은 수행하지 않았다.
+
+2026-10-08 KST 후속 범위 확인: 사용자는 Ctrl+Space로 연 fzf에서 프로젝트 디렉터리를 선택한 후 세션이 실행되지 않는다고 설명했다. 기준 df11be4, origin/main 재fetch 1f1bf3d, PR #16 draft 유지. 호스트에는 원본 config marker와 F/D 등록이 있는 기본 main이 조회되지만 list-clients는 비었고 실제 실패 GUI client를 확인하지 못했다. 새 일반 PowerShell의 mux/t alias·pinned binary·profile loader는 정상이며 조사 프로세스/사용자·시스템 환경에서 FZF 출력 변경 옵션은 발견되지 않았다. 이 호스트 조회 결과를 실패한 pane 자체의 상태로 간주하지 않는다.
+
+읽기 전용 하위 조사: 공식 로컬 3.3.8 소스에서 앞선 native -t 호출은 부모 PowerShell TMUX를 바꾸지 않으므로 source 라우팅 상실 가설을 배제했다. switch-client는 latest_client_id에 directive를 보내므로 다중 client 조건은 남은 후보이며 client 부재에도 exit 0일 수 있다. fzf 다중 출력/쿼리 출력 옵션도 경로 lookup 실패 후보지만 현재 호스트 근거가 없다. 기존 단일 ConPTY 검증을 사용자 실패의 해결 근거로 확대하지 않는다. 사용자 실패 pane의 TMUX·세션 목록과 선택 직후 오류를 요청했고, 확보 전 추정 runtime 수정/실제 적용/서버 종료는 하지 않는다.
+
+
+### F/D 시작 지연 개선 계획
+
+2026-10-08 KST: 사용자 요청으로 별도 PR 대신 기존 PR #16에 포함한다. 기준 85a4896, origin/main 1f1bf3d, windows-powershell. F→fzf 기존 3회 약 4.69~4.86초. psmux 3.3.8의 bare pwsh 명령은 프로필을 읽는 외부 PowerShell로 감싸져 프로필이 중복 초기화된다. 전체 실행 파일 경로를 명령 전체 인용과 함께 전달한 격리 실험은 2.73/3.78/2.72초이고 취소 후 명령 실행을 통과했다. 실행 파일 경로를 runtime에서 찾고 서버 사용자 옵션에 전달하여 F/D와 r reload가 같은 직접 실행 경로를 사용하도록 수정한다. 기존 프로필·사용자 t·취소 셸을 보존하고 실제 격리 dispatcher로 검증한다. 다른 OS 설정과 사용자 세션·설치·링크는 변경하지 않는다. ADR 0006의 기존 구현을 개선하는 버그 수정으로 새 ADR은 없다.
+
+2026-10-08 KST 실험 결과: 전체 명령을 인용한 절대 실행 파일 경로를 접속 후 실제 F에 등록한 경우 3회 2725.8/3775.7/2720.1ms, 중앙값 2725.8ms였다. 기존 F 4859.7/4696.0/4693.7ms의 중앙값 대비 약 42% 감소다. 각각 실제 fzf 화면 표시와 Ctrl+C 후 파일 쓰기 명령 실행·client 유지·고유 테스트 세션 정리·사용자 lockfile/루트 목록 byte 보존을 확인했다. 관측은 ConPTY 입력/출력 polling이며 물리 Ctrl+Space와 직접 경로 D의 실제 전환은 미검증이다. bare 명령의 외부/내부 프로필 중복은 공식 3.3.8 소스에서 확인했다.
+
+원본 자동 연결 후보는 미통과: 사용자 옵션 형식 치환, config 환경 변수 치환+source-file, 접속 전 runtime bind-key 등록을 각각 시도했으나 원본 F→fzf를 확인하지 못했다. 접속 후 CLI 등록은 통과하므로 클라이언트의 원본 config 로드와 서버 바인딩 전달 경로가 남은 조사 대상이다. 실패 후보의 runtime/config 변경은 제거하여 HEAD 동작을 보존했다. 기존 PR #16 draft에 실험 기록만 포함하며 지연 해결 완료로 주장하지 않는다. 다음 단계는 원본 로드 이후에도 유지되는 직접 실행 바인딩 경로를 좁혀 구현하고 F 선택/취소·D·r 및 foreground/현재 경로 회귀를 검증하는 것이다. 프로필을 제거하거나 설치·실제 사용자 서버 reload/세션 종료를 하지 않았다. PowerShell 7 tests/psmux-runtime.ps1은 실험 중 통과했으나 제거된 후보의 실제 연결 성공을 보증하지 않는다.
+
+2026-10-08 KST 검증 재개: 사용자 요청에 따라 기존 PR #16에서 계속한다. 기준 a085bdb와 최신 origin/main을 확인했고 사용자 lockfile·폰트를 보존한다. 직전 실패의 접속 시 덮어쓰기 설명은 가설이며 확정된 원인이 아니다. 동일한 직접 실행 명령의 접속 전후 등록·repeat flag·client 전달을 비교해 원인을 구분하고 성공한 원본 구현에 한해 F/D/r와 취소·경로 추적을 검증한다. 실제 사용자 서버는 변경하지 않는다.
+
+2026-10-08 KST 최종 원인·수정: 접속 시 config 덮어쓰기 가설은 근거가 없었다. 실제 등록 명령을 확인하니 Get-Command pwsh의 두 Application 결과에서 Source 배열 전체가 문자열에 들어가 실행 파일 경로 두 개가 연결됐다. 첫 결과만 선택하고 전체 shell-command를 literal quote로 보호하여 runtime에서 F/D를 등록했다. r에서는 native wire가 bare separator를 등록 시 즉시 분리하는 문제와 SourceFile handler의 키테이블 초기화를 확인했다. separator를 literal quote로 보호해 실제 저장된 r 체인이 source-file 후 F/D를 복원하도록 수정했다. static config의 fallback은 보존한다.
+
+검증(windows-powershell, 미커밋 diff): 고유 session+private registry ConPTY에서 원본 runtime 진입, F 화면 표시, Ctrl+C 취소 후 파일 쓰기 명령 실행/client 유지, 실제 r dispatcher의 원본 prefix 복원과 직접 F/D 바인딩 유지, r 후 F 재실행, 고유 테스트 세션 정리·lockfile/프로젝트 목록 byte 보존 통과. 최종 r 포함 실행의 F→fzf는 3025.1ms였고 앞선 동일 원본 F 측정은 2417.5/2566.1/2870.9ms였다. 초기 기존 F 중앙값 4696.0ms와 비교해 개선되지만 polling·프로필 부하 차이가 있어 고정 지연 보장은 아니다. 재현 도구 tests/windows-psmux-project-latency.py를 추가하고 기존 projects 검사의 fzf 감지를 화면 prompt로, 취소 검사를 실제 셸 명령 완료로 보완했다. runtime PowerShell 7 검사 통과. PowerShell 5.1 -File 검사는 기존 BOM 없는 한글 fixture의 인코딩 오류로 중단되므로 통과로 기록하지 않는다. 읽기 전용 리뷰의 reload 초기화 blocker를 실제 검사로 해결했다.
+
+남은 한계: 실제 물리 Ctrl+Space, 직접 D의 프로젝트 전환, F 선택 후 실제 client 전환, GUI h/IME/clipboard, 다른 OS는 이번 변경 기준 미검증이다. 전체 projects 검사는 main/실제 checkout session 이름의 전역 mutex가 사용자 세션과 겹칠 수 있어 실행하지 않았다. 이전 검사 성공을 이번 diff의 성공으로 확대하지 않는다. 실행 파일·checkout 경로의 작은따옴표는 미검증이다. 사용자 서버 reload/설치/링크 변경은 없으며 PR #16 draft를 유지한다.
+
+2026-10-08 KST D 격리 후속 검증: private PSMUX_DATA_DIR의 고유 ConPTY 세션에서 실제 D dispatcher를 실행했다. 저장소 경로의 대상 세션은 생성됐지만 기존 source client가 계속 attached 상태였고 D 대상에는 client가 붙지 않았다. 사용자 세션이나 기본 registry를 조회·변경하지 않았다. 테스트용 t 대체 주입은 명령 인용을 검증하지 못해 근거로 삼지 않는다. 따라서 D 전환은 여전히 실패/미해결로 표기하고 draft를 유지한다. 다음 조사에서는 Invoke-DotfilesMux 실행 프로세스의 `switch-client` 응답과 대상 client 목록을 분리해 측정하고, native switch-client 최신 client routing과 원본 launcher의 동일한 전환 검사를 비교한다. 원인은 확정하지 않았다.
+
+2026-10-08 KST 새 창 생성 지연 조사: 사용자가 Ctrl+Shift+C로 새 세션을 추가할 때 느리다고 보고했다. 저장소 psmux 설정은 prefix `C-Space` 다음 `c`에서 `new-window -c #{pane_current_path}`를 실행한다. `.wezterm.lua`에는 Ctrl+Shift+C 사용자 바인딩이 없으며 설치된 WezTerm 유효 키맵은 이 조합을 CopyTo Clipboard로 처리한다. Windows Terminal 저장 설정에도 해당 바인딩은 없다. 키 전달 계층을 혼동하지 않도록 사용자가 Ctrl+Space를 먼저 누르는지 확인 중이다.
+
+격리된 ConPTY에서 prefix+c 새 PowerShell 창이 프롬프트 명령을 처리하기까지 2987.9ms(1회)였으며, 이후 runtime `warm on`을 설정한 상태에서 첫 창 3889.4ms, psmux가 spare shell을 채운 뒤 둘째 창 881.5ms(각 1회)였다. 이 비교는 표본 하나씩이며 session startup 비용·메모리와 통합한 결과가 아니다. 현재 `tmux/psmux.conf`의 `warm off`가 기본 창마다 PowerShell profile 초기화를 동기적으로 기다리게 하는 주요 지연 후보로 확인됐다. 아직 원본 설정은 바꾸지 않았고 startup 추가 시간/백그라운드 shell 비용 및 사용자가 누르는 실제 키를 더 확인한다.
+
+### 적용 결과와 PR 제출 범위 정리
+
+2026-10-08 KST 재개 계획: 사용자가 지금까지 적용한 변경의 PR 정리·제출을 요청하고 mux에서 D 적용도 확인했다고 보고했다. 기준 HEAD a95e49f, 실행 환경 windows-powershell. 최신 origin/main을 fetch하고 기존 PR과 실제 diff를 확인하여 같은 PR #16에 기록 정정과 기존 구현을 제출한다. ADR 0006의 기존 제안 구현에 대한 검증 기록 정리이며 새 결정이나 runtime 변경은 없다. 사용자 lazy-lock.json 갱신과 미추적 폰트 파일은 보존하고 이번 psmux PR에는 포함하지 않는다.
+
+검증 상태 정정: mux에서 D 적용은 사용자의 실사용 확인으로 기록한다. 정확한 터미널 앱·입력 순서·client 목록은 이번 보고에 포함되지 않았으므로 그 세부사항까지 검증했다고 확대하지 않는다. 앞선 격리 ConPTY D 전환 실패 관측은 당시 결과로 보존하지만 현재 실사용 D를 일괄 실패/미해결로 설명하지 않는다. 해당 격리 실패의 원인 규명은 남아 있다. F 선택 후 전환 재신고, GUI h/IME/클립보드, 다른 OS 및 새 장비 설치는 이번 D 확인으로 완료 처리하지 않는다.
+
+제출 범위: 기본 namespace 전환과 원본 config 소유권 검사, 프로젝트 이름의 예약 __ 회피, 기존 Neovim 입력 보정 유지, F/D 직접 PowerShell 실행 및 r 재등록, 관련 자동 검사·ADR·사용 안내를 PR #16에서 검토한다. 새 창 지연의 warm on은 조사만 수행했고 원본에 적용하지 않았으므로 구현 완료 항목에 포함하지 않는다. Windows Terminal junction 연결은 이전 승인 거부 후 미적용 상태를 유지한다. PR 제출은 리뷰 대기이며 merge·실제 설치·사용자 서버 reload는 수행하지 않는다.
+
+2026-10-08 KST 이번 정리 검증: Windows PowerShell 7 `pwsh -NoProfile -File tests/psmux-runtime.ps1`, `nvim --headless -u NONE -i NONE -l tests/psmux-foreground.lua`, `python -B tests/check_environment.py` 및 `git diff --check` 통과. runtime은 임시 fixture에서 승인·소유권·이름·prompt 보존을, foreground와 환경 검사는 headless/모의 격리를 확인했다. 실제 attached-client 전체 검사를 이번에 재실행한 것으로 기록하지 않는다. 최신 origin/main 1f1bf3d 확인, PR #16 본문을 현재 결과와 한계 중심으로 다시 작성한다. 열린 #15는 선행 F 연결로 #16과 중복되므로 별도 병합을 권장하지 않으며, #11 성능 분석·#12 SSH Esc 조사·#2 과거 설정 기준선은 별도 검토 대상으로 구분한다. #7/#10/#13/#14는 이미 병합됨을 GitHub 조회로 확인했다.
+
+2026-10-08 KST 독립 정적 리뷰: 제출을 막는 문제는 발견되지 않았다. D 사용자 확인과 격리 실패의 분리, F/GUI/다른 OS 미완료 표기 및 사용자 변경 제외를 확인했다. 초기 PR #10의 남은 일은 과거 기록임을 표시했고 작은따옴표 경로 한계를 PR 본문에 유지했다. 총괄이 GitHub에서 #15/#16 실제 본문과 변경 파일을 비교해 #16을 현재 구현 검토 대상으로 정리했다.

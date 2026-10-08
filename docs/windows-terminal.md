@@ -52,13 +52,14 @@ Windows Terminal의 `font.face`는 `MesloLGMDZ Nerd Font Mono`, 크기는 `11`�
 
 ## PowerShell·psmux·키 입력
 
-기본 프로필 `Dotfiles PowerShell`은 PowerShell 7과 기존 사용자 프로필을 읽습니다. psmux는 [선택 설치](windows-setup.md#psmux와-neovim-pane-이동)이며 터미널 시작 시 강제로 실행하지 않습니다. `mux`로 저장소 설정의 main 세션에 연결합니다. `tmux`를 직접 실행하면 해당 설정·서버 선택을 거치지 않습니다.
+기본 프로필 `Dotfiles PowerShell`은 PowerShell 7과 기존 사용자 프로필을 읽습니다. psmux는 [선택 설치](windows-setup.md#psmux와-neovim-pane-이동)이며 터미널 시작 시 강제로 실행하지 않습니다. `mux`로 저장소 설정의 기본 namespace main 세션에 연결합니다. 이후 `tmux` 명령도 같은 기본 세션에 접근합니다. 처음 세션을 만들 때는 `mux` 또는 명시적인 `-f` 원본 설정을 사용합니다.
 
 `mux`가 없으면 먼저 새 PowerShell 탭을 열고 `Get-DotfilesMuxStatus`로 진단합니다. 명령 자체가 없다면 `powershell/psmux.ps1` 프로필 loader가 연결되지 않았거나 이전 원본을 읽는지 확인합니다. 임시 진단은 `. .\powershell\psmux.ps1` 후 호출할 수 있으며 재설치·환경 자동 승인은 하지 않습니다.
 
 | 키 | 동작·담당 |
 | --- | --- |
 | `Ctrl+Space` → `\|` / `-` | psmux 좌우 / 상하 분할. Windows Terminal은 키를 선점하지 않음 |
+| `Ctrl+Space` → `F` / `D` | psmux 프로젝트 선택 / 저장소 프로젝트 이동 |
 | prefix → `h/j/k/l` | psmux pane 이동 |
 | `Ctrl+h/j/k/l` | 기존 psmux/Neovim 이동. 터미널의 물리 입력 경로는 별도 검증 |
 | `Alt+h` | 기존 psmux 왼쪽 이동 대체. psmux 밖에는 터미널의 기본 입력 유지 |

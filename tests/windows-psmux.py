@@ -9,7 +9,6 @@ import shutil
 import subprocess
 import tempfile
 import time
-import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -55,7 +54,6 @@ def main():
         )
         startup = ['--cmd', guard, '-u', str(ROOT / 'nvim/init.lua')]
     lock_before = (ROOT / 'nvim/lazy-lock.json').read_bytes()
-    namespace = 'dotfiles-test-' + uuid.uuid4().hex[:8]
     with tempfile.TemporaryDirectory(prefix='dotfiles-psmux-test-', ignore_cleanup_errors=True) as temporary:
         temp = Path(temporary)
         env = os.environ.copy()
@@ -65,7 +63,7 @@ def main():
             if key.startswith('PSMUX_'):
                 env.pop(key)
         env.update(PSMUX_DATA_DIR=str(temp / 'runtime'), PSMUX_NO_WARM='1',
-                   DOTFILES_PSMUX_NAMESPACE=namespace, DOTFILES_PSMUX_ROOT=str(ROOT),
+                   DOTFILES_ROOT=str(ROOT), DOTFILES_PSMUX_ROOT=str(ROOT),
                    DOTFILES_PSMUX_FULL='1' if args.full_config else '0',
                    DOTFILES_PSMUX_EXE=str(binary), DOTFILES_PSMUX_WAIT=str(temp / 'wait.ps1'),
                    DOTFILES_PSMUX_RESULT=str(temp / 'headless.json'))
@@ -73,7 +71,7 @@ def main():
         (temp / 'wait.ps1').write_text('Start-Sleep -Seconds 180\n', encoding='utf-8-sig')
 
         def run(*args, check=True):
-            result = subprocess.run([str(binary), '-L', namespace, *args], env=env,
+            result = subprocess.run([str(binary), *args], env=env,
                                     capture_output=True, text=True, encoding='utf-8', timeout=30)
             if check and result.returncode:
                 raise AssertionError(f'{args[0]} failed: {result.stderr}')
@@ -100,9 +98,11 @@ def main():
                     pids.append(int(path.read_text().strip()))
                 except (ValueError, FileNotFoundError):
                     pass
-            run('kill-server', check=False)  # No server may exist after an early failure.
+            # Private data directory; terminate only sessions this fixture creates.
+            for name in ('probe', 'live', 'other'):
+                run('kill-session', '-t', '=' + name, check=False)
             until(lambda: not any(server_running(pid) for pid in pids),
-                  'Test namespace server did not terminate', timeout=10)
+                  'Isolated test server did not terminate', timeout=10)
             time.sleep(1)  # ConPTY releases cwd handles asynchronously.
 
         def load_state(path):
@@ -134,7 +134,7 @@ def main():
             for test in headless['tests']:
                 assert test['ok'], test
                 print('PASS:', test['name'])
-            cleanup_servers()  # Always this unique -L namespace and isolated data directory.
+            cleanup_servers()  # Only named fixture sessions in the isolated data directory.
 
             # Live Neovim plus a genuinely attached psmux client. Feed raw terminal
             # bytes through a second ConPTY, exercising client key decoding/bindings.
@@ -202,7 +202,7 @@ end))
             assert run('display-message', '-p', condition) == '1', 'Native Neovim foreground matcher failed'
             print('PASS: foreground remains Neovim with an LSP-like child process')
             env['DOTFILES_PROBE_DIR'] = str(input_dir)
-            command_line = subprocess.list2cmdline([str(binary), '-L', namespace,
+            command_line = subprocess.list2cmdline([str(binary),
                                                   'attach-session', '-t', '=live'])
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW

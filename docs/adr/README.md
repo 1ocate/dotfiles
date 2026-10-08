@@ -9,3 +9,4 @@
 | 0003 | [Windows pane와 Neovim 이동을 psmux로 연결](0003-windows-psmux.md) | [작업 0003](../work/0003-windows-psmux.md) |
 | 0004 | [Windows 네이티브의 주 터미널과 설정 원본 연결](0004-windows-terminal.md) | [작업 0006](../work/0006-windows-terminal.md) |
 | 0005 | [Windows Terminal Esc 영어 전환](0005-terminal-esc-ime.md) | [작업 0006](../work/0006-windows-terminal.md) |
+| 0006 | [Windows psmux 기본 namespace와 원본 설정 식별](0006-psmux-default-namespace.md) | [작업 0003](../work/0003-windows-psmux.md) |
