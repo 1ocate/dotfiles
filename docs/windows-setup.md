@@ -135,7 +135,7 @@ powershell -NoProfile -File .\scripts\setup-windows.ps1 -ApprovePowerShell -With
 
 기존 장비의 유효한 `.local/environment.json`을 재사용합니다. 최초 장비에서는 앞의 환경 등록 절차로 PowerShell 선택을 먼저 저장합니다. psmux는 `%LOCALAPPDATA%\Programs\psmux\3.3.8`에 준비하며 기존 다른 버전이나 홈의 tmux/psmux 설정을 덮어쓰지 않습니다. 두 사용자 프로필에 저장소 `powershell/psmux.ps1`을 읽는 loader를 추가하며 기존 파일은 백업합니다. 사용자 PATH 변경 전 값은 `.local/path-before-psmux-*.txt`에 보관합니다. 호스트별 활성화 값 `.local/psmux.json`은 Git에 포함하지 않습니다.
 
-WezTerm을 새로 열면 `main` 세션을 만들거나 다시 연결합니다. 별도 `dotfiles` 이름의 서버와 저장소의 `-f` 설정을 사용합니다. 도구가 없거나 시작이 실패하면 PowerShell 셸로 돌아갑니다. pane의 프로필은 기존 prompt 내용과 오류 표시를 보존하며 이전 전경 상태를 초기화하고, tmux.exe를 PATH 앞에 두어 Neovim navigator가 psmux를 호출하도록 합니다. PowerShell 밖에서 직접 psmux/tmux를 실행하면 이 설정·서버 선택이 적용되지 않으므로 아래 함수를 사용합니다.
+WezTerm을 새로 열면 `main` 세션을 만들거나 다시 연결합니다. named namespace 없이 기본 namespace와 저장소의 `-f` 설정을 사용합니다. `mux`·`t`는 유지합니다. 공식 psmux pane 신호와 `PSMUX_CONFIG_FILE` 원본 경로로 보정 대상을 확인하며, 다른 설정의 같은 이름 세션은 덮어쓰지 않습니다. 도구가 없거나 시작이 실패하면 PowerShell 셸로 돌아갑니다. pane의 프로필은 기존 prompt 내용과 오류 표시를 보존하며 이전 전경 상태를 초기화하고, tmux.exe를 PATH 앞에 두어 Neovim navigator가 psmux를 호출하도록 합니다. 기본 namespace에서 `tmux list-sessions` 등 일반 명령을 사용할 수 있습니다. 저장소 설정으로 처음 세션을 만들려면 아래 함수를 사용하거나 `-f`로 원본 설정을 명시합니다.
 
 | 키·명령 | 동작 |
 | --- | --- |
@@ -148,12 +148,13 @@ WezTerm을 새로 열면 `main` 세션을 만들거나 다시 연결합니다. �
 | `Esc` | Neovim 삽입 모드 종료; 다른 모드와 셸에는 원래 Escape 전달 |
 | prefix 다음 `h/j/k/l`, `n/p`, `Space` | pane, 창, 직전 창 이동 |
 | prefix 다음 `r` | 현재 체크아웃 psmux 설정 다시 읽기 |
+| prefix 다음 `F` / `D` | `t`로 프로젝트 선택 / 이 체크아웃의 프로젝트 세션으로 이동 |
 | prefix 다음 `v`, 복사 모드 `v/q/y` | 복사 모드, 선택·블록 선택·Windows clipboard 복사 |
 | prefix 다음 `d`, 다시 `mux` | detach 후 세션 재연결 |
 
 프로젝트 목록을 따로 관리하려면 `.local/project-paths.txt`에 검색 루트를 한 줄에 하나씩 절대 경로로 적습니다. 공백·한글 경로를 지원하며 Unix `~/.project_path`의 공백 구분/eval 형식은 읽지 않습니다. 같은 폴더 이름도 전체 경로의 해시로 세션을 구분합니다. 기존 사용자 `mux`/`t` 명령이 있으면 보존하므로 `Invoke-DotfilesMux`/`Invoke-DotfilesProject` 전체 이름을 사용합니다.
 
-Unix tmux의 Bash 프로젝트 키 `F/D`, `expr/grep/cut` 창 교환 `N/P`, `:!cat` 입력은 이 Windows 설정에 포함하지 않습니다. Windows에서는 `t`를 사용합니다.
+F/D는 프로필을 읽는 PowerShell에서 기존 `t`를 실행합니다. 선택 취소 후 셸은 남습니다. 세션 이름에는 영문·숫자·underscore·hyphen을 사용하되 `__`는 psmux namespace 구분자이므로 사용할 수 없습니다. 한글 프로젝트는 안전한 이름과 전체 경로 해시를 사용합니다. Unix `expr/grep/cut` 창 교환 `N/P`, `:!cat` 입력은 이 Windows 설정에 포함하지 않습니다.
 
 Ctrl+H가 Ctrl+Backspace 이벤트로 전달되는 경로를 위해 두 입력을 같은 왼쪽 이동에 연결합니다. 표준 ConPTY helper의 raw 0x08은 modifier 없는 Backspace로도 해석되므로 자동 검사 결과를 모든 터미널의 물리 Ctrl+H 검증으로 간주하지 않습니다. 일반 Backspace는 유지되지만 Ctrl+Backspace의 단어 삭제는 psmux pane에서 사용할 수 없습니다.
 
@@ -170,12 +171,14 @@ WezTerm의 Ctrl+V 붙여넣기, AutoHotkey Alt·Esc/IME 동작은 기존과 같�
 pwsh -NoProfile -File .\scripts\setup-psmux.ps1 -Disable
 ```
 
-해제 후 WezTerm을 새로 열면 기존 PowerShell 시작으로 돌아갑니다. 프로그램·profile loader·PATH와 백업은 보존합니다. v3.3.8의 bare `psmux kill-server`는 다른 이름의 서버까지 종료할 수 있으므로 사용하지 않습니다. 필요한 경우 `psmux -L dotfiles kill-server`의 영향 범위와 작업 저장을 먼저 확인합니다. 세션은 서버가 살아 있을 때 유지되며 재부팅 후 프로세스 복원을 제공하지 않습니다.
+해제 후 WezTerm을 새로 열면 기존 PowerShell 시작으로 돌아갑니다. 프로그램·profile loader·PATH와 백업은 보존합니다. v3.3.8의 bare `psmux kill-server`는 다른 이름의 서버까지 종료할 수 있으므로 사용하지 않습니다. 종료할 때는 작업을 저장하고 `tmux list-sessions`로 확인한 이름에만 `tmux kill-session -t =이름`을 사용합니다. 이전 dotfiles namespace는 `tmux -L dotfiles list-sessions`로 별도 확인하며 필요한 이름만 `-L dotfiles kill-session -t =이름`으로 종료합니다. 세션은 서버가 살아 있을 때 유지되며 재부팅 후 프로세스 복원을 제공하지 않습니다.
 
-이 변경은 현재 장비 적용과 자동 검사 범위를 제공하며 깨끗한 새 장비의 전체 설치 성공이나 GUI/IME까지 보증하지 않습니다. Neovim/psmux 검사는 기존 navigator·도구가 있는 Windows에서 `py -3 -B tests/windows-psmux.py`로 실행합니다. 실제 연결된 클라이언트에 키 바이트를 보내는 테스트 helper를 임시 경로에서 컴파일하므로 `%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe`가 필요합니다. 이 .NET Framework 컴파일러는 테스트 전용이며 일반 psmux 실행 의존성은 아닙니다. 별도 테스트 namespace/data 경로만 사용하며 플러그인을 다운로드하지 않습니다.
+이 변경은 현재 장비 적용과 자동 검사 범위를 제공하며 깨끗한 새 장비의 전체 설치 성공이나 GUI/IME까지 보증하지 않습니다. Neovim/psmux 검사는 기존 navigator·도구가 있는 Windows에서 `py -3 -B tests/windows-psmux.py`로 실행합니다. 실제 연결된 클라이언트에 키 바이트를 보내는 테스트 helper를 임시 경로에서 컴파일하므로 `%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe`가 필요합니다. 이 .NET Framework 컴파일러는 테스트 전용이며 일반 psmux 실행 의존성은 아닙니다. 고유 테스트 data 경로만 사용하며 플러그인을 다운로드하지 않습니다.
 
 현재 LazyVim 설정을 함께 읽는 검사는 `py -3 -B tests/windows-psmux.py --full-config`로 실행합니다. 자동 다운로드·설치와 Lua bytecode cache를 차단한 검사이며, 일반 캐시 경로나 GUI 전체 기능 검증과 구분합니다. 셸 함수의 승인·경로 검사는 PowerShell 5.1/7에서 `tests/psmux-runtime.ps1`, 다른 환경의 설정 격리는 `py -3 -B tests/check_environment.py`로 확인합니다.
 
 자동 검사는 Ctrl+H(Alt+h 형식)/K/L·Backspace·Esc의 실제 attached-client 입력과 Ctrl+J의 CLI 명령 전달을 구분합니다. 표준 ConPTY에서 raw Ctrl+J의 LF가 Enter로 해석되는 경로와 GUI 물리 키·IME는 별도 확인이 필요합니다.
 
-Neovim은 승인된 Windows의 dotfiles psmux 안에서만 OSC 133 실행·종료·삽입 모드 표시를 사용합니다. LSP/terminal job 자식 프로세스가 있어도 pane의 전경 프로그램을 Neovim으로 유지하고, 종료·중지 시 해제합니다. 전체 설정 검사는 LazyVim을 통해 navigator를 로드하며 키맵을 직접 다시 덮어쓰지 않습니다.
+Neovim은 승인된 Windows에서 이 체크아웃 설정을 사용하는 기본 namespace psmux 안에서만 OSC 133 실행·종료·삽입 모드 표시를 사용합니다. LSP/terminal job 자식 프로세스가 있어도 pane의 전경 프로그램을 Neovim으로 유지하고, 종료·중지 시 해제합니다. 전체 설정 검사는 LazyVim을 통해 navigator를 로드하며 키맵을 직접 다시 덮어쓰지 않습니다.
+
+기존 named namespace에서 기본 namespace로 전환할 때는 설정 reload만으로 서버의 namespace가 바뀌지 않습니다. 작업을 저장하고 기존 psmux에서 detach한 뒤 새 터미널의 `mux`로 시작합니다. 원본 profile 함수도 새 프로세스에서 다시 읽습니다. 기존 세션을 자동 이전하거나 일괄 종료하지 않습니다. 결정은 [ADR 0006](adr/0006-psmux-default-namespace.md)을 참고합니다. 전체 자동 검증은 `tests/windows-psmux-projects.py`의 실제 launcher/t/F/D 흐름, `tests/windows-psmux.py --full-config`의 실제 Neovim 입력 검사와 runtime/foreground 격리 검사로 구분하며 물리 GUI·IME·클립보드는 별도 확인이 필요합니다.

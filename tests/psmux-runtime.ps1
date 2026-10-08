@@ -1,4 +1,4 @@
-﻿#Requires -Version 5.1
+#Requires -Version 5.1
 # Runtime approval, alias preservation, PATH order and project naming without installs.
 $ErrorActionPreference = 'Stop'
 $source = Join-Path (Split-Path -Parent $PSScriptRoot) 'powershell/psmux.ps1'
@@ -52,8 +52,46 @@ $status = Get-DotfilesMuxStatus
 if ($status.Status -ne 'Ready' -or -not $status.PsmuxPresent -or -not $status.TmuxPresent) { throw 'Valid runtime prerequisites not diagnosed.' }
 if ($stateBefore[0] -ne (Get-FileHash $selectionPath).Hash -or $stateBefore[1] -ne (Get-FileHash $featurePath).Hash) { throw 'Diagnostics wrote approval records.' }
 if ((t) -ne 'user-project-command' -or (mux) -ne 'user-mux-command') { throw 'Existing user commands were overwritten.' }
+if ((Invoke-DotfilesConfigProject) -ne 'user-project-command') { throw 'Source-checkout project key replaced the user t command.' }
 $expectedTmux = Join-Path $env:LOCALAPPDATA 'Programs/psmux/3.3.8/tmux.exe'
 if ((Get-Command tmux).Source -ne $expectedTmux) { throw 'Pinned tmux.exe is not first on PATH.' }
+# The default server is ours only when the pane uses this checkout's config.
+$env:TMUX='/tmp/psmux-123/default,1,0'
+$env:PSMUX_SESSION='probe'
+$env:PSMUX_CONFIG_FILE=Join-Path $testRoot 'tmux/psmux.conf'
+$env:DOTFILES_ROOT=$testRoot
+if (-not (Test-DotfilesMuxPane)) { throw 'Approved default pane did not activate.' }
+$ownedConfig=$env:PSMUX_CONFIG_FILE
+$env:PSMUX_CONFIG_FILE=$ownedConfig.ToUpperInvariant().Replace('\','/')
+if (-not (Test-DotfilesMuxPane)) { throw 'Equivalent Windows config path did not activate.' }
+$env:PSMUX_CONFIG_FILE=$ownedConfig
+foreach ($foreignTmux in @('/tmp/psmux-123/dotfiles,1,0','/tmp/tmux-123/default,1,0','/tmp/psmux-test/default,1,0','')) {
+    $env:TMUX=$foreignTmux
+    if (Test-DotfilesMuxPane) { throw "Foreign TMUX marker activated: $foreignTmux" }
+}
+$env:TMUX='/tmp/psmux-123/default,1,0'
+foreach ($foreignConfig in @((Join-Path $testRoot 'other/psmux.conf'),'tmux/psmux.conf','')) {
+    $env:PSMUX_CONFIG_FILE=$foreignConfig
+    if (Test-DotfilesMuxPane) { throw 'Foreign or missing config marker activated.' }
+}
+$env:PSMUX_CONFIG_FILE=$ownedConfig
+$env:PSMUX_SESSION=''
+if (Test-DotfilesMuxPane) { throw 'Missing psmux session activated.' }
+$env:PSMUX_SESSION='probe'
+foreach ($foreignRoot in @('.', '')) {
+    $env:DOTFILES_ROOT=$foreignRoot
+    if (Test-DotfilesMuxPane) { throw 'Relative or missing root marker activated.' }
+}
+$env:DOTFILES_ROOT=$testRoot
+Write-Output 'PASS: default pane ownership accepts normalized paths and rejects foreign/missing markers.'
+# psmux reserves double underscores for namespace-internal filenames.
+$rejectedReservedName=$false
+try { Invoke-DotfilesMux -Session 'reserved__name' -Path $testRoot }
+catch {
+    if ($_.Exception.Message -notmatch 'double underscore is reserved') { throw }
+    $rejectedReservedName=$true
+}
+if (-not $rejectedReservedName) { throw 'Reserved session name reached native psmux.' }
 # Replace only the server entry in this isolated test process.
 function global:Invoke-DotfilesMux { param($Session,$Path); [pscustomobject]@{Session=$Session;Path=$Path} }
 $projectA = Join-Path $testRoot 'one/프로젝트 이름'
@@ -63,8 +101,24 @@ $a=Invoke-DotfilesProject -Path $projectA
 $b=Invoke-DotfilesProject -Path $projectB
 $repeat=Invoke-DotfilesProject -Path $projectA
 if ($a.Session -eq $b.Session -or $a.Session -ne $repeat.Session -or $a.Path -ne $projectA) { throw 'Project names collided or Unicode path changed.' }
+if ($a.Session.Contains('__') -or $b.Session.Contains('__')) { throw 'Generated project name contains reserved double underscore.' }
+$unicodeA=Join-Path $testRoot 'one/한글'
+$unicodeB=Join-Path $testRoot 'two/한글'
+New-Item -ItemType Directory -Path $unicodeA,$unicodeB -Force | Out-Null
+$allUnicodeA=Invoke-DotfilesProject -Path $unicodeA
+$allUnicodeB=Invoke-DotfilesProject -Path $unicodeB
+$allUnicodeRepeat=Invoke-DotfilesProject -Path $unicodeA
+if ($allUnicodeA.Session -notmatch '^project-[a-f0-9]{12}$' -or
+    $allUnicodeB.Session -notmatch '^project-[a-f0-9]{12}$' -or
+    $allUnicodeA.Session -eq $allUnicodeB.Session -or
+    $allUnicodeA.Session -ne $allUnicodeRepeat.Session) { throw 'All-Unicode project names lost stable distinct fallback.' }
+Write-Output 'PASS: reserved namespace separators are rejected and Unicode fallback names stay stable and distinct.'
+
 # A pane prompt must clear stale editor identity without changing prompt content.
-$env:TMUX='/tmp/psmux-test/dotfiles,1,0'
+$env:TMUX='/tmp/psmux-123/default,1,0'
+$env:PSMUX_SESSION='probe'
+$env:PSMUX_CONFIG_FILE=Join-Path $testRoot 'tmux/psmux.conf'
+$env:DOTFILES_ROOT=$testRoot
 function global:prompt { 'custom-prompt>' }
 . $runtime
 $wrappedPrompt=(Get-Item Function:\prompt).ScriptBlock.ToString()

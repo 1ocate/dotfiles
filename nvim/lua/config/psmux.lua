@@ -3,9 +3,19 @@ local M = {}
 function M.setup()
   local tmux = vim.env.TMUX or ''
   if vim.fn.has('win32') ~= 1 or vim.g.dotfiles_environment ~= 'windows-powershell'
-      or not (tmux:find('/dotfiles,', 1, true) or tmux:find('/dotfiles-test-', 1, true)) then
+      or not tmux:match('^/tmp/psmux%-%d+/default,%d+,0$')
+      or not vim.env.PSMUX_SESSION or vim.env.PSMUX_SESSION == '' then
     return
   end
+  local root, config = vim.env.DOTFILES_ROOT, vim.env.PSMUX_CONFIG_FILE
+  local function absolute(path)
+    return type(path) == 'string' and (path:match('^%a:[/\\]') or path:match('^[/\\][/\\]'))
+  end
+  if not absolute(root) or not absolute(config) then return end
+  local function normalize(path)
+    return vim.fn.fnamemodify(path, ':p'):gsub('\\', '/'):gsub('/+$', ''):lower()
+  end
+  if normalize(config) ~= normalize(root .. '/tmux/psmux.conf') then return end
   -- psmux v3.3.8 reads OSC 133 command markers before its process-tree fallback.
   local function enter(command)
     command = command or (vim.api.nvim_get_mode().mode:match('^[iR]') and 'nvim-insert' or 'nvim')

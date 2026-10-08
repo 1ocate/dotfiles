@@ -28,3 +28,5 @@ Neovim 삽입 모드는 같은 Windows foreground 어댑터의 `nvim-insert` mar
 전체 LazyVim GUI·IME와 headless 검증을 구분한다. 전경 프로그램 감지 실패, 키 충돌, 릴리스의 라우팅 의미 변경이 발견되면 어댑터와 버전을 재검토한다.
 
 근거: [v3.3.8 공식 릴리스](https://github.com/psmux/psmux/releases/tag/v3.3.8), [전경 프로그램 해석](https://github.com/psmux/psmux/blob/v3.3.8/src/format.rs), [OSC 133 처리](https://github.com/psmux/psmux/blob/v3.3.8/crates/vt100-psmux/src/perform.rs).
+
+2026-10-08 후속 검토: named 서버 선택과 보정 적용 범위 판별을 변경하는 [ADR 0006](0006-psmux-default-namespace.md)이 제안되었다. 채택 전에는 이 ADR을 대체됨으로 표시하지 않는다. h/Esc 보정은 유지하고 namespace 필수성·원본 연결을 다시 검증한다.

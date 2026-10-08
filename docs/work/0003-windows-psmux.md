@@ -1,6 +1,6 @@
 # 0003: Windows PowerShell에 psmux 적용
 
-- 상태: 리뷰 대기 (사용자 PowerShell tmux 동작 확인 완료, PR 병합 준비)
+- 상태: 리뷰 대기 (기본 namespace 구현·자동 검증 완료, Codex 재시작·GUI 확인 및 Windows Terminal 연결 승인 대기)
 - 요청·배경: 호환성 확인 후 사용자가 PowerShell 로컬 적용과 변경 파일을 모은 PR 제출을 요청했다. Neovim 연동을 우선한다.
 - 시작일: 2026-10-06
 - 기준: main `38d1473`, `feat/windows-psmux`; fetch 후 origin/main 일치, 기존 사용자 변경 없음
@@ -172,3 +172,19 @@ Windows Terminal stable의 현재 LocalState는 일반 디렉터리이고 settin
 별도 실제 pane 환경 검사에서도 -f로 지정한 원본 tmux/psmux.conf 경로가 PSMUX_CONFIG_FILE에 유지됨을 확인했다. TMUX와 PSMUX_SESSION은 psmux 여부를, 원본 설정 경로 동일성은 이 저장소의 보정 적용 범위를 판별하는 후보다. 다른 기본 psmux를 무조건 포함하지 않도록 원본 경로 정규화·현재 승인/활성화·잘못된 marker/다른 원본의 negative 검증을 후속 구현 완료 조건에 추가한다. 해당 경로 동일성 gate는 아직 코드로 구현·검증하지 않았다.
 
 재검토 결론: namespace는 h/Esc 입력 보정 자체의 필수 조건이 아니며 기본 namespace에서도 기존 보정 유지가 실제 실험으로 가능했다. 다만 초기 결정의 적용 대상 분리 역할은 필요하므로 그 역할까지 제거하면 안 된다. 기본 namespace 정책은 새 ADR에서 범위 판별 방식·기존 기본 서버 책임·검증 조건과 함께 제안한 뒤 구현해야 한다. 원본 연결은 별도 불변 조건으로 유지하며 Windows Terminal의 발견된 독립 설정은 실제 연결 복구 대상으로 남긴다. 역사 검토·실험·현재 링크 점검 결과는 PR #16에 갱신하고, 이번 요청의 검토 단계에서 설치/사용자 환경 연결/세션 종료는 수행하지 않는다.
+
+2026-10-08 KST 구현 계획: 사용자가 원하는 완료 기준은 부분 실험이 아니라 모든 작업 기능의 정상 동작임을 명확히 했다. 기본 namespace와 원본 설정 동일성 판별을 ADR 0006에서 제안하고 실제 저장소 runtime/Neovim 원본을 변경한다. 기존 h/l/insert/Esc 보정은 유지하고 F/D를 연결한다. 현재 다른 원본의 기본 세션은 덮어쓰지 않는다. 테스트 담당은 네 기존 통합·격리 검사만 수정하고 총괄은 runtime/키맵/문서/원본 연결 및 PR을 담당한다. 검증은 private PSMUX_DATA_DIR에서 실제 launcher·wrapper·t/fzf/dispatcher와 기존 Neovim 키 검사까지 이어서 실행한다. Windows Terminal 실제 원본 연결은 명시된 원본 연결 요구에 따라 기존 설정과 이전 호스트 기록을 백업하고 현재 승인된 호스트에서 연결·조회 검증하며, 물리 GUI/IME는 자동 완료로 쓰지 않는다. 사용자 lockfile·폰트·인증·다른 OS·의존성 버전은 변경하지 않는다.
+
+2026-10-08 KST 전체 흐름 검사 보완: 실제 원본 launcher/main은 성공했지만 한글·공백 경로의 t 전환이 실패했다. 이름의 비ASCII 문자를 각각 _로 치환해 생성한 ___project는 namespace 구분자로 예약된 __를 포함하므로 기본 세션 목록에서도 제외됐다. 기본/named matrix의 ASCII 이름만으로 모든 경로를 검증하지 못한 누락을 실제 흐름에서 발견했다. 프로젝트 이름의 반복 underscore를 하나로 줄이고 양끝 underscore를 정리하며 명시 Session 인수의 __도 거부하도록 수정한다. 기존 이름의 해시 충돌 방지와 mux/t 보존은 유지한다. 초기 테스트 도구의 ~ 경로 해석/CLI command 인수/CP949 진단 문제도 수정했고, 성공하지 않은 시도를 통과 근거로 쓰지 않는다.
+
+### 기본 namespace 구현 검증 및 Codex 재시작 인계
+
+2026-10-08 KST: 실제 저장소 원본으로 기본 namespace를 구현했다. mux/t 유지, 공식 pane 신호·원본 config 동일성으로 보정 범위를 구분하고 다른 config의 기존 기본 세션은 거부한다. h/l·OSC133 insert/Esc 보정은 유지했고 F/D를 연결했다. D의 중첩 셸 인용이 실제 dispatcher에서 실패하여 원본 Invoke-DotfilesConfigProject가 기존 t에 저장소 경로를 전달하도록 수정했다. 한글 생성 이름의 __도 예약 구분자를 피하도록 수정하고 직접 __ 인수는 native 호출 전 거부한다.
+
+검증 결과(windows-powershell, 현재 미커밋 diff): 원본 tests/windows-psmux.py 최소/오프라인 LazyVim --full-config 각 23개 통과. PowerShell 5.1과 7 runtime 검사에서 승인·호스트·사용자 mux/t 보존·config 소유권·normalized/foreign/missing/relative marker·예약 __/한글 이름·prompt 오류 상태 보존 통과. Lua foreground lifecycle와 원본 경로 negative 검사 통과. tests/windows-psmux-projects.py에서 실제 원본 launcher/main → 한글·공백 t 생성/전환 → 돌아오기 → 실제 F dispatcher/fzf 선택 → 전환 → 취소/PowerShell pane 생존 → D 원본 checkout 전환 → r 원본 reload를 검사한다. 다른 config 세션 거부·보존 및 private 세션 정리, 사용자 lockfile/프로젝트 루트 byte 보존도 포함한다. F/D/r의 실제 dispatcher는 private fixture prefix만 Ctrl+B로 바꾸어 입력했고 원본 prefix C-Space와 r 후 원본 복귀를 조회한다. 물리 Ctrl+Space 입력을 확인했다고 확대하지 않는다. 실제 WezTerm show-keys에서 기존 Ctrl+h Alt+h/ Ctrl+l 전달도 확인했다. Python check_environment의 네 OS 모의·선택/opt-in 격리, 문법·문서 상대링크·diff-check 통과. macOS/Windows 읽기 전용 리뷰와 최종 독립 리뷰에서 blocker는 없었고 취소 셸 생존·정리 통신 오류 판정을 보강했다. 다른 OS 실기기·물리 GUI·IME·클립보드는 미검증이다.
+
+Windows Terminal 실제 연결: 기존 stable LocalState는 일반 디렉터리로 미연결이다. use-windows-terminal.ps1 -ArchivePreviousProgress로 백업/junction 연결과 이전 호스트 기록 아카이브를 적용하려는 호출은 자동 승인 검토에서 '구체적인 연결·아카이브 부작용에 대한 명시적 승인이 부족'하다는 이유로 거부됐다. 거부된 명령 전체는 실행되지 않았고 문서 갱신만 안전한 별도 호출로 완료했다. 사용자에게 해당 작업을 구체적으로 설명해 비동기 승인을 요청했으며 아직 답이 없으므로 우회·재시도하지 않는다. 현재 Neovim junction·WezTerm/PowerShell loader·psmux -f 원본 참조는 유지한다.
+
+사용자가 현재 Codex가 mux 위에서 실행되므로 필요한 경우 자신이 mux를 종료하고 Codex를 다시 실행하겠다고 설명했다. 사용자 mux/터미널/Codex 프로세스는 종료하지 않는다. 이번 source 수정은 기존 프로세스가 읽은 함수·named namespace를 소급 변경하지 않으므로 새 프로세스에서 확인해야 한다. 현재 브랜치 fix/psmux-session-validation과 PR #16에 코드·ADR·검증·인계 기록을 제출하고 GUI/연결 확인이 남아 있으므로 draft로 전환한다. PR #15는 병합하지 않는다. 사용자 lockfile·폰트는 stage하지 않는다.
+
+재개 순서: (1) 이 기록과 ADR 0006, PR #16 및 실제 git status/저장된 호스트 승인 확인. (2) 사용자가 작업을 저장하고 기존 named mux를 종료하거나 detach한 뒤 새 터미널의 mux로 기본 main을 열고 Codex를 재실행. 기존 세션 종료는 사용자 수행을 기다리고 자동 kill-server 금지. (3) 새 환경에서 실제 Ctrl+Space → F/D/r, tmux list-sessions, 프로젝트 전환/복귀, h/l split 이동·insert Esc·Backspace를 사용자 GUI에서 확인. WezTerm과 Windows Terminal의 h 입력 경로는 다르므로 각 앱의 확인 결과를 구분한다. (4) Windows Terminal 백업/junction/진행 기록 아카이브 승인 답을 확인하기 전에는 적용하지 않고, 명시적 승인 후 기존 script로 적용·Check 및 실제 target 확인. (5) 실제 clipboard/IME까지 확인하고 draft 해제·병합 준비를 판단한다. merge는 별도 사용자 요청이다.
