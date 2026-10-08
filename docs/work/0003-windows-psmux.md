@@ -187,4 +187,10 @@ Windows Terminal 실제 연결: 기존 stable LocalState는 일반 디렉터리�
 
 사용자가 현재 Codex가 mux 위에서 실행되므로 필요한 경우 자신이 mux를 종료하고 Codex를 다시 실행하겠다고 설명했다. 사용자 mux/터미널/Codex 프로세스는 종료하지 않는다. 이번 source 수정은 기존 프로세스가 읽은 함수·named namespace를 소급 변경하지 않으므로 새 프로세스에서 확인해야 한다. 현재 브랜치 fix/psmux-session-validation과 PR #16에 코드·ADR·검증·인계 기록을 제출하고 GUI/연결 확인이 남아 있으므로 draft로 전환한다. PR #15는 병합하지 않는다. 사용자 lockfile·폰트는 stage하지 않는다.
 
+### 재시작 후 D/F 실패의 실제 연결 진단
+
+2026-10-08 KST: 사용자가 재시작 후 Ctrl+Space D/F 모두 실패한다고 보고했다. 기준 HEAD `e0aede1`, windows-powershell이며 fetch 후 origin/main은 `1f1bf3d`, PR #16은 열린 draft다. 사용자 lockfile·폰트 변경은 보존한다. 분석·계획은 실제 연결 namespace와 키 등록을 읽기 전용으로 확인하고, 기존 서버가 남아 있으면 세션 삭제 없이 새 기본 mux로 진입하는 안내를 보완하는 것이다. ADR 0006의 기존 결정에 따른 안내 수정으로 새 ADR은 필요하지 않다.
+
+실제 진단: 현재 프로세스의 TMUX는 공식 형식의 dotfiles named namespace이고 Test-DotfilesMuxPane은 false다. 해당 서버의 prefix는 C-Space지만 D/F binding은 없었다. 모든 TMUX/PSMUX 라우팅 변수를 제거한 자식 프로세스에서 조회한 기본 namespace는 세션이 없고, `-L dotfiles list-sessions`에는 attached main만 있었다. 로컬 승인·활성화 runtime 상태는 Ready, 원본 mux/t alias는 정상이다. 따라서 이번 프로세스 재시작은 새 기본 mux 진입까지 이어지지 않았다. Codex 재시작이나 원본 reload가 기존 서버 namespace를 바꾸지 않는다는 설명과 detach → 새 PowerShell 탭 → mux → pane TMUX 확인 절차를 사용 문서·PR에 보완한다. 실제 사용자 클라이언트 detach·서버 reload·세션 종료·설정 연결은 수행하지 않는다. 새 기본 mux의 물리 D/F 확인은 아직 남아 있으며 기존 격리 검증을 재실행한 것으로 기록하지 않는다.
+
 재개 순서: (1) 이 기록과 ADR 0006, PR #16 및 실제 git status/저장된 호스트 승인 확인. (2) 사용자가 작업을 저장하고 기존 named mux를 종료하거나 detach한 뒤 새 터미널의 mux로 기본 main을 열고 Codex를 재실행. 기존 세션 종료는 사용자 수행을 기다리고 자동 kill-server 금지. (3) 새 환경에서 실제 Ctrl+Space → F/D/r, tmux list-sessions, 프로젝트 전환/복귀, h/l split 이동·insert Esc·Backspace를 사용자 GUI에서 확인. WezTerm과 Windows Terminal의 h 입력 경로는 다르므로 각 앱의 확인 결과를 구분한다. (4) Windows Terminal 백업/junction/진행 기록 아카이브 승인 답을 확인하기 전에는 적용하지 않고, 명시적 승인 후 기존 script로 적용·Check 및 실제 target 확인. (5) 실제 clipboard/IME까지 확인하고 draft 해제·병합 준비를 판단한다. merge는 별도 사용자 요청이다.

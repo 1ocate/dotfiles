@@ -181,4 +181,11 @@ pwsh -NoProfile -File .\scripts\setup-psmux.ps1 -Disable
 
 Neovim은 승인된 Windows에서 이 체크아웃 설정을 사용하는 기본 namespace psmux 안에서만 OSC 133 실행·종료·삽입 모드 표시를 사용합니다. LSP/terminal job 자식 프로세스가 있어도 pane의 전경 프로그램을 Neovim으로 유지하고, 종료·중지 시 해제합니다. 전체 설정 검사는 LazyVim을 통해 navigator를 로드하며 키맵을 직접 다시 덮어쓰지 않습니다.
 
-기존 named namespace에서 기본 namespace로 전환할 때는 설정 reload만으로 서버의 namespace가 바뀌지 않습니다. 작업을 저장하고 기존 psmux에서 detach한 뒤 새 터미널의 `mux`로 시작합니다. 원본 profile 함수도 새 프로세스에서 다시 읽습니다. 기존 세션을 자동 이전하거나 일괄 종료하지 않습니다. 결정은 [ADR 0006](adr/0006-psmux-default-namespace.md)을 참고합니다. 전체 자동 검증은 `tests/windows-psmux-projects.py`의 실제 launcher/t/F/D 흐름, `tests/windows-psmux.py --full-config`의 실제 Neovim 입력 검사와 runtime/foreground 격리 검사로 구분하며 물리 GUI·IME·클립보드는 별도 확인이 필요합니다.
+기존 named namespace에서 기본 namespace로 전환할 때는 설정 reload나 Codex 재시작만으로 서버의 namespace가 바뀌지 않습니다. 기존 mux 안에서 다시 시작한 Codex도 이전 namespace를 물려받습니다. 다음 순서로 진입합니다.
+
+1. 작업을 저장하고 `Ctrl+Space` → 소문자 `d`로 기존 mux에서 detach합니다. 기존 세션은 남습니다.
+2. 새 일반 PowerShell 7 탭을 엽니다. `$env:TMUX`가 비어 있는지 확인하고 `mux`를 실행합니다. 비어 있지 않으면 아직 mux 내부이므로 그 탭에서 중첩 실행하지 않습니다.
+3. 새 mux pane에서 `$env:TMUX`가 `/tmp/psmux-숫자/default,포트,0` 형태인지 확인합니다. `/dotfiles,`이면 이전 named 세션입니다.
+4. `Ctrl+Space` → 대문자 `D`로 저장소 이동, 대문자 `F`로 프로젝트 선택·전환을 확인한 뒤 Codex를 시작합니다.
+
+원본 profile 함수도 새 프로세스에서 다시 읽습니다. 기존 세션을 자동 이전하거나 일괄 종료하지 않습니다. 결정은 [ADR 0006](adr/0006-psmux-default-namespace.md)을 참고합니다. 전체 자동 검증은 `tests/windows-psmux-projects.py`의 실제 launcher/t/F/D 흐름, `tests/windows-psmux.py --full-config`의 실제 Neovim 입력 검사와 runtime/foreground 격리 검사로 구분하며 물리 GUI·IME·클립보드는 별도 확인이 필요합니다.
