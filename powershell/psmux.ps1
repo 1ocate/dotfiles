@@ -109,8 +109,16 @@ function global:Invoke-DotfilesMux {
         } catch { $owned = $false }
     }
     if (-not $owned) { throw "Session '$Session' uses another configuration. Choose an unused session name; existing sessions were not changed." }
-    # Quote-aware CLI writes a reload binding referencing this checkout.
-    & $muxExe -t $Session bind-key r source-file $muxConfig
+    # Explicit paths avoid psmux's extra profile-loading shell wrapper.
+    $projectShell = (Get-Command pwsh -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source.Replace('\', '/')
+    & $muxExe -t $Session bind-key -r F new-window -c '#{pane_current_path}' "'$projectShell -NoLogo -NoExit -Command t'"
+    if ($LASTEXITCODE -ne 0) { throw 'Could not configure the project picker binding.' }
+    & $muxExe -t $Session bind-key -r D new-window "'$projectShell -NoLogo -NoExit -Command Invoke-DotfilesConfigProject'"
+    if ($LASTEXITCODE -ne 0) { throw 'Could not configure the source project binding.' }
+    # Quote the separators so the CLI stores the chain instead of executing it.
+    $reloadPicker = "bind-key -r F new-window -c '#{pane_current_path}' '$projectShell -NoLogo -NoExit -Command t'"
+    $reloadConfig = "bind-key -r D new-window '$projectShell -NoLogo -NoExit -Command Invoke-DotfilesConfigProject'"
+    & $muxExe -t $Session bind-key r source-file "'$muxConfig'" "'\;'" $reloadPicker "'\;'" $reloadConfig
     if ($LASTEXITCODE -ne 0) { throw 'Could not configure the psmux reload binding.' }
     if ($env:TMUX) { & $muxExe switch-client -t "=$Session" }
     else { & $muxExe attach-session -t "=$Session" }

@@ -117,8 +117,10 @@ def main():
             # ConPTY character injection cannot establish physical Ctrl+Space modifier state.
             assert run('-t', 'main', 'show-options', '-g', 'prefix') == 'prefix C-Space'
             run('-t', 'main', 'set-option', '-g', 'prefix', 'C-b')
+            time.sleep(1)  # Wait for the private prefix to reach the client.
+            picker_offset = (input_dir / 'conpty_out.bin').stat().st_size
             send(b'\x02F')
-            until(lambda: 'fzf' in run('-t', 'main', 'list-panes', '-a', '-F', '#{pane_current_command}').lower(),
+            until(lambda: b'Project>' in (input_dir / 'conpty_out.bin').read_bytes()[picker_offset:],
                   'F did not launch real fzf')
             send(b'\r')
             picker_session = session_name(picker_path)
@@ -126,13 +128,16 @@ def main():
             print('PASS: actual prefix+F dispatcher, real fzf selection and session switch', flush=True)
             run('switch-client', '-t', '=main', inside=picker_session)
             until(lambda: attached('main'), 'Failed to return after F')
+            picker_offset = (input_dir / 'conpty_out.bin').stat().st_size
             send(b'\x02F')
-            until(lambda: 'fzf' in run('-t', 'main', 'list-panes', '-a', '-F', '#{pane_current_command}').lower(),
+            until(lambda: b'Project>' in (input_dir / 'conpty_out.bin').read_bytes()[picker_offset:],
                   'Second F did not start picker')
             cancelled_pane = run('-t', 'main', 'display-message', '-p', '#{pane_id}')
             send(b'\x03')
-            until(lambda: 'fzf' not in run('-t', 'main', 'list-panes', '-a', '-F', '#{pane_current_command}').lower(),
-                  'Cancelled picker did not exit')
+            cancelled_ready = temp / 'cancelled-ready.txt'
+            time.sleep(0.5)
+            send(("[IO.File]::WriteAllText('" + str(cancelled_ready).replace("'", "''") + "','ready')\r").encode('utf-8'))
+            until(lambda: cancelled_ready.exists(), 'Cancelled picker did not restore its shell')
             assert attached('main'), 'Cancellation moved the client'
             until(lambda: cancelled_pane + ' pwsh' in run('-t', 'main', 'list-panes', '-a', '-F', '#{pane_id} #{pane_current_command}'),
                   'Cancelled picker did not keep its PowerShell pane')
