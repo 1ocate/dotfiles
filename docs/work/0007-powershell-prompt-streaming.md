@@ -49,3 +49,19 @@ GUI 화면/IME 및 psmux 재표시는 별도 확인 필요. PR 제출을 적용�
 
 - 독립 검토 기준 8aef321..cfc7db9: JSON 의미 비교로 streaming만 변경됨을 재확인하고 최종 문서·범위 정적 검토에서 수정 필요 사항 없음.
 - Draft PR #17 제출. 물리 GUI/IME·psmux/Neovim 왕복 확인과 PR 리뷰·병합은 남아 있다.
+
+## 최초 설치 기본 테마 해석 정정과 후속 계획
+
+2026-10-16 KST: 사용자는 명명된 powerlevel10k_rainbow가 아니라 처음 설치 시 내장 기본 테마를 요청했다. 이전 config export는 POSH_CONFIG 제거 후에도 POSH_SESSION_ID의 기존 세션 캐시를 재사용해 rainbow를 내보냈다. 기존 기록의 "명시적 테마 없이 해석"은 해당 세션의 결과이며 최초 설치 기본값이라는 해석은 잘못이었다. 이전 측정치는 당시 rainbow 기준이고 실제 내장 기본 테마 성능으로 주장하지 않는다.
+
+설치 버전 v31.8.0 공식 src/config/default.go와 CLI config_export.go를 확인했다. 별도 -NoProfile 프로세스에서 POSH_* 변수와 세션 ID를 격리한 config export는 session/path/git/status와 palette를 가진 내장 기본 테마를 반환한다. 이 결과를 원본으로 교체하고 streaming=100만 더한다. 새 PowerShell 7 설치 초기화도 이 원본을 참조하고 기존 사용자 oh-my-posh 초기화는 덮어쓰지 않는다. 실제 호스트 프로필 경로는 이미 원본을 가리키므로 초기화 줄 재작성은 필요 없다.
+
+계획: 깨끗한 export/공식 default.go 대조 → 원본 교체와 신규 설치 연결 → PS7/5.1 임시 프로필 생성·재실행·기존 사용자 프로필 인코딩/초기화 보존 검사 → 반복 측정과 새 프로필 확인 → 같은 PR17 갱신. 별도 Windows 글꼴 재현성 변경은 main 기반 다른 worktree/PR에서 진행한다.
+
+### 최초 기본 테마 재검증 결과
+
+2026-10-16 KST, windows-powershell, 후속 diff: 세션 캐시를 격리한 내장 기본 테마와 원본은 streaming=100만 제외하면 의미가 동일하다. 새 pwsh에서 첫 segment session, streaming=100, daemon 생존, Git completion/mux/t를 확인했다. 별도 임시 Git 저장소 브랜치·untracked·종료 코드 검사도 재통과했다.
+
+실제 내장 기본 테마 14회 렌더 중 초기 2회 제외: 기본 중앙값 208.64ms/최댓값239.86ms, streaming 중앙값76.49ms/최댓값90.24ms. PS7/5.1 tests/prompt-profile.ps1 및 tests/windows-terminal-setup.ps1 통과. 새 테스트는 실제 설치 구간을 추출해 새PS7명시원본·5.1유지·따옴표/공백/Unicode경로·기존사용자테마·UTF16인코딩·백업·재실행 보존을 검증한다. 최초 PS5.1 테스트는 Get-Content 기본인코딩 차이로 실패하여 ReadAllText의 UTF8 감지를 사용하도록 테스트를 정정하고 두 버전 모두 재통과했다. 실제 installer/사용자환경 재연결은 실행하지 않았다.
+
+독립 재검토에서도 깨끗한 export 의미 비교와 자동 초기화 연결·기존 프로필/인코딩 보존·문서 정정을 확인했고 수정 필요사항은 없었다. GUI/IME·기존 psmux/Neovim 왕복은 여전히 미검증이다. 현재 열린 셸은 기존 daemon을 유지하므로 새 탭 또는 명시적 재초기화가 필요하다.

@@ -192,8 +192,10 @@ Neovim은 승인된 Windows에서 이 체크아웃 설정을 사용하는 기본
 
 ## PowerShell 7 프롬프트 streaming
 
-Windows PowerShell 7용 [테마 원본](../powershell/prompt.omp.json)은 oh-my-posh 31.8.0에서 명시적 테마 없이 해석한 설정을 내보내고 `streaming: 100`만 추가한 것이다. 색상·세그먼트·Git 표시를 보존하며, 설치 스크립트가 기존 프로필을 자동 교체하지는 않는다. 이 원본은 Windows PowerShell 7용으로 사용하며 다른 환경에 자동 적용하지 않는다.
+Windows PowerShell 7용 [테마 원본](../powershell/prompt.omp.json)은 oh-my-posh 31.8.0의 최초 설치 내장 기본 테마를 세션 캐시와 POSH_* 환경 변수까지 격리해 내보내고 `streaming: 100`만 추가한 것이다. 내장 기본 테마의 색상·세그먼트·Git 표시를 보존한다. 새 PowerShell 7 프로필은 설치 시 이 원본을 참조하고, 기존 oh-my-posh 초기화가 있으면 자동 교체하지 않는다. Windows PowerShell 5.1 초기화 방식은 유지한다. 이 원본은 Windows PowerShell 7용으로 사용하며 다른 환경에 자동 적용하지 않는다.
 
 기존 PowerShell 7 프로필을 백업한 뒤 oh-my-posh 초기화 줄에서 이 체크아웃의 `powershell/prompt.omp.json`을 `--config`로 명시한다. `$PROFILE`에서 프로필 위치를 확인하고 경로는 각 호스트의 실제 체크아웃을 사용한다. Git 자동완성과 psmux loader의 순서를 유지하며 초기화 줄을 중복 추가하지 않는다. 현재 사용 중인 다른 테마로 이 파일을 적용하면 모양이 달라질 수 있으므로 테마 내용을 먼저 비교한다.
 
 streaming은 세션별 백그라운드 프로세스를 재사용하며 느린 정보는 나중에 표시한다. [공식 베타 기능](https://ohmyposh.dev/docs/configuration/streaming)이므로 GUI/IME·오른쪽 프롬프트·psmux에서 재표시를 확인한다. `POSH_DISABLE_STREAMING`이 있으면 비활성화되며, VS Code PowerShell 확장처럼 공식 비호환 호스트에서는 사용하지 않는다. 설치된 oh-my-posh가 streaming을 지원해야 한다. 되돌리려면 백업한 초기화 줄을 복원하고 새 PowerShell 탭을 연다. 적용·검증 근거는 [작업 0007](work/0007-powershell-prompt-streaming.md)을 따른다.
+
+테마 선택은 PowerShell 프로필의 `oh-my-posh init` 줄에서 정하며, 이 원본은 명명된 `powerlevel10k_rainbow`와 다르다. 내장 테마도 Powerline 스타일 구분선을 포함한다. Windows Terminal의 글꼴·배경 색상 설정과 oh-my-posh의 프롬프트 테마는 별개다. 기본값 재추출은 별도 `pwsh -NoProfile` 프로세스에서 `POSH_*` 변수를 제거하고 새로운 `POSH_SESSION_ID`로 수행해야 기존 세션 테마를 다시 내보내지 않는다. 기준 구현은 [v31.8.0 default.go](https://github.com/JanDeDobbeleer/oh-my-posh/blob/v31.8.0/src/config/default.go)다.
