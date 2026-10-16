@@ -7,7 +7,7 @@
 - 실행 환경: windows-powershell
 - 적용 범위: Windows PowerShell 7용 테마 원본, 현재 호스트 PowerShell 7 프로필의 해당 원본 참조, 사용 안내. 5.1 프로필·설치 기본값·macOS/WSL/Linux 변경 제외.
 - 관련 ADR: [ADR 0002](../adr/0002-native-windows-adapters.md)의 원본 참조 방식을 따르는 작은 성능 개선이며 새 구조 결정은 없다.
-- 관련 PR: 제출 후 갱신
+- 관련 PR: [Draft PR #17](https://github.com/1ocate/dotfiles/pull/17)
 
 ## 분석과 미확인 사항
 
@@ -44,3 +44,8 @@ Windows 실제 실행 검사(현재 브랜치 미커밋 diff):
 ## 남은 일과 종료 근거
 
 GUI 화면/IME 및 psmux 재표시는 별도 확인 필요. PR 제출을 적용·병합 또는 다른 OS 검증 완료로 간주하지 않는다.
+
+## 최종 검토와 제출
+
+- 독립 검토 기준 8aef321..cfc7db9: JSON 의미 비교로 streaming만 변경됨을 재확인하고 최종 문서·범위 정적 검토에서 수정 필요 사항 없음.
+- Draft PR #17 제출. 물리 GUI/IME·psmux/Neovim 왕복 확인과 PR 리뷰·병합은 남아 있다.
