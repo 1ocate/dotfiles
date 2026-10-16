@@ -61,11 +61,11 @@ py -3 scripts/environment.py adopt-existing --environment windows-powershell
 # 패키지·글꼴·플러그인 준비 생략. 연결·프로필 처리는 진행하고 AutoHotkey는 실행
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 -SkipPackages -SkipFonts -SkipPlugins
 
-# 로그인 시 AutoHotkey 실행도 등록. 나머지 설치 단계는 그대로 진행
+# 로그인 등록을 명시. 기본값과 같으며 나머지 설치 단계도 진행
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 -RegisterAutoHotkeyStartup
 ```
 
-기본 AutoHotkey 동작은 현재 실행입니다. 대화형 세팅에서는 로그인 자동 시작 등록 여부를 묻고, `y` 또는 `yes`로 답할 때만 바로가기를 작성합니다(기본 아니오). `-RegisterAutoHotkeyStartup`은 질문 없이 등록하고, `-SkipAutoHotkeyStartup`은 질문과 등록을 생략합니다. 두 옵션은 함께 지정할 수 없습니다. 비대화형 실행에서는 명시 등록 옵션이 없으면 등록하지 않습니다. `-Plan`·`-Check`는 질문하거나 등록하지 않습니다. `-SkipAutoHotkey`는 현재 실행과 질문을 생략하지만 명시 등록 옵션은 유효합니다. 생략·거절 시 기존 바로가기는 제거하지 않습니다. `-SkipFonts`·`-SkipPlugins`는 해당 준비 단계를 생략합니다. 개별 옵션은 프로필 변경·설정 연결을 생략하지 않습니다. 사용자 실행 정책이 Undefined/Restricted이면 CurrentUser RemoteSigned로 설정합니다.
+승인된 Windows 설치는 AutoHotkey 현재 실행과 로그인 자동시작 등록을 기본으로 수행하며 별도 질문하지 않습니다. 대화형·비대화형 실행에 같은 기본값을 사용합니다. `-SkipAutoHotkeyStartup`은 로그인 등록만 생략하고, `-SkipAutoHotkey`는 현재 실행과 기본 로그인 등록을 모두 생략합니다. `-SkipAutoHotkey -RegisterAutoHotkeyStartup`은 현재 실행 없이 로그인 등록만 수행합니다. 등록·생략 옵션은 함께 지정할 수 없습니다. `-Plan`·`-Check`는 등록하거나 실행하지 않습니다. 생략 시 기존 바로가기는 제거하지 않습니다. 다음 PC에서도 최초 PowerShell 환경 승인은 필요하며 로그인 등록은 해당 PC의 저장소 원본을 참조합니다. `-SkipFonts`·`-SkipPlugins`는 해당 준비 단계를 생략합니다. 개별 옵션은 프로필 변경·설정 연결을 생략하지 않습니다. 사용자 실행 정책이 Undefined/Restricted이면 CurrentUser RemoteSigned로 설정합니다.
 
 ## 터미널 선택
 
