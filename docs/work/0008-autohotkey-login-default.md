@@ -6,6 +6,7 @@
 - 기준: origin/main 2678b2f, feat/autohotkey-login-default
 - 실행 환경·범위: windows-powershell 설치 기본값·사용 지침·현재 장치 바로가기. 타 OS·패키지 재설치·기존 세션 종료 제외
 - 관련 결정: [ADR 0008](../adr/0008-autohotkey-login-default.md)
+- 관련 PR: [Draft PR #19](https://github.com/1ocate/dotfiles/pull/19)
 
 ## 분석과 계획
 
