@@ -97,3 +97,5 @@ WezTerm Lua 문법 검사 통과. 첫 `tests/environment-isolation.lua` 실행�
 실제 설치·폰트 등록·사용자 설정 연결은 하지 않았다. 다운로드한 TTF는 Git에서 제외된 임시 파일이며 루트의 사용자 TTF/lockfile은 수정하지 않았다. 기존 Mono 설치의 삭제/업데이트는 구현하지 않는다. GUI 아이콘 렌더링·깨끗한 신규 장비 전체 설치·다른 OS 실기기는 미검증이며 최종 리뷰/PR은 총괄이 진행한다.
 
 2026-10-16 12:02 +09:00: 통합 macOS/Windows 및 독립 정적 검토에서 blocker 없음. 폰트 설치 자동 호출·manifest/family 일치·기존 Mono 보존·타 OS 분기 유지와 검증 한계를 확인했다. 검토 역할은 해당 OS 실기기 검사로 간주하지 않는다. 새 장비 전체 설치가 남아 draft PR로 제출한다.
+
+2026-10-16 12:04 +09:00: ce30172를 SSH push하고 [draft PR #18](https://github.com/1ocate/dotfiles/pull/18)을 제출했다. 현재 글꼴 기본값을 다음 설치로 전달하는 코드·manifest·검증 근거를 포함하며 merge·실제 설치는 수행하지 않았다. 최초 내장 기본 테마/streaming은 별도 [PR #17](https://github.com/1ocate/dotfiles/pull/17)에서 추적한다.
