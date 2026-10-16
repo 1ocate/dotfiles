@@ -83,3 +83,17 @@ WezTerm Lua 문법 검사 통과. 첫 `tests/environment-isolation.lua` 실행�
 - 제출 도구: 현재 `py -3`가 설치 Python을 찾지 못해 설치된 Python 3.13 실행 파일로 동일한 `scripts/gh-local.py` wrapper를 호출한다. 기존 GitHub CLI 경로는 해당 명령 프로세스의 PATH에만 추가하며 전역 인증·PATH는 변경하지 않는다.
 
 2026-10-07 KST: 최종 diff·문서 상대 링크·`git diff --check` 통과 후 `7ecc9d0`을 SSH push하고 [draft PR #14](https://github.com/1ocate/dotfiles/pull/14)를 제출했다. 현재 호스트 적용은 완료했고 물리 키·IME GUI 확인은 남아 있다. 사용자 lockfile·폰트는 커밋에서 제외했고 merge는 수행하지 않았다. Git 작성자 설정 부재는 저장소 `.gitconfig`의 기존 작성자를 해당 커밋 명령에만 지정하여 해결했으며 전역/로컬 Git 설정은 바꾸지 않았다.
+
+### 비-Mono 기본 글꼴 후속 요청과 계획
+
+2026-10-16 KST, windows-powershell, 기준 origin/main `8aef321`: 사용자는 아이콘 크기를 기존처럼 유지하도록 `MesloLGMDZ Nerd Font`를 기본 사용하고 이후 설치에도 가져오길 요청했다. 기존 manifest·installer·Windows Terminal·승인된 Windows WezTerm은 Mono 변형을 고르므로 현재 사용자 설정만으로는 재현되지 않는다. 현재 테마/프로필 작업과 분리하여 Windows 글꼴 선택만 수정한다. ADR 0004의 과거 선택은 보존하고 [ADR 0007](../adr/0007-windows-font-family.md)에서 새 선택을 제안한다.
+
+계획: 같은 고정 upstream commit의 비-Mono 파일을 `.local` 임시에 다운로드하여 SHA-256과 TTF name table을 확인 → manifest·installer identity·터미널 기본값·현재 지침을 일치시킴 → 기존 폰트/레지스트리 보존, 읽기 전용 Plan/Check, SkipFonts 및 환경 격리 계약을 기존 검사로 확인 → PS7/5.1 검증과 리뷰. 설치·폰트 등록·사용자 설정 연결은 수행하지 않으며 루트의 사용자 TTF와 lockfile은 수정하지 않는다. 신규 장비 전체 설치·GUI 아이콘·다른 OS 실기기는 미검증으로 남긴다.
+
+2026-10-16 KST, windows-powershell, 미커밋 diff: 같은 upstream commit `f034eeafc0ccf79afa8dd952feb86b18e5d0469e`의 비-Mono TTF를 `.local` 임시에 다운로드했다. SHA-256은 `b8457260c0ba2f20446bb233b3219704e59b75636cca921a0c0d25bf69a78a9b`; Python 표준 struct로 읽은 TTF name table의 family는 `MesloLGMDZ Nerd Font`, full name은 `MesloLGMDZ Nerd Font Regular`였다. manifest·installer identity·Windows Terminal 기본 프로필을 맞추고 WezTerm의 Windows 전용 Mono 삽입을 제거하여 원래 비-Mono fallback을 사용한다. 다른 OS 목록·테마·키맵은 유지했다.
+
+검증: `tests/meslo-font.ps1`, `tests/windows-terminal-setup.ps1`을 PowerShell 7과 Windows PowerShell 5.1에서 실행하여 통과했다. 폰트 검사는 실제 다운로드가 아닌 test bytes·레지스트리/native API 모의로 기존 충돌·rollback·진행 기록·Plan/Check의 무변경을 확인했고, 기본 프로필 family와 manifest 일치 및 기존 Mono 이름과의 분리를 추가 확인했다. 초기 계약 assertion은 존재하지 않는 profiles.defaults를 참조해 실패했으며 실제 defaultProfile의 list 항목을 선택하도록 고쳐 두 버전에서 재검증했다. `git archive origin/main`의 임시 baseline과 `DOTFILES_BASELINE`으로 `nvim --headless -u NONE -i NONE -l tests/environment-isolation.lua`를 실행하여 macOS/Linux/WSL 동등성·Windows 선택·미승인 격리·psmux 모의 시나리오를 통과했다. 같은 격리 Neovim에서 `.wezterm.lua` loadfile 문법 검사와 `git diff --check`도 통과했다.
+
+실제 설치·폰트 등록·사용자 설정 연결은 하지 않았다. 다운로드한 TTF는 Git에서 제외된 임시 파일이며 루트의 사용자 TTF/lockfile은 수정하지 않았다. 기존 Mono 설치의 삭제/업데이트는 구현하지 않는다. GUI 아이콘 렌더링·깨끗한 신규 장비 전체 설치·다른 OS 실기기는 미검증이며 최종 리뷰/PR은 총괄이 진행한다.
+
+2026-10-16 12:02 +09:00: 통합 macOS/Windows 및 독립 정적 검토에서 blocker 없음. 폰트 설치 자동 호출·manifest/family 일치·기존 Mono 보존·타 OS 분기 유지와 검증 한계를 확인했다. 검토 역할은 해당 OS 실기기 검사로 간주하지 않는다. 새 장비 전체 설치가 남아 draft PR로 제출한다.

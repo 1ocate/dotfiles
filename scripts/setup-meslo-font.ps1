@@ -5,13 +5,13 @@ param([switch]$Plan, [switch]$Check, [switch]$ApprovePowerShell)
 function Get-MesloFontManifest {
     param([string]$RepoPath)
     $manifest = [IO.File]::ReadAllText((Join-Path $RepoPath 'fonts/meslo.json')) | ConvertFrom-Json
-    if ($manifest.file_name -ne 'MesloLGMDZNerdFontMono-Regular.ttf' -or
-        $manifest.family -ne 'MesloLGMDZ Nerd Font Mono' -or
-        $manifest.full_name -ne 'MesloLGMDZ Nerd Font Mono Regular' -or
+    if ($manifest.file_name -ne 'MesloLGMDZNerdFont-Regular.ttf' -or
+        $manifest.family -ne 'MesloLGMDZ Nerd Font' -or
+        $manifest.full_name -ne 'MesloLGMDZ Nerd Font Regular' -or
         $manifest.sha256 -notmatch '^[a-f0-9]{64}$' -or
         $manifest.upstream_commit -notmatch '^[a-f0-9]{40}$' -or
         $manifest.url -ne ('https://raw.githubusercontent.com/ryanoasis/nerd-fonts/' + $manifest.upstream_commit + '/patched-fonts/Meslo/M-DZ/' + $manifest.file_name)) {
-        throw 'Invalid pinned Meslo Mono font manifest.'
+        throw 'Invalid pinned Meslo non-Mono font manifest.'
     }
     return $manifest
 }
@@ -113,7 +113,7 @@ function Undo-MesloFontChange {
 
 function Install-MesloFont {
     param([string]$RepoPath, $Manifest, $Status)
-    if ($Status.Registered) { Write-Output 'Pinned Meslo Mono font and registry registration already verified.'; return }
+    if ($Status.Registered) { Write-Output 'Pinned Meslo non-Mono font and registry registration already verified.'; return }
     $temporary = $null
     $createdFile = $false
     $createdRegistration = $false
@@ -137,7 +137,7 @@ function Install-MesloFont {
         $loaded = $true
         $verified = Get-MesloFontStatus -Manifest $Manifest
         if (-not $verified.Registered) { throw 'Font registration verification failed.' }
-        Write-Output 'Pinned Meslo Mono font installed for the current user and registration verified. Open a new terminal process.'
+        Write-Output 'Pinned Meslo non-Mono font installed for the current user and registration verified. Open a new terminal process.'
     } catch {
         $originalError = $_
         if ($loaded) {
@@ -215,7 +215,7 @@ function Invoke-MesloFontSetup {
         $status = Get-MesloFontStatus -Manifest $manifest
         Write-Output ("Font: $($manifest.family); asset: $($manifest.file_name); status: $($status.Status); target: $($status.Target)")
         Write-Output ("Pinned commit: $($manifest.upstream_commit); SHA256: $($manifest.sha256)")
-        if ($Check -and -not $status.Registered) { throw 'Pinned Meslo Mono font is missing or unregistered. Run setup-meslo-font.ps1 to install, or explicitly use -SkipFonts in setup-windows.ps1.' }
+        if ($Check -and -not $status.Registered) { throw 'Pinned Meslo non-Mono font is missing or unregistered. Run setup-meslo-font.ps1 to install, or explicitly use -SkipFonts in setup-windows.ps1.' }
         return
     }
     $null = Get-MesloFontProgress -RepoPath $RepoPath

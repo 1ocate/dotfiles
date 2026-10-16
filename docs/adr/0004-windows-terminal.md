@@ -23,6 +23,8 @@ junction 생성 실패 시 기존 디렉터리를 이동하기 전에 중단하�
 
 ## 키 입력과 영향
 
+폰트 선택의 후속 변경은 [ADR 0007의 비-Mono 선택 제안](0007-windows-font-family.md)에서 다룬다. 아래 Mono 선택은 당시 결정의 기록이다.
+
 Windows Terminal 폰트는 사용자가 지정한 `MesloLGMDZNerdFontMono-Regular.ttf`의 실제 패밀리를 사용한다. Windows 설치는 파일명·패밀리·upstream commit·SHA-256을 저장소 manifest에 기록하여 지정 변형을 준비하고 검증한다. 폰트 바이너리는 저장소에 포함하지 않고 upstream에서 받는다. 기존 임의 Meslo 파일의 존재를 지정 변형 설치의 근거로 사용하지 않는다. 설치는 Windows 사용자 범위로 제한하며, 이 구현·결정은 실사용 폰트 설치 승인이 아니다. macOS/WSL의 기존 폰트 선택은 유지한다.
 
 

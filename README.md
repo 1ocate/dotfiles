@@ -84,7 +84,7 @@ OS별 선택 설치나 자동 복구 기능은 없습니다.
 | 언어 서버 | Node.js 등 각 언어 도구의 실행 환경 |
 | Treesitter 파서 | 플러그인 버전에 맞는 컴파일러와 빌드 환경 |
 | tmux 이동 | Unix tmux / Windows 선택 기능 psmux (`tmux.exe`) |
-| 아이콘 표시 | 설정에 맞는 Nerd Font |
+| 아이콘 표시 | Windows는 `MesloLGMDZ Nerd Font` (비-Mono), [고정 원본 설치·점검](docs/windows-terminal.md#지정-폰트) |
 
 첫 실행에서는 플러그인이 다운로드될 수 있습니다.
 설치 후 `:Lazy`, `:Mason`, `:checkhealth`로 상태를 확인하세요.
