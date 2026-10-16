@@ -1,4 +1,4 @@
-﻿#Requires -Version 5.1
+#Requires -Version 5.1
 <#
 Native Windows bootstrap based on the configuration verified on 2026-10-03.
 Run -Plan to review without installing or changing anything.
@@ -63,7 +63,7 @@ if ($Plan) {
     Write-Output "Connect $Terminal and Neovim to this checkout, backing up previous settings."
     if ($Terminal -eq 'windows-terminal') { & (Join-Path $PSScriptRoot $terminalAdapter) -Plan }
     else { Write-Output ('WezTerm loader source: ' + (Join-Path $repoPath '.wezterm.lua')) }
-    Write-Output 'Add Oh My Posh initialization to the 5.1 and 7 user profiles.'
+    Write-Output 'Add Oh My Posh initialization: PowerShell 7 uses the repository built-in theme snapshot with streaming; preserve existing profile initializers.'
     if (-not $SkipGitCompletion) { & (Join-Path $PSScriptRoot 'setup-git-completion.ps1') -Plan }
     Write-Output 'Set CurrentUser RemoteSigned only if it is currently Undefined or Restricted.'
     if (-not $SkipFonts) { & (Join-Path $PSScriptRoot 'setup-meslo-font.ps1') -Plan }
@@ -169,8 +169,12 @@ if (-not $SkipGitCompletion) {
 & (Join-Path $PSScriptRoot 'use-neovim.ps1')
 
 $documentsPath = [Environment]::GetFolderPath('MyDocuments')
-$initLine = 'oh-my-posh init pwsh --eval | Invoke-Expression'
+$promptConfigPath = (Join-Path $repoPath 'powershell/prompt.omp.json').Replace("'", "''")
 foreach ($profileFolder in @('WindowsPowerShell', 'PowerShell')) {
+    $initLine = 'oh-my-posh init pwsh --eval | Invoke-Expression'
+    if ($profileFolder -eq 'PowerShell') {
+        $initLine = "oh-my-posh init pwsh --config '$promptConfigPath' --eval | Invoke-Expression"
+    }
     $profilePath = Join-Path $documentsPath "$profileFolder/Microsoft.PowerShell_profile.ps1"
     New-Item -ItemType Directory -Path (Split-Path -Parent $profilePath) -Force | Out-Null
     if (Test-Path -LiteralPath $profilePath) {
