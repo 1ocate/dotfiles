@@ -15,11 +15,11 @@ winget과 공통 등록 도구 실행용 Python 3.10 이상을 먼저 준비하�
 | 선택한 터미널(기본 Windows Terminal / `-Terminal wezterm`), Neovim, PowerShell 7, Oh My Posh | 전체 설치의 사전 점검에 필수. Windows Terminal은 PowerShell 7 필수. WezTerm 선택의 런타임 셸만 5.1로 폴백 |
 | Git, Node.js·npm, rg, fd, fzf, GCC, Python | 플러그인·검색·parser·Mason 도구 준비 시 필수. 현재 컴파일러는 WinLibs. `-SkipPlugins`로 준비 생략 가능 |
 | AutoHotkey v2 | 현재 실행 또는 로그인 등록 시 필수. 실행만 생략하려면 `-SkipAutoHotkey`, 등록 옵션도 지정하지 않음 |
-| MesloLGMDZ Nerd Font Mono | `fonts/meslo.json`의 고정 원본·SHA-256으로 사용자 범위 준비. 파일·등록을 점검하며 `-SkipFonts`로 생략 가능 |
+| MesloLGMDZ Nerd Font | `fonts/meslo.json`의 고정 원본·SHA-256으로 사용자 범위 준비. 파일·등록을 점검하며 `-SkipFonts`로 생략 가능 |
 
 winget은 설치된 패키지를 유지하며 없는 패키지는 공급되는 버전을 설치합니다. 버전 숫자를 고정하지 않습니다. 현재 패키지 ID 목록의 원본은 [setup-windows.ps1](../scripts/setup-windows.ps1)입니다. 개별 기능 생략 옵션은 패키지 목록을 줄이지 않으므로 패키지를 전혀 설치하지 않을 때는 `-SkipPackages`도 지정합니다. 각 프로젝트의 LSP·포맷 런타임은 추가로 필요할 수 있습니다.
 
-폰트는 [Windows Terminal 폰트 지침](windows-terminal.md#지정-폰트)을 따릅니다. `-SkipPackages`는 winget만 생략하며 폰트 다운로드는 `-SkipFonts`로 별도 생략합니다. 다른 Meslo 변형의 존재를 지정된 Mono 변형 설치 완료로 판단하지 않습니다.
+폰트는 [Windows Terminal 폰트 지침](windows-terminal.md#지정-폰트)을 따릅니다. `-SkipPackages`는 winget만 생략하며 폰트 다운로드는 `-SkipFonts`로 별도 생략합니다. 다른 Meslo 변형의 존재를 지정된 비-Mono 변형 설치 완료로 판단하지 않습니다.
 
 ## 계획·점검과 최초 설치
 

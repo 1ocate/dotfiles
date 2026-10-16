@@ -44,11 +44,11 @@ Preview 또는 비패키지 설치는 `-Channel preview` / `-Channel unpackaged`
 
 ## 지정 폰트
 
-Windows Terminal의 `font.face`는 `MesloLGMDZ Nerd Font Mono`, 크기는 `11`입니다. 사용자가 지정한 [Meslo M-DZ Mono Regular 원본](https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/Meslo/M-DZ/MesloLGMDZNerdFontMono-Regular.ttf)을 사용합니다. 파일명과 폰트 패밀리 이름은 다르므로 JSON에는 `.ttf` 파일명을 넣지 않습니다.
+Windows Terminal의 `font.face`는 `MesloLGMDZ Nerd Font`, 크기는 `11`입니다. 사용자가 지정한 [Meslo M-DZ Regular 원본](https://github.com/ryanoasis/nerd-fonts/blob/master/patched-fonts/Meslo/M-DZ/MesloLGMDZNerdFont-Regular.ttf)을 사용합니다. 비-Mono 패밀리를 사용하며 기존 Mono 설치·등록은 삭제하지 않습니다. 셸 테마는 별도 프로필 설정이며 폰트 선택으로 바뀌지 않습니다. [선택 근거](adr/0007-windows-font-family.md)를 참고하세요. 파일명과 폰트 패밀리 이름은 다르므로 JSON에는 `.ttf` 파일명을 넣지 않습니다.
 
 설치 원본 commit과 SHA-256은 `fonts/meslo.json`에서 관리하며 폰트 바이너리는 Git에 포함하지 않습니다. 전체 설치는 해당 폰트를 준비하고 `-SkipFonts`는 생략합니다. Windows Terminal 연결만 실행하면 폰트를 설치하지 않습니다. 별도 읽기 전용 점검은 `scripts/setup-meslo-font.ps1 -Check`, 설치 계획은 `-Plan`으로 확인합니다. 실제 설치는 현재 호스트의 PowerShell 선택을 확인하고 사용자 Fonts 경로와 HKCU Fonts에 등록합니다. 같은 이름의 다른 파일·등록은 덮어쓰지 않고 중단하므로 기존 설정을 검토합니다. 설치 결과는 `.local/setup-state.json`의 `components.meslo_font`에 남기며 파일·등록 검증과 화면 표시 미검증을 구분합니다. 다른 호스트·환경의 진행 기록은 폰트 변경 전에 중단하므로, 앞의 Terminal 연결 절차에서 기록을 검토하고 명시적으로 archive한 후 다시 진행합니다. 설치 후 새 Windows Terminal 창에서 선택된 폰트와 아이콘을 확인합니다.
 
-`master`의 최신 파일을 매번 받는 방식이 아니므로 버전 변경은 manifest의 commit·체크섬을 함께 검토하는 별도 변경입니다. 명시적으로 선택한 WezTerm도 Windows 네이티브 PowerShell에서는 Mono 패밀리를 우선하며, macOS·WSL의 기존 폰트 선택은 유지합니다. per-user 등록 근거는 [Microsoft winget Fonts 구현](https://github.com/microsoft/winget-cli/blob/master/src/AppInstallerCommonCore/Fonts.cpp)입니다.
+`master`의 최신 파일을 매번 받는 방식이 아니므로 버전 변경은 manifest의 commit·체크섬을 함께 검토하는 별도 변경입니다. 명시적으로 선택한 WezTerm도 Windows 네이티브 PowerShell에서는 비-Mono 패밀리를 우선하며, macOS·WSL의 기존 폰트 선택은 유지합니다. per-user 등록 근거는 [Microsoft winget Fonts 구현](https://github.com/microsoft/winget-cli/blob/master/src/AppInstallerCommonCore/Fonts.cpp)입니다.
 
 ## PowerShell·psmux·키 입력
 

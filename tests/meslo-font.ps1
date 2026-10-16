@@ -11,6 +11,7 @@ $environmentMock | Set-Content (Join-Path $testRoot 'scripts/windows-environment
 $oldLocal = $env:LOCALAPPDATA
 $oldOS = $env:OS
 $script:registrations = @{}
+$script:legacyMonoRegistration = 'preserved-existing-mono.ttf'
 $script:downloadCalls = 0
 $script:publishCalls = 0
 $script:approved = $false
@@ -18,7 +19,7 @@ $script:bytes = [Text.Encoding]::UTF8.GetBytes('mock pinned font')
 $sha = [Security.Cryptography.SHA256]::Create()
 $hash = ([BitConverter]::ToString($sha.ComputeHash($script:bytes))).Replace('-', '').ToLowerInvariant()
 $sha.Dispose()
-function Get-MesloFontRegistration { param($Name, $Scope); return $script:registrations[$Scope] }
+function Get-MesloFontRegistration { param($Name, $Scope); if ($Name -eq 'MesloLGMDZ Nerd Font Mono Regular (TrueType)') { return $script:legacyMonoRegistration }; return $script:registrations[$Scope] }
 function Set-MesloFontRegistration { param($Name, $Target); if ($script:registrations['User']) { throw 'Concurrent registry conflict' }; $script:registrations['User'] = $Target }
 function Remove-MesloFontRegistration { param($Name); $script:registrations.Remove('User') }
 function Receive-MesloFont { param($Url, $Destination); $script:downloadCalls++; [IO.File]::WriteAllBytes($Destination, $script:bytes) }
@@ -28,7 +29,11 @@ try {
     $env:LOCALAPPDATA = Join-Path $testRoot 'profile'
     $env:OS = 'Windows_NT'
     $manifest = Get-MesloFontManifest -RepoPath $repo
-    if ($manifest.sha256 -ne '66e3a38c5caad569892bd5c241d0ea1fa3e09690521bd9453b77457e1208852a' -or $manifest.family -ne 'MesloLGMDZ Nerd Font Mono') { throw 'Pinned manifest changed without fixture update.' }
+    $terminal = [IO.File]::ReadAllText((Join-Path $repo 'windows-terminal/settings.json')) | ConvertFrom-Json
+    if ((@($terminal.profiles.list | Where-Object { $_.guid -eq $terminal.defaultProfile })[0]).font.face -ne $manifest.family) { throw 'Terminal default and installed font family differ.' }
+    $legacy = Get-MesloFontRegistration -Name 'MesloLGMDZ Nerd Font Mono Regular (TrueType)' -Scope User
+    if ($legacy -ne $script:legacyMonoRegistration) { throw 'Legacy Mono fixture is missing.' }
+    if ($manifest.sha256 -ne 'b8457260c0ba2f20446bb233b3219704e59b75636cca921a0c0d25bf69a78a9b' -or $manifest.family -ne 'MesloLGMDZ Nerd Font') { throw 'Pinned manifest changed without fixture update.' }
     Invoke-MesloFontSetup -RepoPath $testRoot -Plan -ApprovePowerShell | Out-Null
     Expect-Failure { Invoke-MesloFontSetup -RepoPath $testRoot -Check -ApprovePowerShell } 'missing or unregistered'
     Expect-Failure { Invoke-MesloFontSetup -RepoPath $testRoot } 'Unapproved'
@@ -55,6 +60,7 @@ try {
     Write-Output 'PASS: pre-existing file and registry conflicts preserved.'
     Install-MesloFont -RepoPath $testRoot -Manifest $manifest -Status (Get-MesloFontStatus $manifest) | Out-Null
     $ready = Get-MesloFontStatus -Manifest $manifest
+    if ((Get-MesloFontRegistration -Name 'MesloLGMDZ Nerd Font Mono Regular (TrueType)' -Scope User) -ne $legacy -or $ready.RegistryName -eq 'MesloLGMDZ Nerd Font Mono Regular (TrueType)') { throw 'Non-Mono setup changed or reused Mono registration.' }
     if (-not $ready.Registered -or $ready.Scope -ne 'User') { throw 'Install not verified.' }
     $script:registrations['Machine'] = (Join-Path $testRoot 'machine-missing.ttf')
     Expect-Failure { Get-MesloFontStatus $manifest } 'Machine font registration conflicts'
