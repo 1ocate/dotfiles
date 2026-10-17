@@ -11,3 +11,4 @@
 | 0005 | [Windows Terminal Esc 영어 전환](0005-terminal-esc-ime.md) | [작업 0006](../work/0006-windows-terminal.md) |
 | 0006 | [Windows psmux 기본 namespace와 원본 설정 식별](0006-psmux-default-namespace.md) | [작업 0003](../work/0003-windows-psmux.md) |
 | 0007 | [Windows 기본 글꼴의 비-Mono 패밀리 선택](0007-windows-font-family.md) | [작업 0006](../work/0006-windows-terminal.md) |
+| 0008 | [Windows AutoHotkey 로그인 등록 기본값](0008-autohotkey-login-default.md) | [작업 0008](../work/0008-autohotkey-login-default.md) |
