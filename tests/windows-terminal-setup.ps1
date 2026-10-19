@@ -9,10 +9,12 @@ Copy-Item -LiteralPath $setup -Destination $testScripts
 'function Write-WindowsSelectionStatus { param($RepoPath) "mock selection (read-only)" }' | Set-Content (Join-Path $testScripts 'windows-environment.ps1')
 'param([switch]$Plan, [switch]$Check); if (-not ($Plan -or $Check)) { throw "Unexpected apply" }; "mock adapter Plan=$Plan Check=$Check"' | Set-Content (Join-Path $testScripts 'use-windows-terminal.ps1')
 'param([switch]$Plan, [switch]$Check); if (-not ($Plan -or $Check)) { throw "Unexpected font apply" }; "mock font Plan=$Plan Check=$Check"' | Set-Content (Join-Path $testScripts 'setup-meslo-font.ps1')
+'param([switch]$Plan, [switch]$Check); if (-not ($Plan -or $Check)) { throw "Unexpected aliases apply" }; "mock aliases Plan=$Plan Check=$Check"' | Set-Content (Join-Path $testScripts 'setup-powershell-aliases.ps1')
 $testSetup = Join-Path $testScripts 'setup-windows.ps1'
 $common = @{ Plan=$true; SkipGitCompletion=$true; SkipAutoHotkey=$true }
 $defaultPlan = (& $testSetup @common) -join "`n"
 if ($defaultPlan -notmatch 'Microsoft.WindowsTerminal' -or $defaultPlan -match 'wez.wezterm' -or $defaultPlan -notmatch 'mock adapter Plan=True Check=False' -or $defaultPlan -notmatch 'mock font Plan=True Check=False') { throw 'Default terminal Plan regression.' }
+if ($defaultPlan -notmatch 'mock aliases Plan=True Check=False') { throw 'Default setup omitted PowerShell aliases.' }
 $weztermPlan = (& $testSetup @common -Terminal wezterm) -join "`n"
 if ($weztermPlan -notmatch 'wez.wezterm' -or $weztermPlan -match 'Microsoft.WindowsTerminal|mock adapter') { throw 'Explicit WezTerm Plan regression.' }
 if (Test-Path (Join-Path $testRoot '.local')) { throw 'Plan wrote local state.' }
@@ -25,6 +27,13 @@ try {
 $parseErrors = $null
 $ast = [System.Management.Automation.Language.Parser]::ParseFile($setup, [ref]$null, [ref]$parseErrors)
 if ($parseErrors.Count) { throw 'Setup AST syntax errors.' }
+$aliasCalls = @($ast.FindAll({ param($node)
+    $node -is [System.Management.Automation.Language.CommandAst] -and
+    $node.InvocationOperator -eq [System.Management.Automation.Language.TokenKind]::Ampersand -and
+    $node.Extent.Text -match 'setup-powershell-aliases\.ps1'
+}, $true))
+if ($aliasCalls.Count -ne 3 -or @($aliasCalls | Where-Object { $_.Extent.Text -match '\s-Plan\b' }).Count -ne 1 -or
+    @($aliasCalls | Where-Object { $_.Extent.Text -match '\s-Check\b' }).Count -ne 1) { throw 'Alias setup must be called in Plan, Check and apply.' }
 $prerequisite = $ast.Find({ param($node) $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Test-SetupPrerequisites' }, $true)
 Invoke-Expression $prerequisite.Extent.Text
 $SkipGitCompletion = $true
