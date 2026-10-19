@@ -7,7 +7,7 @@
 - 실행 환경: windows-powershell
 - 적용 범위·비대상: Windows PowerShell 5.1·PowerShell 7의 별칭 원본, 프로필 loader, Windows 설치 자동 호출, 현재 호스트 적용과 검증. 기존 Windows Terminal 폰트 변경·Neovim 설정·lockfile·키맵·다른 OS 설정은 제외한다.
 - 관련 ADR: [ADR 0002](../adr/0002-native-windows-adapters.md)의 저장소 원본·프로필 loader·환경 격리 방식을 따르는 작은 기능 추가이며 새로운 구조 결정은 없다.
-- 관련 PR: 제출 후 갱신
+- 관련 PR: [PR #20](https://github.com/1ocate/dotfiles/pull/20)
 
 ## 분석과 미확인 사항
 
@@ -29,6 +29,7 @@
 | 2026-10-19 KST | 별칭 원본·단독 연결기·전체 설치 자동 호출과 사용 지침 추가 | 현재 호스트 승인과 실제 실행 파일을 확인하며 두 프로필의 loader·backup·진행 상태를 관리 | 5.1·7 검증 |
 | 2026-10-19 KST | 독립 리뷰의 무 BOM ANSI 프로필 손상 가능성 수정 | 모호한 인코딩은 쓰기 전에 거부하고 기존 프로필은 append만 수행. UTF-16/UTF-8 BOM과 ASCII 원문 바이트 보존 및 CP949/UTF-8 무 BOM 거부 회귀 검사 추가 | 실제 호스트 적용 |
 | 2026-10-19 KST | 요청한 현재 호스트의 두 프로필을 백업하고 별칭 loader만 추가 | 새 사용자 프로필 프로세스 PS5.1·7에서 두 별칭 해석과 실제 격리 Neovim 실행 통과. Terminal·Neovim junction·lockfile·키맵은 변경하지 않음 | 최종 diff·PR |
+| 2026-10-19 KST | 검증한 8개 파일만 `04b2f6e`로 커밋·SSH push하고 draft PR 제출 | [PR #20](https://github.com/1ocate/dotfiles/pull/20). 현재 호스트의 두 PowerShell 버전 연결 확인, GUI·신규 장비 전체 설치·다른 OS 미검증 범위 명시 | 사용자 리뷰·병합 판단 |
 
 ## 검증 결과
 
