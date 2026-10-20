@@ -64,6 +64,7 @@ if ($Plan) {
     if ($Terminal -eq 'windows-terminal') { & (Join-Path $PSScriptRoot $terminalAdapter) -Plan }
     else { Write-Output ('WezTerm loader source: ' + (Join-Path $repoPath '.wezterm.lua')) }
     Write-Output 'Add Oh My Posh initialization: PowerShell 7 uses the repository built-in theme snapshot with streaming; preserve existing profile initializers.'
+    & (Join-Path $PSScriptRoot 'setup-powershell-aliases.ps1') -Plan
     if (-not $SkipGitCompletion) { & (Join-Path $PSScriptRoot 'setup-git-completion.ps1') -Plan }
     Write-Output 'Set CurrentUser RemoteSigned only if it is currently Undefined or Restricted.'
     if (-not $SkipFonts) { & (Join-Path $PSScriptRoot 'setup-meslo-font.ps1') -Plan }
@@ -81,6 +82,7 @@ if (-not $SkipFonts) {
 }
 
 $terminalSources = if ($Terminal -eq 'windows-terminal') { @('windows-terminal/settings.json', 'scripts/use-windows-terminal.ps1') } else { @('.wezterm.lua', 'environment.lua', 'scripts/use-wezterm.ps1') }
+$terminalSources += @('scripts/setup-powershell-aliases.ps1', 'powershell/aliases.ps1')
 foreach ($relativePath in ($terminalSources + @( 'autoHotKey.ahk', 'nvim/init.lua', 'nvim/lazy-lock.json', 'scripts/use-neovim.ps1', 'scripts/setup-neovim.lua', 'scripts/windows-environment.ps1', 'scripts/environment.py', 'scripts/setup-git-completion.ps1', 'powershell/git-completion.ps1'))) {
     if (-not (Test-Path -LiteralPath (Join-Path $repoPath $relativePath) -PathType Leaf)) {
         throw "Required file not found: $relativePath"
@@ -128,6 +130,7 @@ if ($Check) {
     Write-WindowsSelectionStatus -RepoPath $repoPath
     Update-SetupPath
     Test-SetupPrerequisites
+    & (Join-Path $PSScriptRoot 'setup-powershell-aliases.ps1') -Check
     if ($Terminal -eq 'windows-terminal') { & (Join-Path $PSScriptRoot $terminalAdapter) -Check }
     else { Write-Output ('WezTerm loader target: ' + (Join-Path ([Environment]::GetFolderPath('UserProfile')) '.wezterm.lua')) }
     if (-not $SkipFonts) { & (Join-Path $PSScriptRoot 'setup-meslo-font.ps1') -Check }
@@ -167,6 +170,7 @@ if (-not $SkipGitCompletion) {
 
 & (Join-Path $PSScriptRoot $terminalAdapter)
 & (Join-Path $PSScriptRoot 'use-neovim.ps1')
+& (Join-Path $PSScriptRoot 'setup-powershell-aliases.ps1')
 
 $documentsPath = [Environment]::GetFolderPath('MyDocuments')
 $promptConfigPath = (Join-Path $repoPath 'powershell/prompt.omp.json').Replace("'", "''")
