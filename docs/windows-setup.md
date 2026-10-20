@@ -44,7 +44,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 
 
 기본 Windows 설치는 PowerShell 5.1·7의 사용자 프로필에 [별칭 원본](../powershell/aliases.ps1)을 읽는 loader를 추가합니다. 현재 호스트의 승인된 `windows-powershell` 선택과 실행 가능한 `nvim`이 있으면 `vi`·`vim`이 같은 Neovim 실행 파일을 호출하며 파일 경로·옵션을 그대로 전달합니다. 기존 일반 별칭보다 이 설정을 우선하고, ReadOnly·Constant 별칭은 강제로 바꾸지 않고 경고합니다. Neovim이 없거나 환경 선택이 유효하지 않으면 기존 별칭을 유지하고 해당 기능만 생략합니다. macOS·WSL·Linux 셸에는 적용하지 않습니다.
 
-이미 세팅된 장비에는 전체 설치 대신 다음 명령으로 별칭만 연결합니다. 패키지 설치·Neovim 설정·터미널 설정은 변경하지 않습니다.
+### 머지 후 기존 장비의 vi/vim 별칭 적용
+
+대상은 별칭 loader가 아직 없는 기존 Windows 장비입니다. PR 병합이나 `git pull`은 저장소 원본만 갱신하므로, 각 장비에서 다음 명령으로 한 번 연결해야 합니다. 이미 loader가 연결된 장비는 원본 갱신 후 새 PowerShell 탭을 열면 됩니다. 신규 장비는 전체 Windows 설치에서 자동으로 연결합니다.
+
+유효한 현재 호스트의 `windows-powershell` 승인과 실행 가능한 `nvim`이 필요합니다. 저장소 루트에서 전체 설치 대신 다음 명령으로 별칭만 연결합니다. 패키지 설치·Neovim 설정·터미널 설정은 변경하지 않습니다.
 
 ```powershell
 powershell -NoProfile -File scripts/setup-powershell-aliases.ps1 -Plan
@@ -53,6 +57,10 @@ powershell -NoProfile -File scripts/setup-powershell-aliases.ps1 -Check
 ```
 
 기존 프로필은 인코딩과 내용을 보존해 백업하고, loader는 재실행해도 중복 추가하지 않습니다. BOM 없는 프로필에 비 ASCII 문자가 있거나 추가할 경로에 비 ASCII 문자가 있으면 인코딩을 추측하지 않고 변경 전에 중단합니다. 이 경우 원본을 백업하고 UTF-8 BOM으로 저장한 뒤 다시 연결합니다. Plan/Check는 읽기 전용이며 Check는 Neovim과 두 프로필의 loader 존재를 확인합니다. 새 PowerShell 탭에서 `Get-Command vi,vim`으로 확인하고 `vi 파일명` 또는 `vim 파일명`으로 실행합니다. 현재 탭에서 즉시 사용하려면 저장소 루트에서 `. .\powershell\aliases.ps1`을 실행합니다. 원본이 마지막으로 로드된 뒤 사용자 프로필이 같은 이름을 다시 정의하면 뒤의 정의가 적용됩니다. 연결 결과와 백업 경로는 `.local/setup-state.json`의 `components.powershell_aliases`에 기록합니다. 해제하려면 두 프로필에서 해당 loader 줄을 제거하고 새 탭을 열거나 기록된 프로필 백업을 확인해 복구합니다.
+
+`Alias setup-state belongs to another host/environment or is invalid` 오류는 기존 `.local/setup-state.json`의 호스트·환경·구조가 연결기의 검사와 맞지 않는다는 뜻입니다. 이 경우 프로필을 변경하지 않습니다. 기존 기록을 보존하고 실제 장비·환경과 대조한 뒤 복구해야 하며, 호스트 값을 임의로 덮어쓰거나 다른 장비의 완료 상태를 그대로 승계하지 않습니다.
+
+### Git 자동완성
 
 Git의 명령·브랜치 Tab 완성은 `posh-git` 1.1.0으로 제공합니다. 기본 세팅이 사용자 `Documents/WindowsPowerShell/Modules`에 모듈을 준비하고 5.1·7 프로필에 저장소의 `powershell/git-completion.ps1`을 읽는 loader를 추가합니다. 기존 프로필은 백업하고 인코딩·Oh My Posh 프롬프트를 보존합니다. 설치에는 PowerShell 7.4 이상 또는 `Save-PSResource`를 제공하는 PSResourceGet과 PSGallery 접근이 필요합니다. PSGallery 신뢰 설정은 전역으로 변경하지 않습니다.
 

@@ -18,6 +18,8 @@ macOS 중심 설정과 Linux/WSL 및 Windows용 설정이 함께 있으며, 모�
 
 Windows 설치·연결 명령과 의존성·복구 방법은 [Windows 네이티브 사용 지침](docs/windows-setup.md)에 모았습니다. 선택 이유는 [ADR 0002](docs/adr/0002-native-windows-adapters.md), 계획·진행·검증 이력은 [작업 0002](docs/work/0002-windows-native-setup.md)에서 확인합니다.
 
+기존 Windows 장비에서 `vi`·`vim` 별칭 변경을 받은 경우, 코드 병합·pull만으로 PowerShell 프로필에 연결이 추가되지는 않습니다. [머지 후 별칭 적용 절차](docs/windows-setup.md#머지-후-기존-장비의-vivim-별칭-적용)를 한 번 수행하고 새 PowerShell 탭에서 확인합니다.
+
 ## 저장소 구성
 
 | 경로 | 역할 |
