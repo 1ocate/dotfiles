@@ -92,7 +92,7 @@ Win32 VkEscape 후보도 psmux VT 입력에서는 UnicodeChar=0x1b 이벤트로 
 
 ## 2026-10-20 수정 후보와 검증
 
-이번 사용자는 SSH 접속을 금지했다. 실제 SSH·원격 Vim을 실행하지 않고 아래 로컬 결과만 근거로 수정했다. 사용 터미널 종류 확인 질문은 응답 대기 중이며 현재 기본 설정인 Windows Terminal과 WezTerm VT 경로를 나눠 후보를 준비했다. 실제 터미널·서버에는 적용하지 않았다.
+이번 사용자는 SSH 접속을 금지했다. 실제 SSH·원격 Vim을 실행하지 않고 아래 로컬 결과만 근거로 수정했다. 조사 당시 사용 터미널 종류 확인 질문은 응답 대기 중이어서 기본 설정인 Windows Terminal과 WezTerm VT 경로를 나눠 후보를 준비했다. 이 단계에서는 실제 터미널·서버에 적용하지 않았으며, 후속 Windows Terminal 로컬 적용은 아래에 따로 기록한다.
 
 | 입력과 대상 | 실제 로컬 격리 검사 결과 |
 | --- | --- |
@@ -113,4 +113,8 @@ Windows Terminal 원본의 bare Esc는 Win32 VK_ESCAPE(Uc=0)로 보낸다. 전�
 
 ## 현재 남은 일
 
-사용 터미널 확인과 명시적 적용 요청 후 물리 입력 검증 및 PR 리뷰. SSH 접속 없이 확인한 로컬 유실 경로의 수정 후보이며 원격 증상 해결 완료로 기록하지 않는다. 최신 main 통합 시 문서 두 파일의 충돌은 현재 지침과 기존 조사 내용을 모두 보존해 해결했다. 최종 상대 링크·Python 문법·diff 검사를 완료하고 기존 draft PR #12에 제출한다.
+2026-10-20 KST 로컬 적용 요청: 사용자가 먼저 로컬에 적용하도록 명시하고 사용 터미널을 Windows Terminal로 확인했다. 현재 호스트의 유효한 windows-powershell 선택을 확인했다. 실제 stable Terminal settings는 저장소와 연결되지 않은 일반 파일이고 기존 bare Esc 바인딩이 없다. 현재 개인 프로필·다른 키를 유지하는 최소 실험 적용으로 Win32 Esc action과 keybinding만 추가한다. 쓰기 전 원본 backup, 동일한 원본 hash 재확인, 다른 JSON 값·주석/서식 보존 확인 후 적용한다. psmux 설치본·실행 중 세션·WezTerm은 바꾸지 않고 SSH는 연결하지 않는다. 기존 setup-state의 다른 호스트 기록은 보존하며 이번 호스트의 별도 .local/terminal-escape-state.json에 실제 결과와 물리 입력 확인 필요 상태를 남긴다.
+
+2026-10-20 17:21 KST 로컬 적용 결과: stable Terminal의 기존 설정 파일을 같은 디렉터리에 backup하고, 검증한 `sendInput` Win32 Esc action 및 bare Esc keybinding만 추가했다. 적용 전 원본 bytes 재확인, backup 동일성, 적용 후 JSON 의미 비교와 bytes 일치, 재실행 시 추가 쓰기 없는 idempotent 확인을 통과했다. 개인 프로필·다른 단축키·기존 텍스트는 유지했다. 신규 설치·설정 디렉터리 연결·binary 교체·mux 재시작·SSH 접속은 없었다. backup 경로·hash와 검증 필요 상태는 위 로컬 상태 파일에 기록했다. 물리 Esc·IME·원격 증상 해결은 사용자 확인 전까지 미검증으로 유지한다.
+
+Windows Terminal 로컬 적용 후 물리 입력 검증 및 PR 리뷰가 남았다. SSH 접속 없이 확인한 로컬 유실 경로의 수정 후보이며 원격 증상 해결 완료로 기록하지 않는다. 최신 main 통합 시 문서 두 파일의 충돌은 현재 지침과 기존 조사 내용을 모두 보존해 해결했다. 최종 상대 링크·Python 문법·diff 검사를 완료하고 기존 draft PR #12에 제출했다.
