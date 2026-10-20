@@ -1,6 +1,7 @@
 # 0011: PowerShell SSH 호스트 완성
 
-- 상태: 진행 중
+- 상태: 리뷰 대기
+- 관련 PR: [#22](https://github.com/1ocate/dotfiles/pull/22)
 - 요청: SSH 인수의 Tab 후보로 로컬 디렉터리 대신 SSH Host 별칭을 제안한다.
 - 환경·범위: windows-powershell. 기존 작업 0010의 Tab 메뉴 원본에서 SSH 완성을 로드한다.
 - 기준: main 32e4263. 원격 main fetch 후 차이를 확인한다. 기존 사용자 변경은 보존한다.
@@ -34,4 +35,6 @@ Python 복구 후 PR 제출 및 GUI 확인. 기존 작업 0010의 원본 Tab 설
 
 ## 남은 일
 
-커밋·push 및 PR 제출 후 사용자 리뷰. 지원 대상 PowerShell 7에서 실제 사용 확인을 받았으며 5.1·다른 OS 및 세부 취소 후 화면 검증 한계는 유지한다.
+사용자 PR 리뷰와 병합 확인. 지원 대상 PowerShell 7에서 실제 사용 확인을 받았으며 5.1·다른 OS 및 세부 취소 후 화면 검증 한계는 유지한다.
+
+- 2026-10-20 KST: 구현 커밋 `c0723be`를 push하고 PR #22를 제출했다. merge는 수행하지 않았다. 기존 작업 0010 문서·목록 변경, Neovim lockfile 및 로컬 산출물은 커밋에서 제외하고 보존했다.
