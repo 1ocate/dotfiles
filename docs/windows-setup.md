@@ -4,6 +4,23 @@ Windows 네이티브 PowerShell용 설치·원본 연결 절차입니다. 회사
 
 기술 선택의 이유는 [ADR 0002](adr/0002-native-windows-adapters.md), 기존 버전표·검증 결과와 진행 상태는 [작업 0002](work/0002-windows-native-setup.md)가 원본입니다. 이 문서의 과거 실행 보고를 해당 작업 기록으로 이관했습니다. 공통 환경 승인·격리 원칙은 [설정 가드레일](setup-guardrails.md)을 따릅니다.
 
+## PowerShell SSH 호스트 자동완성
+
+`powershell/tab-completion.ps1`을 읽는 기존 프로필에서는 새 PowerShell 창부터
+`ssh <Tab>`과 `ssh user@<Tab>`으로 사용자 `~/.ssh/config`의 명시적 `Host` 별칭을 제안합니다.
+`fzf.exe`가 있으면 화면 아래 높이 40%의 세로 목록에서 검색·방향키로 고르고 Enter로 입력합니다.
+Enter는 호스트 이름만 삽입하며 명령을 실행하지 않습니다. Esc/Ctrl+C는 선택을 취소하고 입력을 유지합니다.
+다른 명령 및 fzf 부재·실패 시에는 기존 MenuComplete를 사용합니다. 별도 설치는 하지 않습니다.
+선택 중에는 `FZF_DEFAULT_OPTS`와 `FZF_DEFAULT_OPTS_FILE`을 비우고 끝나면 복원합니다.
+세로 목록을 끄려면 현재 창에서 `Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete`를 실행합니다.
+이 원본이 연결되지 않은 프로필이나 신규 설치에는 자동 적용하지 않습니다.
+현재 창에서만 읽으려면 저장소 루트에서 `. ./powershell/tab-completion.ps1`을 실행합니다.
+호스트는 매번 로컬 config에서 읽으며 SSH 접속·외부 모듈 설치는 하지 않습니다.
+와일드카드·부정 패턴·따옴표를 포함한 별칭, `Include`, `-F` 및 옵션 뒤 대상 완성은 지원하지 않습니다.
+후보가 없으면 PowerShell의 기본 경로 완성이 나올 수 있습니다.
+Windows 전용이며 macOS·WSL·Linux 셸은 변경하지 않습니다.
+검증과 제한은 [작업 0011](work/0011-powershell-ssh-completion.md)에 기록합니다.
+
 ## 사전 준비와 의존성
 
 winget과 공통 등록 도구 실행용 Python 3.10 이상을 먼저 준비하고 저장소를 장기간 유지할 위치에 둡니다. Python이 없으면 회사에서 승인한 설치 경로를 사용합니다. 명령은 저장소 루트에서 실행합니다.
