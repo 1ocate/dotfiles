@@ -9,9 +9,9 @@ LWin::LAlt
 #InputLevel 0
 #UseHook
 
-; WezTerm에서만 Esc 원래 입력을 통과시키고, 키를 뗄 때 영문 상태로 설정한다.
+; WezTerm과 Windows Terminal에서 Esc 원래 입력을 통과시키고, 키를 뗄 때 영문 상태로 설정한다.
 ; 한영 토글 키를 보내지 않으므로 이미 영문이면 그대로 유지된다.
-#HotIf WinActive("ahk_exe wezterm-gui.exe")
+#HotIf WinActive("ahk_exe wezterm-gui.exe") || WinActive("ahk_exe WindowsTerminal.exe")
 ~Esc Up::
 {
     try {

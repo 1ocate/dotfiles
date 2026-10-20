@@ -1,10 +1,10 @@
 # 0003: Windows PowerShell에서 psmux로 Neovim과 pane 이동 연결
 
-- 상태: 제안
+- 상태: 채택
 - 작성일: 2026-10-06
 - 적용 범위: windows-powershell
 - 관련 작업·PR: [작업 0003](../work/0003-windows-psmux.md), [PR #10](https://github.com/1ocate/dotfiles/pull/10)
-- 채택 근거: 미결정. 로컬 적용 요청과 PR 병합을 구분한다.
+- 채택 근거: PR #10이 main에 병합된 커밋 `73bbe35`를 확인했다. 2026-10-08 기록 재검토에서 상태를 정정했다. 병합은 모든 GUI·OS 검증 완료를 의미하지 않는다.
 - 대체 관계: 없음. [ADR 0002](0002-native-windows-adapters.md)의 Windows 어댑터 확장이다.
 
 ## 배경과 대안
@@ -28,3 +28,5 @@ Neovim 삽입 모드는 같은 Windows foreground 어댑터의 `nvim-insert` mar
 전체 LazyVim GUI·IME와 headless 검증을 구분한다. 전경 프로그램 감지 실패, 키 충돌, 릴리스의 라우팅 의미 변경이 발견되면 어댑터와 버전을 재검토한다.
 
 근거: [v3.3.8 공식 릴리스](https://github.com/psmux/psmux/releases/tag/v3.3.8), [전경 프로그램 해석](https://github.com/psmux/psmux/blob/v3.3.8/src/format.rs), [OSC 133 처리](https://github.com/psmux/psmux/blob/v3.3.8/crates/vt100-psmux/src/perform.rs).
+
+2026-10-08 후속 검토: named 서버 선택과 보정 적용 범위 판별을 변경하는 [ADR 0006](0006-psmux-default-namespace.md)이 제안되었다. 채택 전에는 이 ADR을 대체됨으로 표시하지 않는다. h/Esc 보정은 유지하고 namespace 필수성·원본 연결을 다시 검증한다.

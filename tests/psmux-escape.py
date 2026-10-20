@@ -52,8 +52,18 @@ def main():
     parser.add_argument('--direct', action='store_true', help='Bypass psmux; exercise ConPTY host directly against the reader.')
     parser.add_argument('--encoding', choices=('win32', 'csi-u', 'modify-other-keys'), default='win32')
     parser.add_argument('--trace', action='store_true', help='Print only isolated psmux KEY/emit/pending trace lines.')
+    parser.add_argument('--binary', type=Path, help='Explicit existing candidate binary for isolated comparison; never installs it.')
     args = parser.parse_args()
-    binary = Path(os.environ['LOCALAPPDATA']) / 'Programs/psmux/3.3.8/psmux.exe'
+    win32_escape = None
+    if args.encoded_escape and args.encoding == 'win32':
+        terminal_settings = json.loads((ROOT / 'windows-terminal/settings.json').read_text(encoding='utf-8-sig'))
+        bindings = [item['command']['input'] for item in terminal_settings['actions']
+                    if item.get('keys') == 'escape' and isinstance(item.get('command'), dict)
+                    and item['command'].get('action') == 'sendInput']
+        if len(bindings) != 1:
+            parser.error('Expected exactly one Escape sendInput binding in terminal source')
+        win32_escape = bindings[0].encode('ascii')
+    binary = (args.binary or (Path(os.environ['LOCALAPPDATA']) / 'Programs/psmux/3.3.8/psmux.exe')).resolve()
     csc = Path(os.environ['WINDIR']) / 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
     if (not args.direct and not binary.is_file()) or not csc.is_file():
         raise SystemExit('Existing psmux 3.3.8 and .NET Framework compiler required.')
@@ -122,6 +132,18 @@ def main():
                      ('hex-win32-scan0', ('send-keys', '-H', '1b','5b','32','37','3b','30','3b','32','37','3b','31','3b','30','3b','31','5f'), None),
                      ('literal-win32-scan0', ('send-keys', '-l', '\x1b[27;0;27;1;0;1_'), None),
                      ('literal-win32-scan1', ('send-keys', '-l', '\x1b[27;1;27;1;0;1_'), None)]
+            modifiers = {
+                'client-Escape-modifier-control': (17, 29),
+                'client-Escape-modifier-alt': (18, 56),
+                'client-Escape-modifier-lshift': (160, 42),
+                'client-Escape-modifier-rshift': (161, 54),
+                'client-Escape-modifier-lcontrol': (162, 29),
+                'client-Escape-modifier-rcontrol': (163, 29),
+                'client-Escape-modifier-lalt': (164, 56),
+                'client-Escape-modifier-ralt': (165, 56),
+            }
+            cases.extend((name, None, b'\x1b' + f'\x1b[{vk};{scan};0;1;0;1_'.encode('ascii'))
+                         for name, (vk, scan) in modifiers.items())
             for mode in args.mode or ('raw', 'keys', 'events'):
                 for index, (name, cli, data) in enumerate(cases):
                     if args.case and name not in args.case:
@@ -139,7 +161,7 @@ def main():
                     time.sleep(.3)
                     if data is not None:
                         if args.encoded_escape:
-                            encoded = {'win32': b'\x1b[27;1;0;1;0;1_', 'csi-u': b'\x1b[27;1u', 'modify-other-keys': b'\x1b[27;1;27~'}[args.encoding]
+                            encoded = {'win32': win32_escape, 'csi-u': b'\x1b[27;1u', 'modify-other-keys': b'\x1b[27;1;27~'}[args.encoding]
                             if isinstance(data, tuple):
                                 data = (encoded, data[1])
                             elif data.startswith(b'\x1b'):
@@ -155,7 +177,8 @@ def main():
                     time.sleep(1.5) # A lone Esc must arrive before any following key.
                     first = output.read_text() if output.exists() else ''
                     if 'modifier' in name:
-                        feed(b'\x1b[16;42;0;0;0;1_') # Release Shift before next input/fixture.
+                        vk, scan = modifiers.get(name, (16, 42))
+                        feed(f'\x1b[{vk};{scan};0;0;0;1_'.encode('ascii'))
                         time.sleep(.1)
                     feed(b'x')
                     time.sleep(.5)

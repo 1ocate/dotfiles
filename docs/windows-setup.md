@@ -12,12 +12,14 @@ winget과 공통 등록 도구 실행용 Python 3.10 이상을 먼저 준비하�
 | --- | --- |
 | Python 3.10 이상 (`py -3` 또는 `python`) | 환경 등록·계획·점검·승인 확인에 필수. winget 준비 단계 이전에 필요 |
 | winget | 패키지 설치 시 필수. 준비된 의존성을 사용할 때 `-SkipPackages`로 설치 생략 |
-| WezTerm, Neovim, PowerShell 7, Oh My Posh | 전체 설치의 사전 점검에 필수. 런타임 셸만 PowerShell 7 부재 시 Windows PowerShell 5.1로 폴백 |
+| 선택한 터미널(기본 Windows Terminal / `-Terminal wezterm`), Neovim, PowerShell 7, Oh My Posh | 전체 설치의 사전 점검에 필수. Windows Terminal은 PowerShell 7 필수. WezTerm 선택의 런타임 셸만 5.1로 폴백 |
 | Git, Node.js·npm, rg, fd, fzf, GCC, Python | 플러그인·검색·parser·Mason 도구 준비 시 필수. 현재 컴파일러는 WinLibs. `-SkipPlugins`로 준비 생략 가능 |
 | AutoHotkey v2 | 현재 실행 또는 로그인 등록 시 필수. 실행만 생략하려면 `-SkipAutoHotkey`, 등록 옵션도 지정하지 않음 |
-| Meslo Nerd Font | 아이콘·화면용 선택 준비. 없으면 설치를 시도하며 `-SkipFonts`로 생략 가능 |
+| MesloLGMDZ Nerd Font | `fonts/meslo.json`의 고정 원본·SHA-256으로 사용자 범위 준비. 파일·등록을 점검하며 `-SkipFonts`로 생략 가능 |
 
 winget은 설치된 패키지를 유지하며 없는 패키지는 공급되는 버전을 설치합니다. 버전 숫자를 고정하지 않습니다. 현재 패키지 ID 목록의 원본은 [setup-windows.ps1](../scripts/setup-windows.ps1)입니다. 개별 기능 생략 옵션은 패키지 목록을 줄이지 않으므로 패키지를 전혀 설치하지 않을 때는 `-SkipPackages`도 지정합니다. 각 프로젝트의 LSP·포맷 런타임은 추가로 필요할 수 있습니다.
+
+폰트는 [Windows Terminal 폰트 지침](windows-terminal.md#지정-폰트)을 따릅니다. `-SkipPackages`는 winget만 생략하며 폰트 다운로드는 `-SkipFonts`로 별도 생략합니다. 다른 Meslo 변형의 존재를 지정된 비-Mono 변형 설치 완료로 판단하지 않습니다.
 
 ## 계획·점검과 최초 설치
 
@@ -36,9 +38,21 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 
 
 설치 프로그램이 필요하면 관리자 승인 창이 표시될 수 있습니다. 회사 정책으로 설치·다운로드·스크립트 실행이 막히면 해당 단계에서 중단합니다. Bypass는 시작하는 프로세스에만 적용되며 조직 정책을 해제하지 않습니다. 다운로드에는 winget 공급 서버, GitHub, npm·Python 패키지 저장소 등의 접근이 필요합니다.
 
-설치 후 WezTerm을 새로 열고 `nvim`을 실행합니다. 첫 플러그인·parser 준비에는 다운로드·컴파일 시간이 걸릴 수 있습니다. 새 장비 전체 설치는 미검증이며 검증의 근거·남은 범위는 작업 0002에서 확인합니다. 재현성 완료의 판단은 [공통 신규 설치 기준](setup-guardrails.md#신규-장비-설치와-재현성-검증)을 따릅니다.
+설치 후 선택한 터미널을 새로 열고 `nvim`을 실행합니다. 첫 플러그인·parser 준비에는 다운로드·컴파일 시간이 걸릴 수 있습니다. 새 장비 전체 설치는 미검증이며 검증의 근거·남은 범위는 작업 0002에서 확인합니다. 재현성 완료의 판단은 [공통 신규 설치 기준](setup-guardrails.md#신규-장비-설치와-재현성-검증)을 따릅니다.
 
 ## 기존 환경 등록과 선택 옵션
+
+기본 Windows 설치는 PowerShell 5.1·7의 사용자 프로필에 [별칭 원본](../powershell/aliases.ps1)을 읽는 loader를 추가합니다. 현재 호스트의 승인된 `windows-powershell` 선택과 실행 가능한 `nvim`이 있으면 `vi`·`vim`이 같은 Neovim 실행 파일을 호출하며 파일 경로·옵션을 그대로 전달합니다. 기존 일반 별칭보다 이 설정을 우선하고, ReadOnly·Constant 별칭은 강제로 바꾸지 않고 경고합니다. Neovim이 없거나 환경 선택이 유효하지 않으면 기존 별칭을 유지하고 해당 기능만 생략합니다. macOS·WSL·Linux 셸에는 적용하지 않습니다.
+
+이미 세팅된 장비에는 전체 설치 대신 다음 명령으로 별칭만 연결합니다. 패키지 설치·Neovim 설정·터미널 설정은 변경하지 않습니다.
+
+```powershell
+powershell -NoProfile -File scripts/setup-powershell-aliases.ps1 -Plan
+powershell -NoProfile -File scripts/setup-powershell-aliases.ps1
+powershell -NoProfile -File scripts/setup-powershell-aliases.ps1 -Check
+```
+
+기존 프로필은 인코딩과 내용을 보존해 백업하고, loader는 재실행해도 중복 추가하지 않습니다. BOM 없는 프로필에 비 ASCII 문자가 있거나 추가할 경로에 비 ASCII 문자가 있으면 인코딩을 추측하지 않고 변경 전에 중단합니다. 이 경우 원본을 백업하고 UTF-8 BOM으로 저장한 뒤 다시 연결합니다. Plan/Check는 읽기 전용이며 Check는 Neovim과 두 프로필의 loader 존재를 확인합니다. 새 PowerShell 탭에서 `Get-Command vi,vim`으로 확인하고 `vi 파일명` 또는 `vim 파일명`으로 실행합니다. 현재 탭에서 즉시 사용하려면 저장소 루트에서 `. .\powershell\aliases.ps1`을 실행합니다. 원본이 마지막으로 로드된 뒤 사용자 프로필이 같은 이름을 다시 정의하면 뒤의 정의가 적용됩니다. 연결 결과와 백업 경로는 `.local/setup-state.json`의 `components.powershell_aliases`에 기록합니다. 해제하려면 두 프로필에서 해당 loader 줄을 제거하고 새 탭을 열거나 기록된 프로필 백업을 확인해 복구합니다.
 
 Git의 명령·브랜치 Tab 완성은 `posh-git` 1.1.0으로 제공합니다. 기본 세팅이 사용자 `Documents/WindowsPowerShell/Modules`에 모듈을 준비하고 5.1·7 프로필에 저장소의 `powershell/git-completion.ps1`을 읽는 loader를 추가합니다. 기존 프로필은 백업하고 인코딩·Oh My Posh 프롬프트를 보존합니다. 설치에는 PowerShell 7.4 이상 또는 `Save-PSResource`를 제공하는 PSResourceGet과 PSGallery 접근이 필요합니다. PSGallery 신뢰 설정은 전역으로 변경하지 않습니다.
 
@@ -65,6 +79,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 
 
 기본 AutoHotkey 동작은 현재 실행입니다. 대화형 세팅에서는 로그인 자동 시작 등록 여부를 묻고, `y` 또는 `yes`로 답할 때만 바로가기를 작성합니다(기본 아니오). `-RegisterAutoHotkeyStartup`은 질문 없이 등록하고, `-SkipAutoHotkeyStartup`은 질문과 등록을 생략합니다. 두 옵션은 함께 지정할 수 없습니다. 비대화형 실행에서는 명시 등록 옵션이 없으면 등록하지 않습니다. `-Plan`·`-Check`는 질문하거나 등록하지 않습니다. `-SkipAutoHotkey`는 현재 실행과 질문을 생략하지만 명시 등록 옵션은 유효합니다. 생략·거절 시 기존 바로가기는 제거하지 않습니다. `-SkipFonts`·`-SkipPlugins`는 해당 준비 단계를 생략합니다. 개별 옵션은 프로필 변경·설정 연결을 생략하지 않습니다. 사용자 실행 정책이 Undefined/Restricted이면 CurrentUser RemoteSigned로 설정합니다.
 
+## 터미널 선택
+
+Windows 네이티브 기본은 Windows Terminal입니다. 기존 WezTerm 사용을 유지하려면 계획·점검·설치 명령에 `-Terminal wezterm`을 지정합니다. 선택한 터미널만 설치·필수 점검·연결하며 다른 터미널의 기존 설정은 수정하지 않습니다. psmux는 어느 선택에서도 `-WithPsmux`로 준비하는 별도 기능입니다. Windows Terminal 탭에서는 기존 PowerShell 프로필을 읽고 `mux`로 세션을 시작합니다. 설정 JSON·junction·백업·키 입력·복구는 [Windows Terminal 사용 지침](windows-terminal.md)을 따릅니다. OS 기본 터미널 설정을 자동 변경하지 않습니다.
+
 ## 설정 원본과 런타임 동작
 
 Windows loader는 `wezterm.GLOBAL.dotfiles_repo`로 체크아웃 경로를 원본에 전달합니다. WezTerm에는 Lua `debug` 라이브러리가 없으므로 경로 판별에 사용하지 않습니다. 이 변경 전 loader를 사용하는 장비는 원본 업데이트 후 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/use-wezterm.ps1`로 반드시 다시 연결해야 합니다. 기존 파일은 백업되며 다른 설치 단계는 실행하지 않습니다. 원본 직접 로드는 `wezterm.config_dir`을 사용합니다.
@@ -73,7 +91,7 @@ Windows loader는 `wezterm.GLOBAL.dotfiles_repo`로 체크아웃 경로를 원�
 
 Windows PowerShell용 WezTerm은 `TERM=xterm-256color`를 전달하여 Git 페이저의 `'wezterm': unknown terminal type` 오류를 방지합니다. 변경 후 새 탭을 열어 `$env:TERM`과 `git log`를 확인하세요. 기존 탭의 환경 변수는 바뀌지 않습니다. macOS·WSL·Linux의 기존 터미널 값은 유지합니다. 설정 항목은 [WezTerm term 문서](https://wezterm.org/config/lua/config/term.html)를 참고하세요.
 
-전체 설치 대신 필요한 설정만 연결할 때는 Python과 해당 프로그램을 먼저 준비하고 다음 어댑터를 사용할 수 있습니다. 최초 선택 이후 명령은 현재 호스트의 승인을 재사용합니다. 두 명령은 패키지·프로필 준비를 하지 않습니다.
+전체 설치 대신 필요한 설정만 연결할 때는 Python과 해당 프로그램을 먼저 준비하고 다음 어댑터를 사용할 수 있습니다. 최초 선택 이후 명령은 현재 호스트의 승인을 재사용합니다. 연결 어댑터는 패키지·프로필 준비를 하지 않습니다. Windows Terminal 연결에는 `scripts/use-windows-terminal.ps1`을 사용합니다.
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\use-neovim.ps1 -ApprovePowerShell
@@ -93,7 +111,7 @@ Neovim과 WezTerm은 Windows에서 현재 호스트의 저장된 선택을 읽�
 Windows 호스트가 명시적으로 WSL을 선택했다면 WezTerm은 발견한 첫 WSL 도메인과 fish 로그인 셸을 사용합니다. 발견한 도메인이 없으면 기본 도메인을 강제하지 않습니다. 특정 배포판·사용자 홈 경로를 고정하지 않으며 WSL 설치나 선택 전환을 자동으로 수행하지 않습니다. 회사 정책으로 WSL이 금지된 호스트에서는 이 방식을 사용하지 않습니다.
 
 - 왼쪽 Alt와 Windows 키를 교환합니다. 교환 후 Alt 위치의 `Alt+Space`는 한영 전환, `Alt+C/V`는 복사·붙여넣기입니다.
-- WezTerm에서만 Esc 원래 입력을 통과시키고 키를 놓을 때 영문 상태를 설정합니다. 이미 영문이면 유지하며 다른 앱의 Esc는 그대로입니다.
+- WezTerm과 Windows Terminal에서 Esc 원래 입력을 통과시키고 키를 놓을 때 영문 상태를 설정합니다. 이미 영문이면 유지하며 다른 앱의 Esc는 그대로입니다.
 - Neovim의 yank는 승인된 PowerShell 환경에서 Windows 클립보드로 전달하고 F9로 연동을 켜거나 끕니다.
 - 내부 셸은 PowerShell 7을 우선 사용하고 Windows 실행 별칭을 처리합니다.
 - Copilot·CopilotChat은 비활성화 상태를 유지합니다. 향후 활성화하더라도 Windows의 선택적인 `make tiktoken` 빌드는 생략합니다.
@@ -129,7 +147,7 @@ powershell -NoProfile -File .\scripts\setup-windows.ps1 -ApprovePowerShell -With
 
 기존 장비의 유효한 `.local/environment.json`을 재사용합니다. 최초 장비에서는 앞의 환경 등록 절차로 PowerShell 선택을 먼저 저장합니다. psmux는 `%LOCALAPPDATA%\Programs\psmux\3.3.8`에 준비하며 기존 다른 버전이나 홈의 tmux/psmux 설정을 덮어쓰지 않습니다. 두 사용자 프로필에 저장소 `powershell/psmux.ps1`을 읽는 loader를 추가하며 기존 파일은 백업합니다. 사용자 PATH 변경 전 값은 `.local/path-before-psmux-*.txt`에 보관합니다. 호스트별 활성화 값 `.local/psmux.json`은 Git에 포함하지 않습니다.
 
-WezTerm을 새로 열면 `main` 세션을 만들거나 다시 연결합니다. 별도 `dotfiles` 이름의 서버와 저장소의 `-f` 설정을 사용합니다. 도구가 없거나 시작이 실패하면 PowerShell 셸로 돌아갑니다. pane의 프로필은 기존 prompt 내용과 오류 표시를 보존하며 이전 전경 상태를 초기화하고, tmux.exe를 PATH 앞에 두어 Neovim navigator가 psmux를 호출하도록 합니다. PowerShell 밖에서 직접 psmux/tmux를 실행하면 이 설정·서버 선택이 적용되지 않으므로 아래 함수를 사용합니다.
+WezTerm을 새로 열면 `main` 세션을 만들거나 다시 연결합니다. named namespace 없이 기본 namespace와 저장소의 `-f` 설정을 사용합니다. `mux`·`t`는 유지합니다. 공식 psmux pane 신호와 `PSMUX_CONFIG_FILE` 원본 경로로 보정 대상을 확인하며, 다른 설정의 같은 이름 세션은 덮어쓰지 않습니다. 도구가 없거나 시작이 실패하면 PowerShell 셸로 돌아갑니다. pane의 프로필은 기존 prompt 내용과 오류 표시를 보존하며 이전 전경 상태를 초기화하고, tmux.exe를 PATH 앞에 두어 Neovim navigator가 psmux를 호출하도록 합니다. 기본 namespace에서 `tmux list-sessions` 등 일반 명령을 사용할 수 있습니다. 저장소 설정으로 처음 세션을 만들려면 아래 함수를 사용하거나 `-f`로 원본 설정을 명시합니다.
 
 | 키·명령 | 동작 |
 | --- | --- |
@@ -142,12 +160,13 @@ WezTerm을 새로 열면 `main` 세션을 만들거나 다시 연결합니다. �
 | `Esc` | Neovim 삽입 모드 종료; 다른 모드와 셸에는 원래 Escape 전달 |
 | prefix 다음 `h/j/k/l`, `n/p`, `Space` | pane, 창, 직전 창 이동 |
 | prefix 다음 `r` | 현재 체크아웃 psmux 설정 다시 읽기 |
+| prefix 다음 `F` / `D` | `t`로 프로젝트 선택 / 이 체크아웃의 프로젝트 세션으로 이동 |
 | prefix 다음 `v`, 복사 모드 `v/q/y` | 복사 모드, 선택·블록 선택·Windows clipboard 복사 |
 | prefix 다음 `d`, 다시 `mux` | detach 후 세션 재연결 |
 
 프로젝트 목록을 따로 관리하려면 `.local/project-paths.txt`에 검색 루트를 한 줄에 하나씩 절대 경로로 적습니다. 공백·한글 경로를 지원하며 Unix `~/.project_path`의 공백 구분/eval 형식은 읽지 않습니다. 같은 폴더 이름도 전체 경로의 해시로 세션을 구분합니다. 기존 사용자 `mux`/`t` 명령이 있으면 보존하므로 `Invoke-DotfilesMux`/`Invoke-DotfilesProject` 전체 이름을 사용합니다.
 
-Unix tmux의 Bash 프로젝트 키 `F/D`, `expr/grep/cut` 창 교환 `N/P`, `:!cat` 입력은 이 Windows 설정에 포함하지 않습니다. Windows에서는 `t`를 사용합니다.
+F/D는 프로필을 읽는 PowerShell에서 기존 `t`를 실행합니다. 선택 취소 후 셸은 남습니다. 세션 이름에는 영문·숫자·underscore·hyphen을 사용하되 `__`는 psmux namespace 구분자이므로 사용할 수 없습니다. 한글 프로젝트는 안전한 이름과 전체 경로 해시를 사용합니다. Unix `expr/grep/cut` 창 교환 `N/P`, `:!cat` 입력은 이 Windows 설정에 포함하지 않습니다.
 
 Ctrl+H가 Ctrl+Backspace 이벤트로 전달되는 경로를 위해 두 입력을 같은 왼쪽 이동에 연결합니다. 표준 ConPTY helper의 raw 0x08은 modifier 없는 Backspace로도 해석되므로 자동 검사 결과를 모든 터미널의 물리 Ctrl+H 검증으로 간주하지 않습니다. 일반 Backspace는 유지되지만 Ctrl+Backspace의 단어 삭제는 psmux pane에서 사용할 수 없습니다.
 
@@ -164,20 +183,50 @@ WezTerm의 Ctrl+V 붙여넣기, AutoHotkey Alt·Esc/IME 동작은 기존과 같�
 pwsh -NoProfile -File .\scripts\setup-psmux.ps1 -Disable
 ```
 
-해제 후 WezTerm을 새로 열면 기존 PowerShell 시작으로 돌아갑니다. 프로그램·profile loader·PATH와 백업은 보존합니다. v3.3.8의 bare `psmux kill-server`는 다른 이름의 서버까지 종료할 수 있으므로 사용하지 않습니다. 필요한 경우 `psmux -L dotfiles kill-server`의 영향 범위와 작업 저장을 먼저 확인합니다. 세션은 서버가 살아 있을 때 유지되며 재부팅 후 프로세스 복원을 제공하지 않습니다.
+해제 후 WezTerm을 새로 열면 기존 PowerShell 시작으로 돌아갑니다. 프로그램·profile loader·PATH와 백업은 보존합니다. v3.3.8의 bare `psmux kill-server`는 다른 이름의 서버까지 종료할 수 있으므로 사용하지 않습니다. 종료할 때는 작업을 저장하고 `tmux list-sessions`로 확인한 이름에만 `tmux kill-session -t =이름`을 사용합니다. 이전 dotfiles namespace는 `tmux -L dotfiles list-sessions`로 별도 확인하며 필요한 이름만 `-L dotfiles kill-session -t =이름`으로 종료합니다. 세션은 서버가 살아 있을 때 유지되며 재부팅 후 프로세스 복원을 제공하지 않습니다.
 
-이 변경은 현재 장비 적용과 자동 검사 범위를 제공하며 깨끗한 새 장비의 전체 설치 성공이나 GUI/IME까지 보증하지 않습니다. Neovim/psmux 검사는 기존 navigator·도구가 있는 Windows에서 `py -3 -B tests/windows-psmux.py`로 실행합니다. 실제 연결된 클라이언트에 키 바이트를 보내는 테스트 helper를 임시 경로에서 컴파일하므로 `%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe`가 필요합니다. 이 .NET Framework 컴파일러는 테스트 전용이며 일반 psmux 실행 의존성은 아닙니다. 별도 테스트 namespace/data 경로만 사용하며 플러그인을 다운로드하지 않습니다.
+이 변경은 현재 장비 적용과 자동 검사 범위를 제공하며 깨끗한 새 장비의 전체 설치 성공이나 GUI/IME까지 보증하지 않습니다. Neovim/psmux 검사는 기존 navigator·도구가 있는 Windows에서 `py -3 -B tests/windows-psmux.py`로 실행합니다. 실제 연결된 클라이언트에 키 바이트를 보내는 테스트 helper를 임시 경로에서 컴파일하므로 `%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe`가 필요합니다. 이 .NET Framework 컴파일러는 테스트 전용이며 일반 psmux 실행 의존성은 아닙니다. 고유 테스트 data 경로만 사용하며 플러그인을 다운로드하지 않습니다.
 
 현재 LazyVim 설정을 함께 읽는 검사는 `py -3 -B tests/windows-psmux.py --full-config`로 실행합니다. 자동 다운로드·설치와 Lua bytecode cache를 차단한 검사이며, 일반 캐시 경로나 GUI 전체 기능 검증과 구분합니다. 셸 함수의 승인·경로 검사는 PowerShell 5.1/7에서 `tests/psmux-runtime.ps1`, 다른 환경의 설정 격리는 `py -3 -B tests/check_environment.py`로 확인합니다.
 
 자동 검사는 Ctrl+H(Alt+h 형식)/K/L·Backspace·Esc의 실제 attached-client 입력과 Ctrl+J의 CLI 명령 전달을 구분합니다. 표준 ConPTY에서 raw Ctrl+J의 LF가 Enter로 해석되는 경로와 GUI 물리 키·IME는 별도 확인이 필요합니다.
 
-Neovim은 승인된 Windows의 dotfiles psmux 안에서만 OSC 133 실행·종료·삽입 모드 표시를 사용합니다. LSP/terminal job 자식 프로세스가 있어도 pane의 전경 프로그램을 Neovim으로 유지하고, 종료·중지 시 해제합니다. 전체 설정 검사는 LazyVim을 통해 navigator를 로드하며 키맵을 직접 다시 덮어쓰지 않습니다.
+Neovim은 승인된 Windows에서 이 체크아웃 설정을 사용하는 기본 namespace psmux 안에서만 OSC 133 실행·종료·삽입 모드 표시를 사용합니다. LSP/terminal job 자식 프로세스가 있어도 pane의 전경 프로그램을 Neovim으로 유지하고, 종료·중지 시 해제합니다. 전체 설정 검사는 LazyVim을 통해 navigator를 로드하며 키맵을 직접 다시 덮어쓰지 않습니다.
+
+기존 named namespace에서 기본 namespace로 전환할 때는 설정 reload나 Codex 재시작만으로 서버의 namespace가 바뀌지 않습니다. 기존 mux 안에서 다시 시작한 Codex도 이전 namespace를 물려받습니다. 다음 순서로 진입합니다.
+
+1. 작업을 저장하고 `Ctrl+Space` → 소문자 `d`로 기존 mux에서 detach합니다. 기존 세션은 남습니다.
+2. 새 일반 PowerShell 7 탭을 엽니다. `$env:TMUX`가 비어 있는지 확인하고 `mux`를 실행합니다. 비어 있지 않으면 아직 mux 내부이므로 그 탭에서 중첩 실행하지 않습니다.
+3. 새 mux pane에서 `$env:TMUX`가 `/tmp/psmux-숫자/default,포트,0` 형태인지 확인합니다. `/dotfiles,`이면 이전 named 세션입니다.
+4. `Ctrl+Space` → 대문자 `D`로 저장소 이동, 대문자 `F`로 프로젝트 선택·전환을 확인한 뒤 Codex를 시작합니다.
+
+원본 profile 함수도 새 프로세스에서 다시 읽습니다. 기존 세션을 자동 이전하거나 일괄 종료하지 않습니다. 결정은 [ADR 0006](adr/0006-psmux-default-namespace.md)을 참고합니다. 전체 자동 검증은 `tests/windows-psmux-projects.py`의 실제 launcher/t/F/D 흐름, `tests/windows-psmux.py --full-config`의 실제 Neovim 입력 검사와 runtime/foreground 격리 검사로 구분하며 물리 GUI·IME·클립보드는 별도 확인이 필요합니다.
 
 ### SSH 원격 Vim에서 Esc가 전달되지 않을 때
 
-로컬 Neovim 삽입 모드 보정은 SSH 뒤의 원격 Vim 모드를 감지하지 않습니다. Esc 문제 조사와 실제·합성 재현 범위는 [작업 0005](work/0005-psmux-ssh-escape.md)에 기록합니다. 현재 원격 문제를 해결한 runtime 변경은 없습니다.
+로컬 Neovim 삽입 모드 보정은 SSH 뒤의 원격 Vim 모드를 감지하지 않습니다. Windows Terminal 원본은 Esc를 Win32 VK_ESCAPE 입력으로 전달해 ConPTY의 raw Esc 유실 경로를 피합니다. 기존 AutoHotkey의 Esc Up 영문 전환은 유지합니다. 이 바인딩은 Windows Terminal 전체 탭에 적용됩니다. 원본 변경을 실제 Terminal 설정에 연결·적용하는 작업은 별도입니다. 실제 SSH·물리 키 증상의 해결은 아직 확인하지 않았습니다. 근거와 한계는 [작업 0005](work/0005-psmux-ssh-escape.md), [ADR 0009](adr/0009-psmux-escape-build.md)에 기록합니다.
 
 원격 Vim에서 임시로 Ctrl+\ 다음 Ctrl+N을 눌러 일반 모드로 복귀할 수 있습니다. 기본 설정의 Vim은 `vim -u NONE -i NONE`으로 실행해 사용자 매핑·플러그인의 영향을 분리합니다. 기본 설정에서만 정상이라면 기존 Vim에서 `:verbose imap <Esc>`로 매핑 정의를 확인합니다. 원격 tmux 사용 여부도 함께 확인합니다. 원격 설정 파일이나 개인 인증을 자동 수정하지 않습니다.
 
 로컬 입력 전달 비교는 `py -3 -B tests/psmux-escape.py --wezterm`으로 수행합니다. 기존 psmux 3.3.8과 테스트 전용 .NET Framework 컴파일러를 사용하고 임시 namespace/data에만 테스트 서버를 만듭니다. 실제 SSH를 연결하거나 사용자 세션을 재설정하지 않습니다. 기본 PASS는 합성 modifier stress의 해결을 뜻하지 않으며 `--require-all`은 알려진 입력 유실도 실패로 노출합니다. GUI/IME·실제 원격 Vim 확인은 별도입니다.
+
+Windows Terminal 원본의 전송 바이트 검사는 다음처럼 실행합니다. `--encoded-escape`는 원본 settings.json의 Esc 액션을 직접 읽습니다.
+
+```powershell
+py -3 -B tests/psmux-escape.py --encoded-escape --require-all --case client-Escape --case client-Escape-modifier --mode raw --mode events
+py -3 -B tests/windows-psmux.py --encoded-escape
+```
+
+WezTerm의 VT 입력 경로는 이 전송 방식만으로 부족합니다. 실험용 수정본은 공식 [v3.3.8 source archive](https://github.com/psmux/psmux/archive/refs/tags/v3.3.8.zip)를 별도로 준비하고 `py -3 scripts/build-psmux-escape.py --source-archive <zip>`으로 빌드합니다. 원본 archive SHA256 `4de52692b7f13f886d13b2d507df8fde36bfda80491eebf865d73ed416d571a3`를 검증하며 기존 Rust/Cargo GNU toolchain과 GNU linker가 필요합니다. Cargo 의존성은 네트워크에서 `.local` 빌드 경로로 준비합니다. 컴파일러 자동 설치·전역 PATH 변경·설치본 교체·기본 mux 선택은 하지 않습니다.
+
+빌드된 `.local/psmux-escape-build/target/x86_64-pc-windows-gnu/release/psmux.exe`를 `--binary <exe>`로 지정해 동일한 검사에 비교할 수 있습니다. WezTerm형 검사는 `--wezterm --encoded-escape`를 함께 사용합니다. 이 실험용 빌드 도구만으로 실사용 mux나 WezTerm Esc 전달이 변경되지는 않습니다.
+
+## PowerShell 7 프롬프트 streaming
+
+Windows PowerShell 7용 [테마 원본](../powershell/prompt.omp.json)은 oh-my-posh 31.8.0의 최초 설치 내장 기본 테마를 세션 캐시와 POSH_* 환경 변수까지 격리해 내보내고 `streaming: 100`만 추가한 것이다. 내장 기본 테마의 색상·세그먼트·Git 표시를 보존한다. 새 PowerShell 7 프로필은 설치 시 이 원본을 참조하고, 기존 oh-my-posh 초기화가 있으면 자동 교체하지 않는다. Windows PowerShell 5.1 초기화 방식은 유지한다. 이 원본은 Windows PowerShell 7용으로 사용하며 다른 환경에 자동 적용하지 않는다.
+
+기존 PowerShell 7 프로필을 백업한 뒤 oh-my-posh 초기화 줄에서 이 체크아웃의 `powershell/prompt.omp.json`을 `--config`로 명시한다. `$PROFILE`에서 프로필 위치를 확인하고 경로는 각 호스트의 실제 체크아웃을 사용한다. Git 자동완성과 psmux loader의 순서를 유지하며 초기화 줄을 중복 추가하지 않는다. 현재 사용 중인 다른 테마로 이 파일을 적용하면 모양이 달라질 수 있으므로 테마 내용을 먼저 비교한다.
+
+streaming은 세션별 백그라운드 프로세스를 재사용하며 느린 정보는 나중에 표시한다. [공식 베타 기능](https://ohmyposh.dev/docs/configuration/streaming)이므로 GUI/IME·오른쪽 프롬프트·psmux에서 재표시를 확인한다. `POSH_DISABLE_STREAMING`이 있으면 비활성화되며, VS Code PowerShell 확장처럼 공식 비호환 호스트에서는 사용하지 않는다. 설치된 oh-my-posh가 streaming을 지원해야 한다. 되돌리려면 백업한 초기화 줄을 복원하고 새 PowerShell 탭을 연다. 적용·검증 근거는 [작업 0007](work/0007-powershell-prompt-streaming.md)을 따른다.
+
+테마 선택은 PowerShell 프로필의 `oh-my-posh init` 줄에서 정하며, 이 원본은 명명된 `powerlevel10k_rainbow`와 다르다. 내장 테마도 Powerline 스타일 구분선을 포함한다. Windows Terminal의 글꼴·배경 색상 설정과 oh-my-posh의 프롬프트 테마는 별개다. 기본값 재추출은 별도 `pwsh -NoProfile` 프로세스에서 `POSH_*` 변수를 제거하고 새로운 `POSH_SESSION_ID`로 수행해야 기존 세션 테마를 다시 내보내지 않는다. 기준 구현은 [v31.8.0 default.go](https://github.com/JanDeDobbeleer/oh-my-posh/blob/v31.8.0/src/config/default.go)다.

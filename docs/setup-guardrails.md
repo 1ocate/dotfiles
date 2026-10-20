@@ -97,7 +97,7 @@ Windows 네이티브 프로세스에서 OS 감지와 PowerShell 선택은 별개
 
 심볼릭 링크나 junction을 통해 수정하는 파일도 저장소 원본을 변경한다. loader를 사용하는 프로그램은 loader 자체가 아닌 저장소의 설정 파일을 수정한다. 독립 복사본을 만든 뒤 변경을 다시 수집하는 방식이나 자동 양방향 동기화는 기본 구조로 삼지 않는다. 인증·캐시·플러그인 다운로드·장비 전용 정보는 공통 설정의 Git 기록에서 제외한다.
 
-현재 Windows의 Neovim junction, WezTerm loader, 저장소 AutoHotkey 직접 실행은 이 구조를 따른다. PowerShell 사용자 프로필의 초기화 구문은 아직 호스트 파일에 기록되므로, 저장소 프로필을 읽는 연결 방식으로 바꾸는 후속 작업이 필요하다. macOS 설치 통합도 아직 완료하지 않았다.
+현재 Windows의 Neovim junction, 명시적으로 선택한 WezTerm loader, 저장소 AutoHotkey 직접 실행은 이 구조를 따른다. Windows Terminal을 주 터미널로 선택한 어댑터는 설정 디렉터리를 저장소 windows-terminal/로 junction 연결하며 관리 JSON 이외의 runtime state·캐시는 해당 디렉터리 .gitignore로 제외한다. 연결·백업·키 입력과 한계는 [Windows Terminal 지침](windows-terminal.md), 선택 이유는 [ADR 0004](adr/0004-windows-terminal.md)를 따른다. PowerShell 사용자 프로필의 초기화 구문은 아직 호스트 파일에 기록되므로, 저장소 프로필을 읽는 연결 방식으로 바꾸는 후속 작업이 필요하다. macOS 설치 통합도 아직 완료하지 않았다.
 
 ## 실행 가드레일
 

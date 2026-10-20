@@ -1,6 +1,61 @@
-﻿# Runtime source, loaded by both user profiles and the WezTerm launcher.
+# Runtime source, loaded by both user profiles and the WezTerm launcher.
 if ($env:OS -ne 'Windows_NT') { return }
 $dotfilesMuxRepo = Split-Path -Parent $PSScriptRoot
+$muxStatusReader = {
+    [CmdletBinding()]
+    param()
+    $reasons = @()
+    $actions = @()
+    $environment = $null
+    $feature = $null
+    try {
+        $environment = Get-Content -LiteralPath (Join-Path $dotfilesMuxRepo '.local/environment.json') -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json
+    } catch {
+        $reasons += 'Environment record is missing or invalid.'
+        $actions += 'Review the host environment selection using scripts/environment.py; do not copy another host approval.'
+    }
+    try {
+        $feature = Get-Content -LiteralPath (Join-Path $dotfilesMuxRepo '.local/psmux.json') -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json
+    } catch {
+        $reasons += 'psmux feature record is missing or invalid.'
+        $actions += 'Review the optional psmux setup in README.md.'
+    }
+    if ($environment) {
+        if ($environment.schemaVersion -ne 1 -or $environment.environment -ne 'windows-powershell') { $reasons += 'Environment record does not select supported Windows PowerShell.' }
+        if ($environment.approved -isnot [bool] -or $environment.approved -ne $true) { $reasons += 'Environment approval must be boolean true.' }
+        if ($environment.host -ne [Environment]::MachineName) { $reasons += 'Environment host differs from this computer.' }
+    }
+    if ($feature) {
+        if ($feature.schemaVersion -ne 1) { $reasons += 'psmux record schema is unsupported.' }
+        if ($feature.enabled -isnot [bool] -or $feature.enabled -ne $true) { $reasons += 'psmux activation must be boolean true.' }
+        if ($feature.host -ne [Environment]::MachineName) { $reasons += 'psmux host differs from this computer.' }
+    }
+    $bin = Join-Path $env:LOCALAPPDATA 'Programs/psmux/3.3.8'
+    $psmuxPresent = Test-Path -LiteralPath (Join-Path $bin 'psmux.exe') -PathType Leaf
+    $tmuxPresent = Test-Path -LiteralPath (Join-Path $bin 'tmux.exe') -PathType Leaf
+    if (-not $psmuxPresent -or -not $tmuxPresent) { $reasons += 'Pinned psmux/tmux 3.3.8 executable is missing.' }
+    $pwshPresent = [bool](Get-Command pwsh -CommandType Application -ErrorAction SilentlyContinue)
+    if (-not $pwshPresent) { $reasons += 'PowerShell 7 (pwsh), required by psmux panes, is missing.' }
+    if ($reasons.Count) {
+        $actions += 'Review the local records and README.md. Host or approval changes require explicit approval; this command does not change them.'
+    }
+    [pscustomobject]@{
+        Status = $(if ($reasons.Count) { 'Blocked' } else { 'Ready' })
+        Reason = $(if ($reasons.Count) { $reasons -join ' ' } else { 'Runtime prerequisites are valid; open a new PowerShell tab after setup.' })
+        Action = $(if ($actions.Count) { ($actions | Select-Object -Unique) -join ' ' } else { 'Run mux; existing user mux/t commands are preserved.' })
+        Repository = $dotfilesMuxRepo
+        CurrentHost = [Environment]::MachineName
+        Environment = $environment.environment
+        EnvironmentHost = $environment.host
+        Approved = $environment.approved
+        FeatureHost = $feature.host
+        Enabled = $feature.enabled
+        PsmuxPresent = $psmuxPresent
+        TmuxPresent = $tmuxPresent
+        PowerShell7Present = $pwshPresent
+    }
+}.GetNewClosure()
+Set-Item Function:\global:Get-DotfilesMuxStatus -Value $muxStatusReader
 try {
     $muxEnvironment = Get-Content (Join-Path $dotfilesMuxRepo '.local/environment.json') -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json
     $muxFeature = Get-Content (Join-Path $dotfilesMuxRepo '.local/psmux.json') -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json
@@ -16,25 +71,57 @@ if (-not (Test-Path (Join-Path $dotfilesMuxBin 'psmux.exe') -PathType Leaf) -or
 $env:Path = $dotfilesMuxBin + ';' + (($env:Path -split ';' | Where-Object { $_ -and $_ -ne $dotfilesMuxBin }) -join ';')
 $env:DOTFILES_ROOT = $dotfilesMuxRepo
 
+function global:Test-DotfilesMuxPane {
+    if ($env:TMUX -notmatch '^/tmp/psmux-\d+/default,\d+,0$' -or
+        -not $env:PSMUX_SESSION -or -not $env:DOTFILES_ROOT -or -not $env:PSMUX_CONFIG_FILE) { return $false }
+    try {
+        if (-not [IO.Path]::IsPathRooted($env:DOTFILES_ROOT) -or -not [IO.Path]::IsPathRooted($env:PSMUX_CONFIG_FILE)) { return $false }
+        $expected = [IO.Path]::GetFullPath((Join-Path $env:DOTFILES_ROOT 'tmux/psmux.conf')).TrimEnd('\', '/')
+        $actual = [IO.Path]::GetFullPath($env:PSMUX_CONFIG_FILE).TrimEnd('\', '/')
+        return [string]::Equals($expected, $actual, [StringComparison]::OrdinalIgnoreCase)
+    } catch { return $false }
+}
+
 function global:Invoke-DotfilesMux {
     [CmdletBinding()]
     param([string]$Session = 'main', [string]$Path = (Get-Location).Path)
-    if ($Session -notmatch '^[a-zA-Z0-9_-]+$') { throw 'Use letters, numbers, underscore or hyphen for the session name.' }
+    if ($Session -notmatch '^[a-zA-Z0-9_-]+$' -or $Session.Contains('__')) { throw 'Use letters, numbers, underscore or hyphen; double underscore is reserved by psmux.' }
     $directory = (Get-Item -LiteralPath $Path -ErrorAction Stop)
     if (-not $directory.PSIsContainer -or $directory.PSProvider.Name -ne 'FileSystem') { throw 'A filesystem directory is required.' }
     $muxExe = Join-Path $env:LOCALAPPDATA 'Programs/psmux/3.3.8/psmux.exe'
     $muxConfig = Join-Path $env:DOTFILES_ROOT 'tmux/psmux.conf'
-    if ($env:TMUX -and $env:TMUX -notmatch '/dotfiles,') { throw 'Exit the other multiplexer before entering dotfiles psmux.' }
-    & $muxExe -L dotfiles -f $muxConfig has-session -t "=$Session" 2>$null
+    if ($env:TMUX -and -not (Test-DotfilesMuxPane)) { throw 'Exit the named or other multiplexer before entering default dotfiles psmux.' }
+    & $muxExe -f $muxConfig has-session -t "=$Session" 2>$null
     if ($LASTEXITCODE -ne 0) {
-        & $muxExe -L dotfiles -f $muxConfig new-session -d -s $Session -c $directory.FullName
+        & $muxExe -f $muxConfig new-session -d -s $Session -c $directory.FullName
         if ($LASTEXITCODE -ne 0) { throw 'Could not create the psmux session.' }
     }
-    # Quote-aware CLI writes a reload binding referencing this checkout.
-    & $muxExe -L dotfiles -t $Session bind-key r source-file $muxConfig
+    # Do not silently adopt a default session that belongs to another configuration.
+    $serverEnvironment = @(& $muxExe -t $Session show-environment)
+    if ($LASTEXITCODE -ne 0) { throw 'Could not inspect the psmux session configuration.' }
+    $configMarker = @($serverEnvironment | Where-Object { $_ -like 'PSMUX_CONFIG_FILE=*' })
+    $owned = $false
+    if ($configMarker.Count -eq 1) {
+        try {
+            $serverConfig = $configMarker[0].Substring('PSMUX_CONFIG_FILE='.Length)
+            $owned = [IO.Path]::IsPathRooted($serverConfig) -and [string]::Equals(
+                [IO.Path]::GetFullPath($serverConfig), [IO.Path]::GetFullPath($muxConfig), [StringComparison]::OrdinalIgnoreCase)
+        } catch { $owned = $false }
+    }
+    if (-not $owned) { throw "Session '$Session' uses another configuration. Choose an unused session name; existing sessions were not changed." }
+    # Explicit paths avoid psmux's extra profile-loading shell wrapper.
+    $projectShell = (Get-Command pwsh -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source.Replace('\', '/')
+    & $muxExe -t $Session bind-key -r F new-window -c '#{pane_current_path}' "'$projectShell -NoLogo -NoExit -Command t'"
+    if ($LASTEXITCODE -ne 0) { throw 'Could not configure the project picker binding.' }
+    & $muxExe -t $Session bind-key -r D new-window "'$projectShell -NoLogo -NoExit -Command Invoke-DotfilesConfigProject'"
+    if ($LASTEXITCODE -ne 0) { throw 'Could not configure the source project binding.' }
+    # Quote the separators so the CLI stores the chain instead of executing it.
+    $reloadPicker = "bind-key -r F new-window -c '#{pane_current_path}' '$projectShell -NoLogo -NoExit -Command t'"
+    $reloadConfig = "bind-key -r D new-window '$projectShell -NoLogo -NoExit -Command Invoke-DotfilesConfigProject'"
+    & $muxExe -t $Session bind-key r source-file "'$muxConfig'" "'\;'" $reloadPicker "'\;'" $reloadConfig
     if ($LASTEXITCODE -ne 0) { throw 'Could not configure the psmux reload binding.' }
-    if ($env:TMUX) { & $muxExe -L dotfiles switch-client -t "=$Session" }
-    else { & $muxExe -L dotfiles attach-session -t "=$Session" }
+    if ($env:TMUX) { & $muxExe switch-client -t "=$Session" }
+    else { & $muxExe attach-session -t "=$Session" }
     if ($LASTEXITCODE -ne 0) { throw 'Could not attach/switch to the psmux session.' }
 }
 
@@ -73,15 +160,17 @@ function global:Invoke-DotfilesProject {
     try { $hash = $sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($normalized)) }
     finally { $sha.Dispose() }
     $suffix = ([BitConverter]::ToString($hash)).Replace('-', '').Substring(0, 12).ToLowerInvariant()
-    $name = ($directory.Name -replace '[^a-zA-Z0-9_-]', '_')
+    $name = (($directory.Name -replace '[^a-zA-Z0-9_-]', '_') -replace '_+', '_').Trim('_')
     if (-not $name) { $name = 'project' }
     Invoke-DotfilesMux -Session ($name + '-' + $suffix) -Path $directory.FullName
 }
 
+# No nested shell quoting is needed for the source-checkout project key.
+function global:Invoke-DotfilesConfigProject { & t $env:DOTFILES_ROOT }
 if (-not (Get-Command mux -ErrorAction SilentlyContinue)) { Set-Alias -Name mux -Value Invoke-DotfilesMux -Scope Global }
 if (-not (Get-Command t -ErrorAction SilentlyContinue)) { Set-Alias -Name t -Value Invoke-DotfilesProject -Scope Global }
 
-if ($env:TMUX -match '/dotfiles,' -and (Get-Command prompt -ErrorAction SilentlyContinue)) {
+if ((Test-DotfilesMuxPane) -and (Get-Command prompt -ErrorAction SilentlyContinue)) {
     $originalMuxPrompt = (Get-Item Function:\prompt).ScriptBlock
     if ($originalMuxPrompt.ToString() -notmatch 'ResetDotfilesPsmuxForeground') {
         $muxPrompt = {
