@@ -65,7 +65,7 @@ Windows Terminal의 `font.face`는 `MesloLGMDZ Nerd Font`, 크기는 `11`입니�
 | `Alt+h` | 기존 psmux 왼쪽 이동 대체. psmux 밖에는 터미널의 기본 입력 유지 |
 | `Ctrl+Shift+V` | 터미널 붙여넣기 |
 | `Ctrl+V` | Neovim Visual Block 등에 전달하도록 터미널 붙여넣기 해제 |
-| `Esc` | Win32 VK_ESCAPE 입력 한 번으로 전달. 저장소 AutoHotkey v2 실행 시 키를 뗄 때 영어 IME로 전환 |
+| `Esc` | Win32 VK_ESCAPE와 문자 0x1b를 함께 한 번 전달. 저장소 AutoHotkey v2 실행 시 키를 뗄 때 영어 IME로 전환 |
 
 Esc 전송은 Windows Terminal 전체 탭의 정책입니다. ConPTY·기존 psmux·로컬 Neovim 검사는 통과했지만 물리 키, GUI 검색·선택 취소와 한글 조합 중 입력은 미검증입니다. 연결된 원본에 이 변경을 반영하면 Terminal이 자동 reload할 수 있습니다. 원격 Vim 증상의 해결을 확정하지 않으며 [작업 0005](work/0005-psmux-ssh-escape.md)와 [ADR 0009](adr/0009-psmux-escape-build.md)를 참고하세요.
 

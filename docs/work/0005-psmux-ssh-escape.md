@@ -113,6 +113,14 @@ Windows Terminal 원본의 bare Esc는 Win32 VK_ESCAPE(Uc=0)로 보낸다. 전�
 
 ## 현재 남은 일
 
+2026-10-21 KST 재개: 사용자가 mux와 무관하게 발생하며 영어 전환은 되지만 Vim 모드가 유지된다고 보고했다. 현재 Terminal의 Win32 Esc action/keybinding은 유지되고 AutoHotkey도 실행 중임을 읽기 전용 확인했다. 앞선 합성 ConPTY 결과는 물리 입력과 동일한 원인으로 확정할 수 없다. 원격/로컬 Vim 구분과 초기 영문 상태 결과는 아직 미확인이다. SSH 접속 없이 별도 Terminal 진단 탭에서 Esc·Ctrl+[의 실제 ConsoleKey/KeyChar만 제한적으로 측정한다. 일반 문자·다른 창 입력은 기록하지 않으며 새로운 영구 바인딩 변경 전에 실제 이벤트를 확인한다.
+
+2026-10-21 KST 실제 키 진단: 사용자가 진단 탭에서 입력한 두 Escape는 `ConsoleKey=Escape, KeyChar=0`, Ctrl+[는 `KeyChar=27`로 관측됐다. 기존 Uc=0 보정의 raw 전달/키 이름 검사만으로 문자 의미까지 검증했다고 볼 수 없음을 확인했다. Win32 Uc=27 후보와 문자값 0x1b 단언을 추가하고 직접 ConPTY·로컬 Neovim 회귀 후, 승인된 기존 로컬 보정의 Uc 필드만 0→27로 수정한다. 기존 설정 bytes·backup을 보존하고 실제 키 재확인을 요청한다. 이 관측만으로 최초 원격 증상의 원인까지 확정하지 않는다.
+
+2026-10-21 09:53 KST 수정·적용: Uc=27 후보는 직접 ConPTY 및 기존 psmux native 경로에서 일반/Shift 동시 입력 raw/keys/events 각 6사례를 통과했다. 실제 `0x1b` 문자와 Escape 키를 함께 검증하도록 `--require-escape-character`를 추가했으며 독립 리뷰를 반영해 event의 vk=27·char=1B·keydown이 같은 레코드인지 단언한다. 기존 `tests/windows-psmux.py --encoded-escape` 통합 검사도 통과했다. 현재 Terminal settings의 해당 Uc 값만 수정하고 기존 bytes 보존·backup·재실행 확인을 완료했다. 이후 물리 키 재확인용 새 탭을 열었고 실제 Vim 모드 전환 결과는 사용자 확인 대기다. SSH 접속·서버 변경은 없다.
+
+2026-10-21 KST 수정 후 물리 입력: 별도 실제 Windows Terminal 탭에서 Escape 두 번 모두 `ConsoleKey=Escape, KeyChar=27`, Ctrl+[도 문자값 27로 관측됐다. 수정 전 0/0/27과 달리 실제 Esc 문자 전달까지 확인했다. 일반 문자 기록·SSH 접속은 없었다. 최종 same-record 단언의 직접 ConPTY modifier/events 검사도 통과했다(첫 실행은 임시 helper 실행 단계의 Windows 접근 거부로 시작 실패, 1회 재시도 통과). 로컬 상태 파일에 수정 후 실제 control-key 결과와 Vim 모드 전환 확인 필요 상태를 갱신했다.
+
 2026-10-20 KST 로컬 적용 요청: 사용자가 먼저 로컬에 적용하도록 명시하고 사용 터미널을 Windows Terminal로 확인했다. 현재 호스트의 유효한 windows-powershell 선택을 확인했다. 실제 stable Terminal settings는 저장소와 연결되지 않은 일반 파일이고 기존 bare Esc 바인딩이 없다. 현재 개인 프로필·다른 키를 유지하는 최소 실험 적용으로 Win32 Esc action과 keybinding만 추가한다. 쓰기 전 원본 backup, 동일한 원본 hash 재확인, 다른 JSON 값·주석/서식 보존 확인 후 적용한다. psmux 설치본·실행 중 세션·WezTerm은 바꾸지 않고 SSH는 연결하지 않는다. 기존 setup-state의 다른 호스트 기록은 보존하며 이번 호스트의 별도 .local/terminal-escape-state.json에 실제 결과와 물리 입력 확인 필요 상태를 남긴다.
 
 2026-10-20 17:21 KST 로컬 적용 결과: stable Terminal의 기존 설정 파일을 같은 디렉터리에 backup하고, 검증한 `sendInput` Win32 Esc action 및 bare Esc keybinding만 추가했다. 적용 전 원본 bytes 재확인, backup 동일성, 적용 후 JSON 의미 비교와 bytes 일치, 재실행 시 추가 쓰기 없는 idempotent 확인을 통과했다. 개인 프로필·다른 단축키·기존 텍스트는 유지했다. 신규 설치·설정 디렉터리 연결·binary 교체·mux 재시작·SSH 접속은 없었다. backup 경로·hash와 검증 필요 상태는 위 로컬 상태 파일에 기록했다. 물리 Esc·IME·원격 증상 해결은 사용자 확인 전까지 미검증으로 유지한다.

@@ -12,7 +12,8 @@ SSH 설정이나 원격 Vim 상태를 추정해 모든 Esc를 Ctrl+\\ Ctrl+N으�
 Win32/CSI-u 입력 변환은 과거 격리 검사에서 해결하지 못했다. 공식 3.4.0에도 같은 취소 경로가 남아 있다.
 
 ConPTY에 raw Esc와 modifier 이벤트를 한 번에 쓰면 psmux에 도착하기 전에도 Esc가 사라졌다.
-Windows Terminal의 기본 설정 원본에는 Esc를 Win32 VK_ESCAPE(Uc=0)로 전달하는 `sendInput` 바인딩을 둔다.
+Windows Terminal의 기본 설정 원본에는 Esc를 Win32 VK_ESCAPE(Uc=27)로 전달하는 `sendInput` 바인딩을 둔다.
+최초 Uc=0 후보는 물리 Console.ReadKey 검사에서 Escape 키지만 문자값은 0으로 관측됐다. 키와 실제 0x1b 문자를 함께 유지하도록 2026-10-21 Uc=27로 수정했다.
 이는 Windows Terminal 전체 탭에 적용되는 키 전송 정책이며 mux/SSH/Vim 상태를 추측하지 않는다.
 직접 ConPTY raw/Console.ReadKey/events 검사와 기존 psmux의 로컬 Neovim 회귀를 통과했다.
 Esc의 의미는 한 번 유지하고 AutoHotkey의 Esc Up 영문 전환은 별도로 유지한다.

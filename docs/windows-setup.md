@@ -213,7 +213,7 @@ Neovim은 승인된 Windows에서 이 체크아웃 설정을 사용하는 기본
 Windows Terminal 원본의 전송 바이트 검사는 다음처럼 실행합니다. `--encoded-escape`는 원본 settings.json의 Esc 액션을 직접 읽습니다.
 
 ```powershell
-py -3 -B tests/psmux-escape.py --encoded-escape --require-all --case client-Escape --case client-Escape-modifier --mode raw --mode events
+py -3 -B tests/psmux-escape.py --encoded-escape --require-all --require-escape-character --case client-Escape --case client-Escape-modifier --mode raw --mode keys --mode events
 py -3 -B tests/windows-psmux.py --encoded-escape
 ```
 

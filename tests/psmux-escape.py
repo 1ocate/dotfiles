@@ -48,7 +48,8 @@ def main():
     parser.add_argument('--case', action='append', help='Select named cases (repeatable).')
     parser.add_argument('--mode', action='append', choices=('raw', 'keys', 'events'))
     parser.add_argument('--require-all', action='store_true', help='Require Esc in synthetic modifier stress cases too (fails on psmux 3.3.8 VT input).')
-    parser.add_argument('--encoded-escape', action='store_true', help='Encode client Esc as Win32 VkEscape with UnicodeChar zero.')
+    parser.add_argument('--encoded-escape', action='store_true', help='Use the Win32 Escape binding from Windows Terminal source.')
+    parser.add_argument('--require-escape-character', action='store_true', help='Require character 0x1b as well as the Escape key identity.')
     parser.add_argument('--direct', action='store_true', help='Bypass psmux; exercise ConPTY host directly against the reader.')
     parser.add_argument('--encoding', choices=('win32', 'csi-u', 'modify-other-keys'), default='win32')
     parser.add_argument('--trace', action='store_true', help='Print only isolated psmux KEY/emit/pending trace lines.')
@@ -242,6 +243,12 @@ def main():
             assert result['escape_received'], result
             expected = 2 if result['case'] == 'client-double-Escape' else 1
             assert result['escape_count'] == expected, result
+            if args.require_escape_character:
+                if result['mode'] == 'keys':
+                    assert result['before_x'].count('1B key=Escape') == expected, result
+                elif result['mode'] == 'events':
+                    assert sum(line.startswith('char=1B ') and 'vk=27 ' in line and 'down=1 ' in line
+                               for line in result['before_x'].splitlines()) == expected, result
         lines = result['after_x'].splitlines()
         if result['mode'] == 'raw':
             received_x = any('78' in line.split('-') for line in lines)
