@@ -34,6 +34,7 @@ if ($global:testHistoryExit -eq 0) {
     $command = "Write-Output '한글'`nWrite-Output 'second'"
     $result = Select-DotfilesHistory @('older', $command) '한글'
     if ($result.Status -ne 'selected' -or $result.Value -cne $command) { throw 'Original command not restored' }
+    $runtimeFzfArgs = @($global:testHistoryArgs)
     if ($global:testHistoryArgs -notcontains '--query=한글' -or $global:testHistoryRows.Count -ne 2 -or $global:testHistoryRows[1].Contains("`n")) { throw 'Query/display mapping failed' }
     if ($env:FZF_DEFAULT_OPTS -ne '--print-query --multi' -or $env:FZF_DEFAULT_OPTS_FILE -ne 'fixture-file' -or $LASTEXITCODE -ne 73 -or $OutputEncoding -ne $originalEncoding) { throw 'Caller state not restored' }
     foreach ($exitCode in @(1, 130, 2)) {
@@ -52,7 +53,7 @@ if ($global:testHistoryExit -eq 0) {
     $env:FZF_DEFAULT_OPTS = ''
     $env:FZF_DEFAULT_OPTS_FILE = ''
     $OutputEncoding = [Text.UTF8Encoding]::new($false)
-    $selected = @(@("0`tfixture-old", "1`tfixture-한글") | & $realFzf.Source --filter=한글 '--delimiter=\t' '--nth=2..')
+    $selected = @(@("0`tfixture-old", "1`tfixture-한글") | & $realFzf.Source @runtimeFzfArgs --filter=한글)
     if ($LASTEXITCODE -ne 0 -or $selected.Count -ne 1 -or $selected[0] -ne "1`tfixture-한글") { throw 'Real fzf Unicode selection failed' }
     'PASS: history order, dedup, Unicode, multiline mapping, query, cancellation/failure, state restoration, binding and real fzf.'
 } finally {

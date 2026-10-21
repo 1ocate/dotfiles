@@ -1,4 +1,4 @@
-# Native Windows PSReadLine history selector. Never evaluates the selected command.
+﻿# Native Windows PSReadLine history selector. Never evaluates the selected command.
 if ([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT) { return }
 
 function Get-DotfilesHistoryCandidates {
@@ -43,7 +43,7 @@ function Select-DotfilesHistory {
         $env:FZF_DEFAULT_OPTS = ''
         $env:FZF_DEFAULT_OPTS_FILE = ''
         $OutputEncoding = [Text.UTF8Encoding]::new($false)
-        $selected = @($rows | & $fzfCommand.Source --height=40% --layout=reverse --border --no-multi --no-sort '--delimiter=\t' '--with-nth=2..' '--nth=2..' '--prompt=History> ' ('--query=' + $Query))
+        $selected = @($rows | & $fzfCommand.Source --height=40% --layout=reverse --border --no-multi --no-sort '--delimiter=\t' '--with-nth=2..' '--prompt=History> ' ('--query=' + $Query))
         $selectorExit = $LASTEXITCODE
         if ($selectorExit -eq 130 -or $selectorExit -eq 1) {
             return [pscustomobject]@{ Status = 'cancelled'; Value = $null }
