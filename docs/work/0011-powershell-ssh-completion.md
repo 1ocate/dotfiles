@@ -35,6 +35,12 @@ Python 복구 후 PR 제출 및 GUI 확인. 기존 작업 0010의 원본 Tab 설
 
 ## 남은 일
 
+2026-10-21 KST 후속 계획: 사용자가 Tab 전에 입력한 단어를 fzf 초기 검색어로 유지하도록 요청했다. `ssh <Tab>`은 빈 query, `ssh prod<Tab>`은 prod query로 열고 전체 Host 후보를 전달해 query를 지워 전체 목록으로 돌아갈 수 있게 한다. user@는 선택 결과에서 유지하되 초기 검색어는 호스트 부분만 사용한다. 현재 Windows PowerShell, 기존 PR #22를 재개하며 최신 main 통합 후 원본 handler·모의 fzf 인자/전체 후보·부분 문자열·취소 회귀를 확인한다. 사용자 작업 목록 변경은 byte backup과 선택 stash로 보존했으며 통합 커밋 후 복원한다. 다른 사용자 변경·프로필·SSH 접속은 변경하지 않는다. 기존 ADR 0002의 runtime 원본 방식을 따르는 소규모 UI 개선으로 새 ADR은 없다.
+
+2026-10-21 KST 구현·검증: 전체 SSH 후보를 초기 query와 분리해 전달하고, 원래 입력의 치환 범위와 user@를 보존했다. PowerShell 7 `tests/ssh-completion.ps1`, `tests/ssh-fzf.ps1` 통과: 빈/부분 문자열/미일치 query, 전체 목록, 사용자명, 원격 명령·옵션 미개입, fzf query 인자·취소·실패·환경 복원. 설치된 fzf에도 가상 전체 후보 alpha/beta와 query=pha를 전달해 alpha 자동 선택을 확인했다. 실제 사용자 GUI 키 입력은 별도 확인 범위다.
+
+독립 읽기 전용 리뷰에서도 기존 치환 범위·user@·옵션/원격 명령 경계와 단일 query 인자 전달을 확인했고 차단 문제는 없었다. 후속 변경은 기존 PR #22에 제출한다.
+
 사용자 PR 리뷰와 병합 확인. 지원 대상 PowerShell 7에서 실제 사용 확인을 받았으며 5.1·다른 OS 및 세부 취소 후 화면 검증 한계는 유지한다.
 
 - 2026-10-20 KST: 구현 커밋 `c0723be`를 push하고 PR #22를 제출했다. merge는 수행하지 않았다. 기존 작업 0010 문서·목록 변경, Neovim lockfile 및 로컬 산출물은 커밋에서 제외하고 보존했다.

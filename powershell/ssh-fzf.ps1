@@ -4,17 +4,31 @@ if ([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT) { return }
 function Get-DotfilesSshTabCandidates {
     param([string]$Line, [int]$Cursor)
     $completion = [System.Management.Automation.CommandCompletion]::CompleteInput($Line, $Cursor, $null)
-    $candidates = @($completion.CompletionMatches | Where-Object ToolTip -eq 'SSH Host alias')
+    if ($completion.ReplacementIndex -lt 0 -or $Cursor -lt $completion.ReplacementIndex) { return }
+    $word = $Line.Substring($completion.ReplacementIndex, $Cursor - $completion.ReplacementIndex)
+    if ($word.StartsWith('-')) { return }
+    $userPrefix = ''
+    $query = $word
+    if ($word -match '^(.*@)([^@]*)$') {
+        $userPrefix = $Matches[1]
+        $query = $Matches[2]
+    }
+    # Give fzf all hosts, so the initial query can be edited or cleared there.
+    $candidateLine = $Line.Remove($completion.ReplacementIndex, $completion.ReplacementLength).Insert($completion.ReplacementIndex, $userPrefix)
+    $allHosts = [System.Management.Automation.CommandCompletion]::CompleteInput(
+        $candidateLine, $completion.ReplacementIndex + $userPrefix.Length, $null)
+    $candidates = @($allHosts.CompletionMatches | Where-Object ToolTip -eq 'SSH Host alias')
     if ($candidates.Count -eq 0) { return }
     [pscustomobject]@{
         Candidates = @($candidates | ForEach-Object CompletionText)
         Start = $completion.ReplacementIndex
         Length = $completion.ReplacementLength
+        Query = $query
     }
 }
 
 function Select-DotfilesSshHost {
-    param([string[]]$Candidates)
+    param([string[]]$Candidates, [string]$Query = '')
     $fzfCommand = Get-Command fzf.exe -CommandType Application -ErrorAction SilentlyContinue
     if (-not $fzfCommand) { return [pscustomobject]@{ Status = 'unavailable'; Value = $null } }
     # Keep global fzf bindings/options from changing single-selection output or running actions.
@@ -23,7 +37,7 @@ function Select-DotfilesSshHost {
     try {
         $env:FZF_DEFAULT_OPTS = ''
         $env:FZF_DEFAULT_OPTS_FILE = ''
-        $selected = @($Candidates | & $fzfCommand.Source --height=40% --layout=reverse --border --no-multi --no-sort '--prompt=SSH> ')
+        $selected = @($Candidates | & $fzfCommand.Source --height=40% --layout=reverse --border --no-multi --no-sort '--prompt=SSH> ' ('--query=' + $Query))
         $selectorExit = $LASTEXITCODE
         if ($selectorExit -eq 130 -or $selectorExit -eq 1) {
             return [pscustomobject]@{ Status = 'cancelled'; Value = $null }
@@ -48,7 +62,7 @@ if (Get-Command Set-PSReadLineKeyHandler -ErrorAction SilentlyContinue) {
         [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$line, [ref]$cursor)
         $completion = Get-DotfilesSshTabCandidates -Line $line -Cursor $cursor
         if ($completion) {
-            $selection = Select-DotfilesSshHost -Candidates $completion.Candidates
+            $selection = Select-DotfilesSshHost -Candidates $completion.Candidates -Query $completion.Query
             if ($selection.Status -eq 'selected') {
                 [Microsoft.PowerShell.PSConsoleReadLine]::Replace($completion.Start, $completion.Length, $selection.Value)
             }

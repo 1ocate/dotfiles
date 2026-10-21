@@ -9,6 +9,9 @@ Windows 네이티브 PowerShell용 설치·원본 연결 절차입니다. 회사
 `powershell/tab-completion.ps1`을 읽는 기존 프로필에서는 새 PowerShell 창부터
 `ssh <Tab>`과 `ssh user@<Tab>`으로 사용자 `~/.ssh/config`의 명시적 `Host` 별칭을 제안합니다.
 `fzf.exe`가 있으면 화면 아래 높이 40%의 세로 목록에서 검색·방향키로 고르고 Enter로 입력합니다.
+`ssh <Tab>`은 빈 검색어, `ssh prod<Tab>`은 `prod`가 입력된 검색창으로 열립니다.
+`ssh user@prod<Tab>`도 호스트 부분인 `prod`로 검색하고 선택 결과의 `user@`는 유지합니다.
+전체 Host 목록을 넘기므로 검색어를 수정·삭제해 다른 호스트를 찾을 수 있습니다.
 Enter는 호스트 이름만 삽입하며 명령을 실행하지 않습니다. Esc/Ctrl+C는 선택을 취소하고 입력을 유지합니다.
 다른 명령 및 fzf 부재·실패 시에는 기존 MenuComplete를 사용합니다. 별도 설치는 하지 않습니다.
 선택 중에는 `FZF_DEFAULT_OPTS`와 `FZF_DEFAULT_OPTS_FILE`을 비우고 끝나면 복원합니다.
