@@ -1,12 +1,13 @@
 # 0012: PowerShell 프롬프트의 현재 Kubernetes 클러스터
 
-- 상태: 진행 중
+- 상태: 리뷰 대기
 - 요청: fzf 선택 목록이 아니라 프롬프트에 현재 Kubernetes 클러스터를 표시한다.
 - 기준: main 4122d9c, feat/kubernetes-prompt
 - 실행 환경·범위: windows-powershell, PowerShell 7의 powershell/prompt.omp.json 원본. 기존 프로필·streaming·테마와 다른 환경은 유지한다.
 - 관련 결정: ADR 0002의 단일 원본·기존 loader 방식에 따른 작은 세그먼트 추가로 새 ADR은 없다.
 - 계획: 로컬 kubeconfig 파싱 세그먼트 → 가상 설정으로 실제 oh-my-posh 렌더 → 누락/기본 namespace/context 전환 검사 → 문서·리뷰·PR.
-- 표시: ☸ cluster 이름만. ARN/경로는 마지막 이름만 표시하고 namespace는 생략한다. 설정이 없으면 세그먼트만 숨긴다.
+- PR: https://github.com/1ocate/dotfiles/pull/23
+- 표시: ☸ cluster:namespace. ARN/경로는 마지막 클러스터 이름만 표시한다. 설정이 없으면 세그먼트만 숨긴다.
 - 비대상: 클러스터 접속, 자격증명 출력/배포, context 변경, Kubernetes 도구 설치, PowerShell 5.1·macOS/WSL/Linux 테마 변경.
 
 ## 분석과 진행
@@ -25,4 +26,8 @@
 
 최종 로컬 확인에서는 요청한 현재 대상을 확인하기 위해 세그먼트만 격리 렌더하고, 실제 로컬 kubeconfig에서 현재 클러스터 표시가 생성됨을 확인했다. PATH를 비워 kubectl 실행을 막았고 클러스터명·namespace·인증 정보는 출력·기록하지 않았다. 클러스터 API 접속이나 context 변경은 없다. 가상 설정 검사와 이 실제 로컬 읽기 확인을 구분한다.
 
-PR 제출과 새 PowerShell 탭의 GUI 확인이 남았다. macOS·WSL·Linux 실기기 및 클러스터 연결 상태 확인은 범위 밖이다.
+PR 리뷰와 새 PowerShell 탭의 GUI 확인이 남았다. macOS·WSL·Linux 실기기 및 클러스터 연결 상태 확인은 범위 밖이다.
+
+2026-10-21 KST 후속 요청: 짧은 클러스터 이름은 유지하면서 namespace를 다시 표시한다. cluster:namespace 형식으로 템플릿·가상 렌더 검사·사용 문서를 갱신하고 현재 체크아웃 원본에도 반영한다. namespace가 비어 있으면 default를 표시하는 기존 세그먼트 동작을 검사한다.
+
+후속 검증: 실제 렌더에서 빈 Namespace 필드가 빈 문자열로 전달됨을 확인해 템플릿에 default fallback을 명시했다. Kubernetes 가상 렌더 검사와 프로필 회귀 검사는 통과했으며 실제 클러스터에 접속하지 않았다.

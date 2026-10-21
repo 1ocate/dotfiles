@@ -52,16 +52,16 @@ def main():
 
         fixture('fixture-context')
         output = render()
-        assert '☸ fixture-cluster' in output and 'fixture-ns' not in output, 'Expected cluster name only'
+        assert '☸ fixture-cluster:fixture-ns' in output, 'Expected short cluster and namespace'
         fixture('fixture-context', '')
         output = render()
-        assert 'fixture-cluster' in output and 'default' not in output, 'Namespace should not be displayed'
+        assert 'fixture-cluster:default' in output, 'Expected default namespace'
         fixture('fixture-context', cluster='arn:aws:eks:ap-northeast-2:000000000000:cluster/fixture-cluster')
         output = render()
-        assert '☸ fixture-cluster' in output and 'arn:' not in output and '000000000000' not in output, 'Cluster ARN not shortened'
+        assert '☸ fixture-cluster:fixture-ns' in output and 'arn:' not in output and '000000000000' not in output, 'Cluster ARN not shortened'
         fixture('other-context')
         output = render()
-        assert 'other-cluster' in output and 'fixture-cluster' not in output and 'other-ns' not in output, 'Stale context or namespace shown'
+        assert 'other-cluster:other-ns' in output and 'fixture-cluster' not in output and 'fixture-ns' not in output, 'Stale context or namespace shown'
         (temp / 'kubectl.cmd').unlink()
         fixture('fixture-context')
         assert 'fixture-cluster' in render(), 'Local parsing unexpectedly requires kubectl'
@@ -69,7 +69,7 @@ def main():
         assert '☸' not in render(), 'Missing kubeconfig should hide Kubernetes'
         kube.write_text('not: [valid', encoding='utf-8')
         assert '☸' not in render(), 'Malformed kubeconfig should hide Kubernetes'
-        print('PASS: short cluster name, ARN shortening, no namespace, context switch, absent/malformed config; no kubectl execution')
+        print('PASS: short cluster name, ARN shortening, namespace/default, context switch, absent/malformed config; no kubectl execution')
 
 
 if __name__ == '__main__':
