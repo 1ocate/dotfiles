@@ -6,7 +6,7 @@
 - 실행 환경·범위: windows-powershell, PowerShell 7의 powershell/prompt.omp.json 원본. 기존 프로필·streaming·테마와 다른 환경은 유지한다.
 - 관련 결정: ADR 0002의 단일 원본·기존 loader 방식에 따른 작은 세그먼트 추가로 새 ADR은 없다.
 - 계획: 로컬 kubeconfig 파싱 세그먼트 → 가상 설정으로 실제 oh-my-posh 렌더 → 누락/기본 namespace/context 전환 검사 → 문서·리뷰·PR.
-- 표시: ☸ cluster:namespace. namespace가 생략되면 default. 설정이 없으면 세그먼트만 숨긴다.
+- 표시: ☸ cluster 이름만. ARN/경로는 마지막 이름만 표시하고 namespace는 생략한다. 설정이 없으면 세그먼트만 숨긴다.
 - 비대상: 클러스터 접속, 자격증명 출력/배포, context 변경, Kubernetes 도구 설치, PowerShell 5.1·macOS/WSL/Linux 테마 변경.
 
 ## 분석과 진행
@@ -14,6 +14,10 @@
 2026-10-21 KST: 기존 프롬프트에 Kubernetes 세그먼트가 없고, PowerShell 7 프로필이 저장소 테마를 참조하는 것을 확인했다. 현재 도구는 oh-my-posh 31.8.0이며 kubectl도 설치돼 있다. 공식 kubectl segment의 parse_kubeconfig와 Cluster/Namespace 필드를 사용한다. 개인 kubeconfig는 테스트에서 읽거나 출력하지 않고 가상 파일만 사용한다. 기존 SSH 작업 브랜치와 사용자 변경을 보존하려고 별도 worktree에서 준비한다.
 
 ## 검증과 남은 일
+
+2026-10-21 KST 표시 축약 요청: 사용자가 표시가 너무 길어 이름만 요청했다. 현재 세그먼트의 namespace 표시를 제거하고 .Cluster의 마지막 slash 뒤 이름만 표시한다. 단순 이름은 그대로 두고 ARN 형식의 가상 cluster를 추가해 계정·리전·경로 prefix가 노출되지 않는지 실제 렌더로 검증한다. 최초 cluster:namespace 검증은 당시 결과로 아래에 보존한다.
+
+최종 축약 템플릿으로 Kubernetes 렌더 검사와 기존 프로필 검사 모두 재통과했다. 일반 이름 보존·ARN prefix 제거·namespace 미표시·현재 context 전환·설정 부재/오류·kubectl 미호출을 확인했다. 현재 체크아웃의 테마 원본에도 동일한 축약을 반영했다.
 
 2026-10-21 KST: `py -3 -B tests/kubernetes-prompt.py` 통과. 실제 oh-my-posh 31.8.0에 가상 KUBECONFIG만 전달해 실제 Cluster/Namespace, default, context 전환, 누락/잘못된 파일을 검사했다. 가상 kubectl 실행 시 marker를 남기도록 해 미호출을 확인했고, kubectl 파일이 없는 빈 PATH에서도 표시를 확인했다. `pwsh -NoProfile -File tests/prompt-profile.ps1`도 통과해 기존 streaming·프로필·사용자 테마/인코딩 보존을 확인했다.
 

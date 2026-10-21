@@ -42,29 +42,34 @@ def main():
             assert 'ERROR' not in result.stdout, 'Template/configuration error'
             return result.stdout
 
-        def fixture(current, namespace='fixture-ns'):
+        def fixture(current, namespace='fixture-ns', cluster='fixture-cluster'):
             data = {'apiVersion': 'v1', 'kind': 'Config', 'current-context': current,
-                    'clusters': [{'name': 'fixture-cluster', 'cluster': {'server': 'https://127.0.0.1:1'}},
+                    'clusters': [{'name': cluster, 'cluster': {'server': 'https://127.0.0.1:1'}},
                                  {'name': 'other-cluster', 'cluster': {'server': 'https://127.0.0.1:1'}}],
-                    'contexts': [{'name': 'fixture-context', 'context': {'cluster': 'fixture-cluster', 'namespace': namespace}},
+                    'contexts': [{'name': 'fixture-context', 'context': {'cluster': cluster, 'namespace': namespace}},
                                  {'name': 'other-context', 'context': {'cluster': 'other-cluster', 'namespace': 'other-ns'}}]}
             kube.write_text(json.dumps(data), encoding='utf-8')
 
         fixture('fixture-context')
-        assert 'fixture-cluster:fixture-ns' in render(), 'Current cluster/namespace absent'
+        output = render()
+        assert '☸ fixture-cluster' in output and 'fixture-ns' not in output, 'Expected cluster name only'
         fixture('fixture-context', '')
-        assert 'fixture-cluster:default' in render(), 'Default namespace absent'
+        output = render()
+        assert 'fixture-cluster' in output and 'default' not in output, 'Namespace should not be displayed'
+        fixture('fixture-context', cluster='arn:aws:eks:ap-northeast-2:000000000000:cluster/fixture-cluster')
+        output = render()
+        assert '☸ fixture-cluster' in output and 'arn:' not in output and '000000000000' not in output, 'Cluster ARN not shortened'
         fixture('other-context')
         output = render()
-        assert 'other-cluster:other-ns' in output and 'fixture-cluster' not in output, 'Stale context'
+        assert 'other-cluster' in output and 'fixture-cluster' not in output and 'other-ns' not in output, 'Stale context or namespace shown'
         (temp / 'kubectl.cmd').unlink()
         fixture('fixture-context')
-        assert 'fixture-cluster:fixture-ns' in render(), 'Local parsing unexpectedly requires kubectl'
+        assert 'fixture-cluster' in render(), 'Local parsing unexpectedly requires kubectl'
         kube.unlink()
         assert '☸' not in render(), 'Missing kubeconfig should hide Kubernetes'
         kube.write_text('not: [valid', encoding='utf-8')
         assert '☸' not in render(), 'Malformed kubeconfig should hide Kubernetes'
-        print('PASS: current cluster/namespace, default namespace, context switch, absent/malformed config; no kubectl execution')
+        print('PASS: short cluster name, ARN shortening, no namespace, context switch, absent/malformed config; no kubectl execution')
 
 
 if __name__ == '__main__':
