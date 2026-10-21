@@ -11,3 +11,4 @@
 | 0006 | [Windows Terminal 기본 사용과 Git 설정 관리](0006-windows-terminal.md) | [ADR 0004](../adr/0004-windows-terminal.md) |
 | 0007 | [PowerShell 7 프롬프트 streaming](0007-powershell-prompt-streaming.md) | [ADR 0002](../adr/0002-native-windows-adapters.md) |
 | 0009 | [PowerShell의 vi·vim을 Neovim에 연결](0009-powershell-neovim-aliases.md) | [ADR 0002](../adr/0002-native-windows-adapters.md) |
+| 0012 | [PowerShell 프롬프트의 현재 Kubernetes 클러스터](0012-kubernetes-prompt.md) | [ADR 0002](../adr/0002-native-windows-adapters.md) |
