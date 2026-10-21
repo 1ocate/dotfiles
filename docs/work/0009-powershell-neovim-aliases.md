@@ -49,9 +49,15 @@ macOS·WSL·네이티브 Linux 실기기, GUI 편집·IME와 깨끗한 장비의
 
 ## 남은 일과 종료 근거
 
+2026-10-21 KST PR #21 충돌 해결 계획: 사용자 요청으로 최신 origin/main d304474를 격리 worktree에 통합했다. 기준 PR head a17da2d, 실행 환경 windows-powershell이며 기존 사용자 체크아웃·설정 적용은 변경하지 않는다. 충돌은 ADR 목록에서 별칭 ADR 0008과 main의 Esc ADR 0009가 같은 위치에 추가된 부분이다. 두 결정을 모두 보존한다. 열린 PR #19도 ADR 0008을 쓰므로 별칭 ADR을 0010으로 옮기고 관련 링크를 갱신한다. 새 정책 결정이나 별칭 동작 변경은 없다. 통합 뒤 별칭·설치 경로 회귀, 문서 링크·공백·독립 리뷰를 확인하고 같은 PR 브랜치에 일반 push한다. PR 병합은 수행하지 않는다.
+
+2026-10-21 KST 통합 검증: Windows PowerShell 5.1·PowerShell 7에서 `tests/powershell-aliases.ps1`, PowerShell 7에서 `tests/windows-terminal-setup.ps1`을 실행해 통과했다. 검사 범위는 임시 프로필·상태 보존·host/선택 독립·인코딩/백업/재실행과 실제 격리 Neovim 인자 전달, 설치기 Plan/별칭 자동 호출·터미널 분리다. 사용자 프로필 적용이나 실제 설치를 다시 실행한 것은 아니다. 기존 macOS·WSL·Linux 실기기 미검증 범위도 유지한다.
+
+독립 정적 리뷰에서 main Esc 변경 보존, 기존 PR head 대비 별칭 코드·테스트 무변경, ADR 0010 링크 일치와 사용자 lockfile 미포함을 확인했고 차단 문제는 없었다. 상대 문서 링크·공백 검사를 통과했으며 충돌 표시는 제거했다. 같은 PR #21의 브랜치를 갱신하며 실제 PR 병합은 사용자에게 남긴다.
+
 ### 머지 후 적용 안내 보완
 
-- 범위 변경·계획(2026-10-20 KST): 사용자가 장비 이름 없는 Windows PowerShell 공통 적용을 요청했다. [ADR 0008](../adr/0008-powershell-alias-platform-scope.md)에 따라 별칭의 승인·호스트 의존을 제거하고 연결 기록을 `.local/powershell-aliases.json`으로 분리한다. 기존 전체 설치 기록은 보존한다. Windows 5.1·7 격리 검사, 비 Windows 미적용, 호스트·선택 파일과 무관한 적용, 실제 사용자 프로필 연결·새 세션 검증 후 PR #21을 구현 중심으로 갱신한다. 이전 상태 초기화 확인 요청은 이 새 방식으로 대체한다.
+- 범위 변경·계획(2026-10-20 KST): 사용자가 장비 이름 없는 Windows PowerShell 공통 적용을 요청했다. [ADR 0010](../adr/0010-powershell-alias-platform-scope.md)에 따라 별칭의 승인·호스트 의존을 제거하고 연결 기록을 `.local/powershell-aliases.json`으로 분리한다. 기존 전체 설치 기록은 보존한다. Windows 5.1·7 격리 검사, 비 Windows 미적용, 호스트·선택 파일과 무관한 적용, 실제 사용자 프로필 연결·새 세션 검증 후 PR #21을 구현 중심으로 갱신한다. 이전 상태 초기화 확인 요청은 이 새 방식으로 대체한다.
 
 - 요청·분석: 2026-10-20 KST, PR #20은 `32e4263`으로 병합됐지만 기존 장비에서 필요한 후속 연결 작업을 쉽게 찾기 어렵다는 피드백을 받았다. 기존 사용 지침에 명령은 있으나 병합·pull과 장비별 적용의 차이가 명확하지 않았다.
 - 기준·범위: origin/main `32e4263`, `docs/neovim-alias-post-merge`, windows-powershell. README와 Windows 사용 지침에 적용 대상·일회 연결·새 탭 검증·상태 불일치 오류를 명시한다. 기존 ADR 0002의 연결 방식 설명이며 새 결정은 없다. 사용자 lockfile과 미추적 파일은 제외한다.

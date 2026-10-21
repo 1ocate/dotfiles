@@ -34,7 +34,7 @@ Windows는 PowerShell 7을 사용하고 macOS는 기존 셸을 유지한다. Win
 
 ## Windows 사용 환경 선택과 승인
 
-`vi`·`vim` 편집기 별칭은 [ADR 0008](adr/0008-powershell-alias-platform-scope.md)의 예외를 따른다. 별칭 전용 연결·실행은 Windows 네이티브 PowerShell과 Neovim 존재 여부만 검사하고, 환경 승인·장비 이름을 요구하지 않는다. 연결 기록은 장비 이름 없는 `.local/powershell-aliases.json`으로 분리한다. 아래의 전체 설치·다른 구성요소 승인과 진행 기록 기준은 유지한다.
+`vi`·`vim` 편집기 별칭은 [ADR 0010](adr/0010-powershell-alias-platform-scope.md)의 예외를 따른다. 별칭 전용 연결·실행은 Windows 네이티브 PowerShell과 Neovim 존재 여부만 검사하고, 환경 승인·장비 이름을 요구하지 않는다. 연결 기록은 장비 이름 없는 `.local/powershell-aliases.json`으로 분리한다. 아래의 전체 설치·다른 구성요소 승인과 진행 기록 기준은 유지한다.
 
 네 환경의 선택값 저장·읽기·검증과 기존 설정 등록은 [공통 환경 등록 도구](environment-registration.md)가 담당한다. Windows 전용 설치에서도 이 기반을 사용하고 자체 상태 저장 구현을 중복 작성하지 않는다. 기존 환경은 읽기 전용 점검 후 선택값만 저장하며, 누락 항목의 설치와 연결은 별도 단계다.
 

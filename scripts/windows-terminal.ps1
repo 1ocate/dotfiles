@@ -1,5 +1,27 @@
 #Requires -Version 5.1
-# Directory-junction helpers only; dot-sourcing has no installation side effects.
+# Read-only validation and junction helpers; dot-sourcing has no installation side effects.
+function Assert-WindowsTerminalEscapeBinding {
+    param([Parameter(Mandatory=$true)][string]$SourcePath)
+    $settings = [IO.File]::ReadAllText($SourcePath) | ConvertFrom-Json -ErrorAction Stop
+    $bindings = @()
+    foreach ($action in @($settings.actions)) {
+        if (@($action.keys) -contains 'escape' -or @($action.keys) -contains 'esc') {
+            $bindings += $action.command
+        }
+    }
+    foreach ($binding in @($settings.keybindings)) {
+        if (@($binding.keys) -contains 'escape' -or @($binding.keys) -contains 'esc') {
+            $actions = @($settings.actions | Where-Object { $_.id -eq $binding.id })
+            if (-not $binding.id -or $actions.Count -ne 1) { throw 'Windows Terminal Escape action is missing or ambiguous; no settings were changed.' }
+            $bindings += $actions[0].command
+        }
+    }
+    $expected = [string][char]27 + '[27;1;27;1;0;1_'
+    if ($bindings.Count -ne 1 -or $bindings[0].action -ne 'sendInput' -or $bindings[0].input -cne $expected) {
+        throw 'Windows Terminal requires one Escape binding preserving VK_ESCAPE and character 0x1b; no settings were changed.'
+    }
+}
+
 function Get-WindowsTerminalTarget {
     param([ValidateSet('stable', 'preview', 'unpackaged')][string]$Channel = 'stable')
     if ($env:OS -ne 'Windows_NT') { throw 'Windows Terminal requires native Windows.' }
