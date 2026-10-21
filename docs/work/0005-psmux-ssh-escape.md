@@ -129,4 +129,4 @@ Windows Terminal 원본의 bare Esc는 Win32 VK_ESCAPE(Uc=0)로 보낸다. 전�
 
 2026-10-20 17:21 KST 로컬 적용 결과: stable Terminal의 기존 설정 파일을 같은 디렉터리에 backup하고, 검증한 `sendInput` Win32 Esc action 및 bare Esc keybinding만 추가했다. 적용 전 원본 bytes 재확인, backup 동일성, 적용 후 JSON 의미 비교와 bytes 일치, 재실행 시 추가 쓰기 없는 idempotent 확인을 통과했다. 개인 프로필·다른 단축키·기존 텍스트는 유지했다. 신규 설치·설정 디렉터리 연결·binary 교체·mux 재시작·SSH 접속은 없었다. backup 경로·hash와 검증 필요 상태는 위 로컬 상태 파일에 기록했다. 물리 Esc·IME·원격 증상 해결은 사용자 확인 전까지 미검증으로 유지한다.
 
-Windows Terminal 로컬 적용 후 물리 입력 검증 및 PR 리뷰가 남았다. SSH 접속 없이 확인한 로컬 유실 경로의 수정 후보이며 원격 증상 해결 완료로 기록하지 않는다. 최신 main 통합 시 문서 두 파일의 충돌은 현재 지침과 기존 조사 내용을 모두 보존해 해결했다. 최종 상대 링크·Python 문법·diff 검사를 완료하고 기존 draft PR #12에 제출했다.
+Windows Terminal 로컬 적용·실제 키 문자27 및 사용자 정상 동작 확인까지 완료했다. PR 리뷰와 GUI 검색·선택/IME 세부 검증은 남았다. 사용자의 확인을 에이전트의 SSH 접속 검증으로 확대하지 않는다. 최신 main 통합 시 문서 두 파일의 충돌은 현재 지침과 기존 조사 내용을 모두 보존해 해결했다. 최종 상대 링크·Python 문법·diff 검사를 완료하고 기존 draft PR #12에 제출했다.
