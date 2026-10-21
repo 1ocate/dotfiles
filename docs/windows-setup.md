@@ -258,3 +258,11 @@ Windows PowerShell 7용 [테마 원본](../powershell/prompt.omp.json)은 oh-my-
 streaming은 세션별 백그라운드 프로세스를 재사용하며 느린 정보는 나중에 표시한다. [공식 베타 기능](https://ohmyposh.dev/docs/configuration/streaming)이므로 GUI/IME·오른쪽 프롬프트·psmux에서 재표시를 확인한다. `POSH_DISABLE_STREAMING`이 있으면 비활성화되며, VS Code PowerShell 확장처럼 공식 비호환 호스트에서는 사용하지 않는다. 설치된 oh-my-posh가 streaming을 지원해야 한다. 되돌리려면 백업한 초기화 줄을 복원하고 새 PowerShell 탭을 연다. 적용·검증 근거는 [작업 0007](work/0007-powershell-prompt-streaming.md)을 따른다.
 
 테마 선택은 PowerShell 프로필의 `oh-my-posh init` 줄에서 정하며, 이 원본은 명명된 `powerlevel10k_rainbow`와 다르다. 내장 테마도 Powerline 스타일 구분선을 포함한다. Windows Terminal의 글꼴·배경 색상 설정과 oh-my-posh의 프롬프트 테마는 별개다. 기본값 재추출은 별도 `pwsh -NoProfile` 프로세스에서 `POSH_*` 변수를 제거하고 새로운 `POSH_SESSION_ID`로 수행해야 기존 세션 테마를 다시 내보내지 않는다. 기준 구현은 [v31.8.0 default.go](https://github.com/JanDeDobbeleer/oh-my-posh/blob/v31.8.0/src/config/default.go)다.
+
+### Ctrl+R 명령 히스토리 검색
+
+기존 `powershell/tab-completion.ps1` 로더가 연결된 PowerShell은 새 세션부터 `Ctrl+R`로 fzf 히스토리 검색을 엽니다. 아직 연결하지 않은 세션에서만 사용하려면 저장소 루트에서 `. ./powershell/tab-completion.ps1`을 실행합니다. 별도 PowerShell 모듈은 필요 없으며 `fzf.exe`가 선택 의존성입니다.
+
+입력 중인 내용이 초기 검색어가 됩니다. 기록은 최신순으로 중복을 제거해 표시하며, 여러 줄 명령은 검색 목록에서 한 줄로 보이고 선택하면 원문으로 복원합니다. fzf에서 Enter는 입력줄에 넣기만 하며 실행하려면 PowerShell에서 Enter를 다시 누릅니다. Esc 또는 Ctrl+C로 취소하면 기존 입력이 유지됩니다. fzf가 없거나 실패하면 기본 역방향 히스토리 검색을 사용합니다. Tab의 SSH 검색은 유지합니다.
+
+PSReadLine의 현재 HistorySavePath와 메모리 기록을 사용하며 파일을 수정하지 않습니다. SaveNothing이면 기존 저장 파일은 읽지 않습니다. 다른 OS의 셸·tmux·Neovim 키 설정에는 영향을 주지 않습니다.
