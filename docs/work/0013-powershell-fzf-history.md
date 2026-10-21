@@ -1,6 +1,7 @@
 ﻿# 0013: PowerShell Ctrl+R 히스토리 fzf 검색
 
-- 상태: 진행 중
+- 상태: 리뷰 대기
+- PR: https://github.com/1ocate/dotfiles/pull/24
 - 요청: Ctrl+R로 과거 명령을 검색하고 선택한 명령을 입력줄에 넣는다.
 - 기준: 최신 main 2a92162 (PR #22 병합 확인), feat/powershell-fzf-history. main 대상으로 독립 PR을 제출한다.
 - 환경·범위: windows-powershell, 기존 tab-completion 원본 로더에 연결. 다른 OS·프로필·패키지 설치는 변경하지 않는다.
