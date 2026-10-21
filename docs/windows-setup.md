@@ -4,6 +4,26 @@ Windows 네이티브 PowerShell용 설치·원본 연결 절차입니다. 회사
 
 기술 선택의 이유는 [ADR 0002](adr/0002-native-windows-adapters.md), 기존 버전표·검증 결과와 진행 상태는 [작업 0002](work/0002-windows-native-setup.md)가 원본입니다. 이 문서의 과거 실행 보고를 해당 작업 기록으로 이관했습니다. 공통 환경 승인·격리 원칙은 [설정 가드레일](setup-guardrails.md)을 따릅니다.
 
+## PowerShell SSH 호스트 자동완성
+
+`powershell/tab-completion.ps1`을 읽는 기존 프로필에서는 새 PowerShell 창부터
+`ssh <Tab>`과 `ssh user@<Tab>`으로 사용자 `~/.ssh/config`의 명시적 `Host` 별칭을 제안합니다.
+`fzf.exe`가 있으면 화면 아래 높이 40%의 세로 목록에서 검색·방향키로 고르고 Enter로 입력합니다.
+`ssh <Tab>`은 빈 검색어, `ssh prod<Tab>`은 `prod`가 입력된 검색창으로 열립니다.
+`ssh user@prod<Tab>`도 호스트 부분인 `prod`로 검색하고 선택 결과의 `user@`는 유지합니다.
+전체 Host 목록을 넘기므로 검색어를 수정·삭제해 다른 호스트를 찾을 수 있습니다.
+Enter는 호스트 이름만 삽입하며 명령을 실행하지 않습니다. Esc/Ctrl+C는 선택을 취소하고 입력을 유지합니다.
+다른 명령 및 fzf 부재·실패 시에는 기존 MenuComplete를 사용합니다. 별도 설치는 하지 않습니다.
+선택 중에는 `FZF_DEFAULT_OPTS`와 `FZF_DEFAULT_OPTS_FILE`을 비우고 끝나면 복원합니다.
+세로 목록을 끄려면 현재 창에서 `Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete`를 실행합니다.
+이 원본이 연결되지 않은 프로필이나 신규 설치에는 자동 적용하지 않습니다.
+현재 창에서만 읽으려면 저장소 루트에서 `. ./powershell/tab-completion.ps1`을 실행합니다.
+호스트는 매번 로컬 config에서 읽으며 SSH 접속·외부 모듈 설치는 하지 않습니다.
+와일드카드·부정 패턴·따옴표를 포함한 별칭, `Include`, `-F` 및 옵션 뒤 대상 완성은 지원하지 않습니다.
+후보가 없으면 PowerShell의 기본 경로 완성이 나올 수 있습니다.
+Windows 전용이며 macOS·WSL·Linux 셸은 변경하지 않습니다.
+검증과 제한은 [작업 0011](work/0011-powershell-ssh-completion.md)에 기록합니다.
+
 ## 사전 준비와 의존성
 
 winget과 공통 등록 도구 실행용 Python 3.10 이상을 먼저 준비하고 저장소를 장기간 유지할 위치에 둡니다. Python이 없으면 회사에서 승인한 설치 경로를 사용합니다. 명령은 저장소 루트에서 실행합니다.
@@ -245,3 +265,11 @@ Windows PowerShell 7용 [테마 원본](../powershell/prompt.omp.json)은 oh-my-
 streaming은 세션별 백그라운드 프로세스를 재사용하며 느린 정보는 나중에 표시한다. [공식 베타 기능](https://ohmyposh.dev/docs/configuration/streaming)이므로 GUI/IME·오른쪽 프롬프트·psmux에서 재표시를 확인한다. `POSH_DISABLE_STREAMING`이 있으면 비활성화되며, VS Code PowerShell 확장처럼 공식 비호환 호스트에서는 사용하지 않는다. 설치된 oh-my-posh가 streaming을 지원해야 한다. 되돌리려면 백업한 초기화 줄을 복원하고 새 PowerShell 탭을 연다. 적용·검증 근거는 [작업 0007](work/0007-powershell-prompt-streaming.md)을 따른다.
 
 테마 선택은 PowerShell 프로필의 `oh-my-posh init` 줄에서 정하며, 이 원본은 명명된 `powerlevel10k_rainbow`와 다르다. 내장 테마도 Powerline 스타일 구분선을 포함한다. Windows Terminal의 글꼴·배경 색상 설정과 oh-my-posh의 프롬프트 테마는 별개다. 기본값 재추출은 별도 `pwsh -NoProfile` 프로세스에서 `POSH_*` 변수를 제거하고 새로운 `POSH_SESSION_ID`로 수행해야 기존 세션 테마를 다시 내보내지 않는다. 기준 구현은 [v31.8.0 default.go](https://github.com/JanDeDobbeleer/oh-my-posh/blob/v31.8.0/src/config/default.go)다.
+
+### Ctrl+R 명령 히스토리 검색
+
+기존 `powershell/tab-completion.ps1` 로더가 연결된 PowerShell은 새 세션부터 `Ctrl+R`로 fzf 히스토리 검색을 엽니다. 아직 연결하지 않은 세션에서만 사용하려면 저장소 루트에서 `. ./powershell/tab-completion.ps1`을 실행합니다. 별도 PowerShell 모듈은 필요 없으며 `fzf.exe`가 선택 의존성입니다.
+
+입력 중인 내용이 초기 검색어가 됩니다. 기록은 최신순으로 중복을 제거해 표시하며, 여러 줄 명령은 검색 목록에서 한 줄로 보이고 선택하면 원문으로 복원합니다. fzf에서 Enter는 입력줄에 넣기만 하며 실행하려면 PowerShell에서 Enter를 다시 누릅니다. Esc 또는 Ctrl+C로 취소하면 기존 입력이 유지됩니다. fzf가 없거나 실패하면 기본 역방향 히스토리 검색을 사용합니다. Tab의 SSH 검색은 유지합니다.
+
+PSReadLine의 현재 HistorySavePath와 메모리 기록을 사용하며 파일을 수정하지 않습니다. SaveNothing이면 기존 저장 파일은 읽지 않습니다. 다른 OS의 셸·tmux·Neovim 키 설정에는 영향을 주지 않습니다.

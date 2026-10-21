@@ -31,3 +31,7 @@ PR 리뷰와 새 PowerShell 탭의 GUI 확인이 남았다. macOS·WSL·Linux �
 2026-10-21 KST 후속 요청: 짧은 클러스터 이름은 유지하면서 namespace를 다시 표시한다. cluster:namespace 형식으로 템플릿·가상 렌더 검사·사용 문서를 갱신하고 현재 체크아웃 원본에도 반영한다. namespace가 비어 있으면 default를 표시하는 기존 세그먼트 동작을 검사한다.
 
 후속 검증: 실제 렌더에서 빈 Namespace 필드가 빈 문자열로 전달됨을 확인해 템플릿에 default fallback을 명시했다. Kubernetes 가상 렌더 검사와 프로필 회귀 검사는 통과했으며 실제 클러스터에 접속하지 않았다.
+
+2026-10-21 KST 충돌 해결 요청: 최신 main 196622f의 SSH 완성과 Ctrl+R 히스토리 기능을 보존하며 PR #23을 통합한다. 작업 목록/Windows 사용 문서의 충돌을 양쪽 기능이 남도록 정리한 뒤 Kubernetes 렌더·프롬프트·히스토리 회귀 검사와 diff 검토를 수행한다.
+
+충돌 해결 결과: docs/work/README.md의 추가 행 충돌을 0011·0012·0013 순서로 모두 보존해 해결했다. Windows 사용 문서는 양쪽 설명이 자동 통합됐다. py -3 -B tests/kubernetes-prompt.py, pwsh -NoProfile -File tests/prompt-profile.ps1, pwsh -NoProfile -File tests/history-fzf.ps1 및 staged/working diff --check가 통과했다. 최신 main 대비 변경이 Kubernetes 관련 5개 파일 범위임을 검토했다. GitHub PR 브랜치에 통합 커밋을 push하고 병합 가능 상태를 확인한다. 실제 클러스터 접속·사용 환경 변경·main 병합은 수행하지 않았다.
