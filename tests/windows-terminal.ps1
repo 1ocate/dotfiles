@@ -17,6 +17,27 @@ $beforeLocalAppData = $env:LOCALAPPDATA
 $beforeOS = $env:OS
 $realFactory = (Get-Item Function:\New-WindowsTerminalDirectoryLink).ScriptBlock
 try {
+    $validSource = [IO.File]::ReadAllText($source)
+    Assert-WindowsTerminalEscapeBinding -SourcePath $source
+    $invalidSource = $validSource.Replace('[27;1;27;1;0;1_', '[27;1;0;1;0;1_')
+    [IO.File]::WriteAllText($source, $invalidSource)
+    $blocked = $false
+    try { & (Join-Path $stagedRepo 'scripts/use-windows-terminal.ps1') -Plan | Out-Null } catch { $blocked = $true }
+    if (-not $blocked -or (Test-Path (Join-Path $stagedRepo '.local'))) { throw 'Invalid Escape character was accepted or wrote local state.' }
+    [IO.File]::WriteAllText($source, '{"actions":[]}')
+    $blocked = $false
+    try { Assert-WindowsTerminalEscapeBinding -SourcePath $source } catch { $blocked = $true }
+    if (-not $blocked) { throw 'Missing Escape binding accepted.' }
+    $modern = [pscustomobject]@{actions=@([pscustomobject]@{id='Test.Escape';command=[pscustomobject]@{action='sendInput';input=([string][char]27+'[27;1;27;1;0;1_')}});keybindings=@([pscustomobject]@{id='Test.Escape';keys='escape'})}
+    [IO.File]::WriteAllText($source, ($modern | ConvertTo-Json -Depth 8))
+    Assert-WindowsTerminalEscapeBinding -SourcePath $source
+    $modern.keybindings += [pscustomobject]@{id='Test.Escape';keys='esc'}
+    [IO.File]::WriteAllText($source, ($modern | ConvertTo-Json -Depth 8))
+    $blocked = $false
+    try { Assert-WindowsTerminalEscapeBinding -SourcePath $source } catch { $blocked = $true }
+    if (-not $blocked) { throw 'Duplicate Escape binding accepted.' }
+    [IO.File]::WriteAllText($source, $validSource)
+    Write-Output 'PASS: mandatory Escape character contract; missing/zero/duplicate rejected; modern and legacy formats accepted.'
     $env:LOCALAPPDATA = Join-Path $stage 'appdata'
     $stable = Get-WindowsTerminalTarget
     $preview = Get-WindowsTerminalTarget -Channel preview

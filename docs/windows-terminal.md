@@ -67,7 +67,9 @@ Windows Terminal의 `font.face`는 `MesloLGMDZ Nerd Font`, 크기는 `11`입니�
 | `Ctrl+V` | Neovim Visual Block 등에 전달하도록 터미널 붙여넣기 해제 |
 | `Esc` | Win32 VK_ESCAPE와 문자 0x1b를 함께 한 번 전달. 저장소 AutoHotkey v2 실행 시 키를 뗄 때 영어 IME로 전환 |
 
-Esc 전송은 Windows Terminal 전체 탭의 정책입니다. ConPTY·기존 psmux·로컬 Neovim 검사는 통과했지만 물리 키, GUI 검색·선택 취소와 한글 조합 중 입력은 미검증입니다. 연결된 원본에 이 변경을 반영하면 Terminal이 자동 reload할 수 있습니다. 원격 Vim 증상의 해결을 확정하지 않으며 [작업 0005](work/0005-psmux-ssh-escape.md)와 [ADR 0009](adr/0009-psmux-escape-build.md)를 참고하세요.
+Esc 전송은 이 저장소의 Windows 네이티브 기본 Windows Terminal 설정에 필요한 보정이며 전체 탭에 적용됩니다. 설치 어댑터는 Plan·Check·연결 전에 Esc 키와 문자 0x1b를 함께 보존하는 바인딩을 확인하고, 누락·문자값 0·중복이면 설정 변경 전에 중단합니다. legacy actions와 분리된 actions/keybindings 형식을 모두 검사합니다. WezTerm이나 다른 OS에 이 정책을 자동 적용하지 않습니다.
+
+ConPTY·기존 psmux·로컬 Neovim 검사와 실제 키 문자27 진단을 통과했고 사용자가 모드 전환 정상 동작을 확인했습니다. GUI 검색·선택 취소와 한글 조합 세부는 별도 미검증입니다. 연결된 원본에 이 변경을 반영하면 Terminal이 자동 reload할 수 있습니다. 근거와 한계는 [작업 0005](work/0005-psmux-ssh-escape.md)와 [ADR 0009](adr/0009-psmux-escape-build.md)를 참고하세요.
 
 Windows Terminal 전역 단축키를 SSH 탭까지 바꾸지 않도록 Ctrl+h→Alt+h 전송을 추가하지 않습니다. Esc 영어 전환은 `autoHotKey.ahk`가 활성 Windows Terminal 또는 WezTerm 창에만 적용하며 이미 영어면 그대로 유지합니다. AutoHotkey를 실행하지 않으면 영어 전환 없이 Esc만 전달됩니다. Windows Terminal 창의 모든 탭(SSH 포함)에 적용하며 원격 서버의 IME를 변경하는 기능은 아닙니다. Alt+Space의 터미널 메뉴와 기존 AutoHotkey 입력 전환, 물리 Ctrl+Space·Ctrl+h·Esc/IME는 GUI에서 별도로 확인해야 합니다. 원격 Vim Esc 문제는 [PR #12](https://github.com/1ocate/dotfiles/pull/12)의 독립 조사이며 이번 변경으로 해결됐다고 판단하지 않습니다.
 

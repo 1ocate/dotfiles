@@ -113,6 +113,10 @@ Windows Terminal 원본의 bare Esc는 Win32 VK_ESCAPE(Uc=0)로 보낸다. 전�
 
 ## 현재 남은 일
 
+2026-10-21 KST 마무리 계획: 사용자가 동작을 확인하고 Windows에서 기본 적용을 유지하도록 요청했다. Windows 네이티브의 Windows Terminal 기본 설정에 한정해 필수 Esc 키/문자 보존 검사기를 설치 어댑터의 Plan/Check/연결 전에 호출한다. Uc=0·누락·중복 바인딩이 있으면 실제 설정 변경 전에 중단하도록 검증한다. 원본 키맵은 JSON 한 곳에 유지하고 검사기는 필수 계약만 확인한다. WezTerm·다른 OS에 검증 결과를 일반화하지 않는다. 사용자의 성공 보고는 사용자 기능 확인으로 기록하며 에이전트가 SSH 접속을 수행한 것으로 쓰지 않는다. 작업 완료 후 열린 PR의 중복·우선순위·남은 확인을 정리한다.
+
+2026-10-21 KST 기본 경로 검증: PowerShell 7에서 `tests/windows-terminal.ps1` 통과(누락·Uc=0·중복 거절, legacy/modern 수용, 설정 보존·승인/호스트 차단·junction/재실행). `tests/windows-terminal-setup.ps1`도 통과해 기본 Windows Terminal 호출과 명시적 WezTerm 분리, Plan 무변경을 확인했다. 실제 사용자 설정을 이 검사로 다시 연결하지 않았고 현재 로컬 수정은 유지했다. 사용자 정상 확인에 따라 Esc 구성요소 로컬 상태만 완료로 기록하며 전체 설치나 다른 호스트 진행 기록은 변경하지 않는다.
+
 2026-10-21 KST 재개: 사용자가 mux와 무관하게 발생하며 영어 전환은 되지만 Vim 모드가 유지된다고 보고했다. 현재 Terminal의 Win32 Esc action/keybinding은 유지되고 AutoHotkey도 실행 중임을 읽기 전용 확인했다. 앞선 합성 ConPTY 결과는 물리 입력과 동일한 원인으로 확정할 수 없다. 원격/로컬 Vim 구분과 초기 영문 상태 결과는 아직 미확인이다. SSH 접속 없이 별도 Terminal 진단 탭에서 Esc·Ctrl+[의 실제 ConsoleKey/KeyChar만 제한적으로 측정한다. 일반 문자·다른 창 입력은 기록하지 않으며 새로운 영구 바인딩 변경 전에 실제 이벤트를 확인한다.
 
 2026-10-21 KST 실제 키 진단: 사용자가 진단 탭에서 입력한 두 Escape는 `ConsoleKey=Escape, KeyChar=0`, Ctrl+[는 `KeyChar=27`로 관측됐다. 기존 Uc=0 보정의 raw 전달/키 이름 검사만으로 문자 의미까지 검증했다고 볼 수 없음을 확인했다. Win32 Uc=27 후보와 문자값 0x1b 단언을 추가하고 직접 ConPTY·로컬 Neovim 회귀 후, 승인된 기존 로컬 보정의 Uc 필드만 0→27로 수정한다. 기존 설정 bytes·backup을 보존하고 실제 키 재확인을 요청한다. 이 관측만으로 최초 원격 증상의 원인까지 확정하지 않는다.
