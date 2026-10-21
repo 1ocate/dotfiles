@@ -6,3 +6,5 @@ if (Get-Command Set-PSReadLineKeyHandler -ErrorAction SilentlyContinue) {
 
 . (Join-Path $PSScriptRoot 'ssh-completion.ps1')
 . (Join-Path $PSScriptRoot 'ssh-fzf.ps1')
+
+. (Join-Path $PSScriptRoot 'history-fzf.ps1')
