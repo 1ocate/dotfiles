@@ -9,6 +9,7 @@ $repoPath = Split-Path -Parent $PSScriptRoot
 . (Join-Path $PSScriptRoot 'windows-environment.ps1')
 . (Join-Path $PSScriptRoot 'windows-terminal.ps1')
 $source = Join-Path $repoPath 'windows-terminal/settings.json'
+Assert-WindowsTerminalEscapeBinding -SourcePath $source
 if (-not (Test-Path -LiteralPath (Join-Path $repoPath 'windows-terminal/.gitignore') -PathType Leaf)) { throw 'Windows Terminal runtime ignore rules are missing; no settings were changed.' }
 $target = Get-WindowsTerminalTarget -Channel $Channel
 $connection = Get-WindowsTerminalConnection -SourcePath $source -TargetPath $target

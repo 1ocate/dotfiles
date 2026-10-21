@@ -59,9 +59,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1 
 
 ## 기존 환경 등록과 선택 옵션
 
-기본 Windows 설치는 PowerShell 5.1·7의 사용자 프로필에 [별칭 원본](../powershell/aliases.ps1)을 읽는 loader를 추가합니다. 현재 호스트의 승인된 `windows-powershell` 선택과 실행 가능한 `nvim`이 있으면 `vi`·`vim`이 같은 Neovim 실행 파일을 호출하며 파일 경로·옵션을 그대로 전달합니다. 기존 일반 별칭보다 이 설정을 우선하고, ReadOnly·Constant 별칭은 강제로 바꾸지 않고 경고합니다. Neovim이 없거나 환경 선택이 유효하지 않으면 기존 별칭을 유지하고 해당 기능만 생략합니다. macOS·WSL·Linux 셸에는 적용하지 않습니다.
+기본 Windows 설치는 PowerShell 5.1·7의 사용자 프로필에 [별칭 원본](../powershell/aliases.ps1)을 읽는 loader를 추가합니다. Windows 네이티브 PowerShell에서 실행 가능한 `nvim`이 있으면 `vi`·`vim`이 같은 Neovim 실행 파일을 호출하며 파일 경로·옵션을 그대로 전달합니다. 별칭은 장비 이름·환경 선택 파일·승인 기록에 의존하지 않습니다. 기존 일반 별칭보다 이 설정을 우선하고, ReadOnly·Constant 별칭은 강제로 바꾸지 않고 경고합니다. Neovim이 없으면 기존 별칭을 유지하고 해당 기능만 생략합니다. macOS·WSL·Linux 셸에는 적용하지 않습니다. Global 별칭은 현재 PowerShell 세션 전체에서 유효하며 다른 사용자나 시스템 전체에 설치하는 의미는 아닙니다.
 
-이미 세팅된 장비에는 전체 설치 대신 다음 명령으로 별칭만 연결합니다. 패키지 설치·Neovim 설정·터미널 설정은 변경하지 않습니다.
+### 머지 후 기존 장비의 vi/vim 별칭 적용
+
+대상은 별칭 loader가 아직 없는 기존 Windows 장비입니다. PR 병합이나 `git pull`은 저장소 원본만 갱신하므로, 각 장비에서 다음 명령으로 한 번 연결해야 합니다. 이미 loader가 연결된 장비는 원본 갱신 후 새 PowerShell 탭을 열면 됩니다. 신규 장비는 전체 Windows 설치에서 자동으로 연결합니다.
+
+Windows 네이티브 PowerShell과 실행 가능한 `nvim`이 필요합니다. 저장소 루트에서 전체 설치 대신 다음 명령으로 별칭만 연결합니다. 패키지 설치·Neovim 설정·터미널 설정은 변경하지 않습니다. 전체 Windows 설치의 환경 승인 절차와 별개로 별칭 전용 연결에는 환경 등록이 필요 없습니다.
 
 ```powershell
 powershell -NoProfile -File scripts/setup-powershell-aliases.ps1 -Plan
@@ -69,7 +73,11 @@ powershell -NoProfile -File scripts/setup-powershell-aliases.ps1
 powershell -NoProfile -File scripts/setup-powershell-aliases.ps1 -Check
 ```
 
-기존 프로필은 인코딩과 내용을 보존해 백업하고, loader는 재실행해도 중복 추가하지 않습니다. BOM 없는 프로필에 비 ASCII 문자가 있거나 추가할 경로에 비 ASCII 문자가 있으면 인코딩을 추측하지 않고 변경 전에 중단합니다. 이 경우 원본을 백업하고 UTF-8 BOM으로 저장한 뒤 다시 연결합니다. Plan/Check는 읽기 전용이며 Check는 Neovim과 두 프로필의 loader 존재를 확인합니다. 새 PowerShell 탭에서 `Get-Command vi,vim`으로 확인하고 `vi 파일명` 또는 `vim 파일명`으로 실행합니다. 현재 탭에서 즉시 사용하려면 저장소 루트에서 `. .\powershell\aliases.ps1`을 실행합니다. 원본이 마지막으로 로드된 뒤 사용자 프로필이 같은 이름을 다시 정의하면 뒤의 정의가 적용됩니다. 연결 결과와 백업 경로는 `.local/setup-state.json`의 `components.powershell_aliases`에 기록합니다. 해제하려면 두 프로필에서 해당 loader 줄을 제거하고 새 탭을 열거나 기록된 프로필 백업을 확인해 복구합니다.
+기존 프로필은 인코딩과 내용을 보존해 백업하고, loader는 재실행해도 중복 추가하지 않습니다. BOM 없는 프로필에 비 ASCII 문자가 있거나 추가할 경로에 비 ASCII 문자가 있으면 인코딩을 추측하지 않고 변경 전에 중단합니다. 이 경우 원본을 백업하고 UTF-8 BOM으로 저장한 뒤 다시 연결합니다. Plan/Check는 읽기 전용이며 Check는 Neovim과 두 프로필의 loader 존재를 확인합니다. 새 PowerShell 탭에서 `Get-Command vi,vim`으로 확인하고 `vi 파일명` 또는 `vim 파일명`으로 실행합니다. 현재 탭에서 즉시 사용하려면 저장소 루트에서 `. .\powershell\aliases.ps1`을 실행합니다. 원본이 마지막으로 로드된 뒤 사용자 프로필이 같은 이름을 다시 정의하면 뒤의 정의가 적용됩니다. 연결 결과와 백업 경로는 `.local/powershell-aliases.json`의 `components.powershell_aliases`에 기록합니다. 해제하려면 두 프로필에서 해당 loader 줄을 제거하고 새 탭을 열거나 기록된 프로필 백업을 확인해 복구합니다.
+
+별칭 연결 결과·검증 시각·백업 경로는 장비 이름 없이 `.local/powershell-aliases.json`에 기록합니다. 기존 `.local/setup-state.json`은 읽거나 수정하지 않습니다. 예전 연결기의 `Alias setup-state belongs to another host/environment or is invalid` 오류가 발생했다면 이 변경이 포함된 원본으로 갱신한 뒤 위 별칭 전용 명령을 다시 실행합니다. 기존 설치 기록의 호스트 값을 수정하거나 삭제할 필요가 없습니다. 정책 결정은 [ADR 0010](adr/0010-powershell-alias-platform-scope.md)을 따릅니다.
+
+### Git 자동완성
 
 Git의 명령·브랜치 Tab 완성은 `posh-git` 1.1.0으로 제공합니다. 기본 세팅이 사용자 `Documents/WindowsPowerShell/Modules`에 모듈을 준비하고 5.1·7 프로필에 저장소의 `powershell/git-completion.ps1`을 읽는 loader를 추가합니다. 기존 프로필은 백업하고 인코딩·Oh My Posh 프롬프트를 보존합니다. 설치에는 PowerShell 7.4 이상 또는 `Save-PSResource`를 제공하는 PSResourceGet과 PSGallery 접근이 필요합니다. PSGallery 신뢰 설정은 전역으로 변경하지 않습니다.
 
@@ -218,6 +226,25 @@ Neovim은 승인된 Windows에서 이 체크아웃 설정을 사용하는 기본
 4. `Ctrl+Space` → 대문자 `D`로 저장소 이동, 대문자 `F`로 프로젝트 선택·전환을 확인한 뒤 Codex를 시작합니다.
 
 원본 profile 함수도 새 프로세스에서 다시 읽습니다. 기존 세션을 자동 이전하거나 일괄 종료하지 않습니다. 결정은 [ADR 0006](adr/0006-psmux-default-namespace.md)을 참고합니다. 전체 자동 검증은 `tests/windows-psmux-projects.py`의 실제 launcher/t/F/D 흐름, `tests/windows-psmux.py --full-config`의 실제 Neovim 입력 검사와 runtime/foreground 격리 검사로 구분하며 물리 GUI·IME·클립보드는 별도 확인이 필요합니다.
+
+### SSH 원격 Vim에서 Esc가 전달되지 않을 때
+
+로컬 Neovim 삽입 모드 보정은 SSH 뒤의 원격 Vim 모드를 감지하지 않습니다. Windows Terminal 원본은 Esc를 Win32 VK_ESCAPE 입력으로 전달해 ConPTY의 raw Esc 유실 경로를 피합니다. 기존 AutoHotkey의 Esc Up 영문 전환은 유지합니다. 이 바인딩은 Windows Terminal 전체 탭에 적용됩니다. 원본 변경을 실제 Terminal 설정에 연결·적용하는 작업은 별도입니다. 실제 SSH·물리 키 증상의 해결은 아직 확인하지 않았습니다. 근거와 한계는 [작업 0005](work/0005-psmux-ssh-escape.md), [ADR 0009](adr/0009-psmux-escape-build.md)에 기록합니다.
+
+원격 Vim에서 임시로 Ctrl+\ 다음 Ctrl+N을 눌러 일반 모드로 복귀할 수 있습니다. 기본 설정의 Vim은 `vim -u NONE -i NONE`으로 실행해 사용자 매핑·플러그인의 영향을 분리합니다. 기본 설정에서만 정상이라면 기존 Vim에서 `:verbose imap <Esc>`로 매핑 정의를 확인합니다. 원격 tmux 사용 여부도 함께 확인합니다. 원격 설정 파일이나 개인 인증을 자동 수정하지 않습니다.
+
+로컬 입력 전달 비교는 `py -3 -B tests/psmux-escape.py --wezterm`으로 수행합니다. 기존 psmux 3.3.8과 테스트 전용 .NET Framework 컴파일러를 사용하고 임시 namespace/data에만 테스트 서버를 만듭니다. 실제 SSH를 연결하거나 사용자 세션을 재설정하지 않습니다. 기본 PASS는 합성 modifier stress의 해결을 뜻하지 않으며 `--require-all`은 알려진 입력 유실도 실패로 노출합니다. GUI/IME·실제 원격 Vim 확인은 별도입니다.
+
+Windows Terminal 원본의 전송 바이트 검사는 다음처럼 실행합니다. `--encoded-escape`는 원본 settings.json의 Esc 액션을 직접 읽습니다.
+
+```powershell
+py -3 -B tests/psmux-escape.py --encoded-escape --require-all --require-escape-character --case client-Escape --case client-Escape-modifier --mode raw --mode keys --mode events
+py -3 -B tests/windows-psmux.py --encoded-escape
+```
+
+WezTerm의 VT 입력 경로는 이 전송 방식만으로 부족합니다. 실험용 수정본은 공식 [v3.3.8 source archive](https://github.com/psmux/psmux/archive/refs/tags/v3.3.8.zip)를 별도로 준비하고 `py -3 scripts/build-psmux-escape.py --source-archive <zip>`으로 빌드합니다. 원본 archive SHA256 `4de52692b7f13f886d13b2d507df8fde36bfda80491eebf865d73ed416d571a3`를 검증하며 기존 Rust/Cargo GNU toolchain과 GNU linker가 필요합니다. Cargo 의존성은 네트워크에서 `.local` 빌드 경로로 준비합니다. 컴파일러 자동 설치·전역 PATH 변경·설치본 교체·기본 mux 선택은 하지 않습니다.
+
+빌드된 `.local/psmux-escape-build/target/x86_64-pc-windows-gnu/release/psmux.exe`를 `--binary <exe>`로 지정해 동일한 검사에 비교할 수 있습니다. WezTerm형 검사는 `--wezterm --encoded-escape`를 함께 사용합니다. 이 실험용 빌드 도구만으로 실사용 mux나 WezTerm Esc 전달이 변경되지는 않습니다.
 
 ## PowerShell 7 프롬프트 streaming
 

@@ -26,15 +26,27 @@ def until(predicate, description, timeout=25):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--full-config', action='store_true', help='Load current LazyVim config offline; disable bytecode cache and tool downloads.')
+    parser.add_argument('--binary', type=Path, help='Use this psmux executable instead of installed psmux 3.3.8.')
+    parser.add_argument('--encoded-escape', action='store_true', help='Send standalone Escape using Windows Terminal Win32 input encoding.')
     args = parser.parse_args()
     if os.name != 'nt':
         raise SystemExit('Native Windows is required.')
-    binary = Path(os.environ['LOCALAPPDATA']) / 'Programs/psmux/3.3.8/psmux.exe'
+    encoded_escape = None
+    if args.encoded_escape:
+        terminal_config = json.loads((ROOT / 'windows-terminal/settings.json').read_text(encoding='utf-8-sig'))
+        escape_bindings = [action for action in terminal_config.get('actions', [])
+                           if action.get('keys') == 'escape']
+        assert len(escape_bindings) == 1, 'Expected exactly one Windows Terminal Escape binding'
+        escape_command = escape_bindings[0].get('command')
+        assert isinstance(escape_command, dict) and escape_command.get('action') == 'sendInput', \
+            'Windows Terminal Escape binding must use sendInput'
+        encoded_escape = escape_command['input'].encode('ascii')
+    binary = (args.binary or Path(os.environ['LOCALAPPDATA']) / 'Programs/psmux/3.3.8/psmux.exe').resolve()
     nvim = shutil.which('nvim')
     pwsh = shutil.which('pwsh')
     plugin = Path(os.environ['LOCALAPPDATA']) / 'nvim-data/lazy/nvim-tmux-navigation'
     if not binary.is_file() or not nvim or not pwsh or not plugin.is_dir():
-        raise SystemExit('Installed psmux 3.3.8, Neovim, PowerShell 7 and navigator are required; no downloads.')
+        raise SystemExit('The selected psmux executable, Neovim, PowerShell 7 and navigator are required; no downloads.')
     startup = ['-u', 'NONE']
     if args.full_config:
         # Keep the existing installed plugin state, with no bootstrap/download/update.
@@ -122,6 +134,8 @@ def main():
                         str(ROOT / 'tests/psmux-input-host.cs')], check=True,
                        capture_output=True, text=True, timeout=30)
         def terminal_bytes(data):
+            if encoded_escape is not None and data == b'\x1b':
+                data = encoded_escape
             with (input_dir / 'conpty_ctrl.txt').open('a', encoding='ascii') as control:
                 control.write('HEX ' + data.hex() + '\n')
 
