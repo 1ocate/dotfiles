@@ -9,12 +9,11 @@ $documents = Join-Path $stage 'documents'
 New-Item -ItemType Directory -Path (Join-Path $stagedRepo 'powershell'), (Join-Path $stagedRepo 'scripts') -Force | Out-Null
 $runtime = Join-Path $stagedRepo 'powershell/aliases.ps1'
 Copy-Item -LiteralPath (Join-Path $repo 'powershell/aliases.ps1') -Destination $runtime
-# Mock only the installer's common Python approval adapter; runtime reads real fixture JSON.
+# This adapter must never be loaded: aliases are independent of environment approval.
 @'
 function Assert-WindowsPowerShellSelection {
     param($RepoPath)
-    $selection = Get-Content -LiteralPath (Join-Path $RepoPath '.local/environment.json') -Raw -Encoding UTF8 | ConvertFrom-Json
-    if ($selection.approved -ne $true -or $selection.host -ne [Environment]::MachineName -or $selection.environment -ne 'windows-powershell') { throw 'Test approval rejected.' }
+    throw 'Aliases must not require environment approval.'
 }
 '@ | Set-Content -LiteralPath (Join-Path $stagedRepo 'scripts/windows-environment.ps1') -Encoding UTF8
 function Expect-AliasFailure {
@@ -30,7 +29,7 @@ Expect-AliasFailure { Invoke-PowerShellAliasesSetup @arguments -Plan -Check } 'c
 $stateDirectory = Join-Path $stagedRepo '.local'
 New-Item -ItemType Directory -Path $stateDirectory | Out-Null
 $selectionPath = Join-Path $stateDirectory 'environment.json'
-$selection = [ordered]@{schemaVersion=1;approved=$true;host=[Environment]::MachineName;environment='windows-powershell'}
+$selection = [ordered]@{schemaVersion=1;approved=$true;host='unrelated-device';environment='windows-powershell'}
 function Save-AliasSelection { $selection | ConvertTo-Json | Set-Content -LiteralPath $selectionPath -Encoding UTF8 }
 Save-AliasSelection
 $profiles = @('WindowsPowerShell','PowerShell') | ForEach-Object { Join-Path $documents "$_/Microsoft.PowerShell_profile.ps1" }
@@ -49,22 +48,25 @@ if ([Convert]::ToBase64String([IO.File]::ReadAllBytes($profiles[0])) -ne [Conver
 Expect-AliasFailure { Invoke-PowerShellAliasesSetup @arguments } 'ambiguous without a BOM'
 [IO.File]::WriteAllText($profiles[0], '# ASCII without BOM', [Text.UTF8Encoding]::new($false))
 Expect-AliasFailure { Invoke-PowerShellAliasesSetup @arguments } 'ambiguous without a BOM'
-if ((Test-Path (Join-Path $stateDirectory 'setup-state.json')) -or @(Get-ChildItem $documents -Recurse -Filter '*.backup-*').Count -or
+if ((Test-Path (Join-Path $stateDirectory 'powershell-aliases.json')) -or @(Get-ChildItem $documents -Recurse -Filter '*.backup-*').Count -or
     [Convert]::ToBase64String([IO.File]::ReadAllBytes($profiles[1])) -ne [Convert]::ToBase64String($originals[1])) { throw 'Rejected encoding changed another profile or created backups/state.' }
 [IO.File]::WriteAllBytes($profiles[0], $originals[0])
-$statePath = Join-Path $stateDirectory 'setup-state.json'
-$progress = @{host=[Environment]::MachineName;environment='windows-powershell';components=@{unrelated=@{status='preserved'}}}
-$progress.host='other-host'
-$progress | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $statePath -Encoding UTF8
-Expect-AliasFailure { Invoke-PowerShellAliasesSetup @arguments } 'setup-state belongs'
+$legacyStatePath = Join-Path $stateDirectory 'setup-state.json'
+$progress = @{host='unrelated-device';environment='windows-powershell';components=@{unrelated=@{status='preserved'}}}
+$progress | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $legacyStatePath -Encoding UTF8
+$legacyStateBytes = [Convert]::ToBase64String([IO.File]::ReadAllBytes($legacyStatePath))
+$statePath = Join-Path $stateDirectory 'powershell-aliases.json'
+'{}' | Set-Content -LiteralPath $statePath -Encoding UTF8
+Expect-AliasFailure { Invoke-PowerShellAliasesSetup @arguments } 'progress record is invalid'
 if (@(Get-ChildItem $documents -Recurse -Filter '*.backup-*').Count) { throw 'Rejected apply made profile backups.' }
-$progress.host=[Environment]::MachineName
-$progress | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $statePath -Encoding UTF8
+Remove-Item -LiteralPath $statePath
+Remove-Item -LiteralPath $selectionPath
 Invoke-PowerShellAliasesSetup @arguments | Out-Null
 Invoke-PowerShellAliasesSetup @arguments -Check | Out-Null
 $firstState = [IO.File]::ReadAllText($statePath)
 $savedState = $firstState | ConvertFrom-Json
-if ($savedState.components.unrelated.status -ne 'preserved' -or $savedState.components.powershell_aliases.status -ne 'linked') { throw 'Progress record was lost or unverified.' }
+if ($savedState.PSObject.Properties['host'] -or $savedState.components.powershell_aliases.status -ne 'linked') { throw 'Host identity stored or progress unverified.' }
+if ([Convert]::ToBase64String([IO.File]::ReadAllBytes($legacyStatePath)) -ne $legacyStateBytes) { throw 'Legacy setup-state changed.' }
 for ($index=0; $index -lt $profiles.Count; $index++) {
     $backup = @(Get-ChildItem -LiteralPath (Split-Path -Parent $profiles[$index]) -Filter '*.backup-*')
     if ($backup.Count -ne 1 -or [Convert]::ToBase64String([IO.File]::ReadAllBytes($backup[0].FullName)) -ne [Convert]::ToBase64String($originals[$index])) { throw 'Original profile backup differs.' }
@@ -75,7 +77,7 @@ for ($index=0; $index -lt $profiles.Count; $index++) {
 }
 Invoke-PowerShellAliasesSetup @arguments | Out-Null
 if ([IO.File]::ReadAllText($statePath) -ne $firstState -or @(Get-ChildItem $documents -Recurse -Filter '*.backup-*').Count -ne 2) { throw 'Repeated setup changed state/backups.' }
-Write-Output 'PASS: read-only Plan/Check, other-host rejection, profile encoding/backups, unrelated progress and idempotence.'
+Write-Output 'PASS: read-only Plan/Check, no approval required, host-free progress, legacy state preservation, encoding/backups and idempotence.'
 $asciiRepo = Join-Path $stage 'ascii-repo'
 Copy-Item -LiteralPath $stagedRepo -Destination $asciiRepo -Recurse
 $asciiDocuments = Join-Path $stage 'ascii-documents'
@@ -101,7 +103,7 @@ try {
             'malformed' { '{' | Set-Content -LiteralPath $selectionPath }
             'unapproved' { $selection.approved=$false; Save-AliasSelection; $selection.approved=$true }
             'string-approval' { $selection.approved='true'; Save-AliasSelection; $selection.approved=$true }
-            'other-host' { $selection.host='other-host'; Save-AliasSelection; $selection.host=[Environment]::MachineName }
+            'other-host' { $selection.host='other-host'; Save-AliasSelection }
             'wsl' { $selection.environment='windows-wsl'; Save-AliasSelection; $selection.environment='windows-powershell' }
             'schema' { $selection.schemaVersion=2; Save-AliasSelection; $selection.schemaVersion=1 }
             'non-Windows' { $env:OS='Linux' }
@@ -109,10 +111,18 @@ try {
         Set-Alias vi Get-Date -Scope Global
         Set-Alias vim Get-Location -Scope Global
         . $runtime
-        if ((Get-Alias vi).Definition -ne 'Get-Date' -or (Get-Alias vim).Definition -ne 'Get-Location') { throw "Invalid environment changed aliases: $invalid" }
+        if ($invalid -eq 'non-Windows') {
+            if ((Get-Alias vi).Definition -ne 'Get-Date' -or (Get-Alias vim).Definition -ne 'Get-Location') { throw 'Non-Windows changed aliases.' }
+            Expect-AliasFailure { Invoke-PowerShellAliasesSetup @arguments } 'native Windows'
+        } else {
+            $expectedNeovim = (Get-Command nvim -CommandType Application | Select-Object -First 1).Source
+            if ((Get-Alias vi).Definition -ne $expectedNeovim -or (Get-Alias vim).Definition -ne $expectedNeovim) { throw "Alias depends on selection: $invalid" }
+        }
         $env:OS=$beforeOS
     }
     Save-AliasSelection
+    Set-Alias vi Get-Date -Scope Global
+    Set-Alias vim Get-Location -Scope Global
     $env:Path=''
     . $runtime
     if ((Get-Alias vi).Definition -ne 'Get-Date' -or (Get-Alias vim).Definition -ne 'Get-Location') { throw 'Missing nvim changed aliases.' }
@@ -132,7 +142,7 @@ try {
         $output = & $name --headless -u NONE -i NONE -n $fixture '+lua io.stdout:write(vim.api.nvim_buf_get_name(0))' '+qa!' 2>&1 | Out-String
         if ($LASTEXITCODE -ne 0 -or $output -notmatch 'file with spaces') { throw "$name lost arguments or failed: $output" }
     }
-    Write-Output 'PASS: environment/approval isolation, missing executable, ReadOnly preservation, repeated loading, real vi/vim argument forwarding with -u NONE -i NONE.'
+    Write-Output 'PASS: selection-independent Windows aliases, non-Windows exclusion, missing executable, ReadOnly preservation, real vi/vim argument forwarding with -u NONE -i NONE.'
 } finally {
     $env:OS=$beforeOS
     $env:Path=$beforePath

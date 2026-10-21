@@ -45,21 +45,19 @@ function Invoke-PowerShellAliasesSetup {
         if (@($entries | Where-Object { -not $_.Linked }).Count) {
             throw 'PowerShell alias loader is missing. Run scripts/setup-powershell-aliases.ps1; no profiles were changed.'
         }
-        Write-Output 'Neovim and both profile loaders are available. Runtime aliases still require the current host PowerShell selection.'
+        Write-Output 'Neovim and both profile loaders are available. Aliases apply in native Windows PowerShell.'
         return
     }
-    . (Join-Path $RepoPath 'scripts/windows-environment.ps1')
-    Assert-WindowsPowerShellSelection -RepoPath $RepoPath
-    $statePath = Join-Path $RepoPath '.local/setup-state.json'
+    $statePath = Join-Path $RepoPath '.local/powershell-aliases.json'
     $state = $null
     if (Test-Path -LiteralPath $statePath) {
         $state = Get-Content -LiteralPath $statePath -Raw -Encoding UTF8 | ConvertFrom-Json
-        if ($state.host -ne [Environment]::MachineName -or $state.environment -ne 'windows-powershell' -or $state.components -isnot [pscustomobject]) {
-            throw 'Alias setup-state belongs to another host/environment or is invalid. Preserve and repair it before applying; no profiles were changed.'
+        if ($state.schemaVersion -ne 1 -or $state.environment -ne 'windows-powershell' -or $state.components -isnot [pscustomobject]) {
+            throw 'Alias progress record is invalid. Preserve and repair .local/powershell-aliases.json before applying; no profiles were changed.'
         }
     }
     if (-not $state) {
-        $state = [pscustomobject]@{host=[Environment]::MachineName;environment='windows-powershell';components=[pscustomobject]@{}}
+        $state = [pscustomobject]@{schemaVersion=1;environment='windows-powershell';components=[pscustomobject]@{}}
     }
     $previous = $state.components.powershell_aliases
     $backups = @()
@@ -83,6 +81,7 @@ function Invoke-PowerShellAliasesSetup {
         $component = [pscustomobject]@{status='linked';source=$runtimePath;profiles=@($profiles);backups=$backups;checked_at=(Get-Date -Format o);
             verification='Both profile loaders verified. Open a new PowerShell session to verify vi/vim command resolution; GUI editing is not verified.'}
         $state.components | Add-Member -NotePropertyName powershell_aliases -NotePropertyValue $component -Force
+        New-Item -ItemType Directory -Path (Split-Path -Parent $statePath) -Force | Out-Null
         if (Test-Path -LiteralPath $statePath) { Copy-Item -LiteralPath $statePath -Destination ($statePath + '.backup-' + [guid]::NewGuid().ToString('N')) }
         $state | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $statePath -Encoding UTF8
     }
