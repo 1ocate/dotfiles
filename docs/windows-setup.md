@@ -251,7 +251,14 @@ WezTerm의 VT 입력 경로는 이 전송 방식만으로 부족합니다. 실�
 
 ## PowerShell 7 프롬프트 streaming
 
-Windows PowerShell 7용 [테마 원본](../powershell/prompt.omp.json)은 oh-my-posh 31.8.0의 최초 설치 내장 기본 테마를 세션 캐시와 POSH_* 환경 변수까지 격리해 내보내고 `streaming: 100`만 추가한 것이다. 내장 기본 테마의 색상·세그먼트·Git 표시를 보존한다. 새 PowerShell 7 프로필은 설치 시 이 원본을 참조하고, 기존 oh-my-posh 초기화가 있으면 자동 교체하지 않는다. Windows PowerShell 5.1 초기화 방식은 유지한다. 이 원본은 Windows PowerShell 7용으로 사용하며 다른 환경에 자동 적용하지 않는다.
+프롬프트에는 로컬 kubeconfig의 현재 클러스터와 네임스페이스를 `☸ cluster:namespace`로 표시합니다.
+`KUBECONFIG`를 지정하면 해당 파일을, 없으면 기본 사용자 kubeconfig를 사용합니다.
+ARN·경로 형식이면 마지막 `/` 뒤 클러스터 이름만 표시하며 namespace가 비어 있으면 `default`로 표시합니다. 설정이 없거나 잘못됐으면 Kubernetes 표시만 숨깁니다.
+이 표시는 클러스터 접속 상태가 아니라 로컬에서 선택한 대상입니다. kubectl 실행·인증 plugin·context 변경은 하지 않습니다.
+기존 streaming과 테마는 유지하며 PowerShell 7의 저장소 테마를 읽는 새 탭부터 확인합니다.
+검증 범위는 [작업 0012](work/0012-kubernetes-prompt.md)에 기록합니다.
+
+Windows PowerShell 7용 [테마 원본](../powershell/prompt.omp.json)은 oh-my-posh 31.8.0의 최초 설치 내장 기본 테마를 세션 캐시와 POSH_* 환경 변수까지 격리해 내보내고 `streaming: 100` 설정과 Kubernetes 클러스터 표시를 추가한 것이다. 내장 기본 테마의 색상·세그먼트·Git 표시를 보존한다. 새 PowerShell 7 프로필은 설치 시 이 원본을 참조하고, 기존 oh-my-posh 초기화가 있으면 자동 교체하지 않는다. Windows PowerShell 5.1 초기화 방식은 유지한다. 이 원본은 Windows PowerShell 7용으로 사용하며 다른 환경에 자동 적용하지 않는다.
 
 기존 PowerShell 7 프로필을 백업한 뒤 oh-my-posh 초기화 줄에서 이 체크아웃의 `powershell/prompt.omp.json`을 `--config`로 명시한다. `$PROFILE`에서 프로필 위치를 확인하고 경로는 각 호스트의 실제 체크아웃을 사용한다. Git 자동완성과 psmux loader의 순서를 유지하며 초기화 줄을 중복 추가하지 않는다. 현재 사용 중인 다른 테마로 이 파일을 적용하면 모양이 달라질 수 있으므로 테마 내용을 먼저 비교한다.
 

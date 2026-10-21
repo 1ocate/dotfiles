@@ -74,6 +74,18 @@
           ]
         },
         {
+          "options": {
+            "parse_kubeconfig": true,
+            "display_error": false
+          },
+          "template": " ☸ {{ regexReplaceAll \"^.*/\" .Cluster \"\" }}:{{ if .Namespace }}{{ .Namespace }}{{ else }}default{{ end }} ",
+          "foreground": "p:white",
+          "powerline_symbol": "",
+          "background": "p:blue",
+          "type": "kubectl",
+          "style": "powerline"
+        },
+        {
           "template": "  ",
           "foreground": "p:white",
           "powerline_symbol": "",
