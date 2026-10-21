@@ -46,6 +46,13 @@
   ],
   "actions": [
     {
+      "command": {
+        "action": "sendInput",
+        "input": "\u001b[27;1;27;1;0;1_"
+      },
+      "keys": "escape"
+    },
+    {
       "command": "unbound",
       "keys": "ctrl+v"
     },

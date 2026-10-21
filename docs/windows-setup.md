@@ -202,6 +202,25 @@ Neovim은 승인된 Windows에서 이 체크아웃 설정을 사용하는 기본
 
 원본 profile 함수도 새 프로세스에서 다시 읽습니다. 기존 세션을 자동 이전하거나 일괄 종료하지 않습니다. 결정은 [ADR 0006](adr/0006-psmux-default-namespace.md)을 참고합니다. 전체 자동 검증은 `tests/windows-psmux-projects.py`의 실제 launcher/t/F/D 흐름, `tests/windows-psmux.py --full-config`의 실제 Neovim 입력 검사와 runtime/foreground 격리 검사로 구분하며 물리 GUI·IME·클립보드는 별도 확인이 필요합니다.
 
+### SSH 원격 Vim에서 Esc가 전달되지 않을 때
+
+로컬 Neovim 삽입 모드 보정은 SSH 뒤의 원격 Vim 모드를 감지하지 않습니다. Windows Terminal 원본은 Esc를 Win32 VK_ESCAPE 입력으로 전달해 ConPTY의 raw Esc 유실 경로를 피합니다. 기존 AutoHotkey의 Esc Up 영문 전환은 유지합니다. 이 바인딩은 Windows Terminal 전체 탭에 적용됩니다. 원본 변경을 실제 Terminal 설정에 연결·적용하는 작업은 별도입니다. 실제 SSH·물리 키 증상의 해결은 아직 확인하지 않았습니다. 근거와 한계는 [작업 0005](work/0005-psmux-ssh-escape.md), [ADR 0009](adr/0009-psmux-escape-build.md)에 기록합니다.
+
+원격 Vim에서 임시로 Ctrl+\ 다음 Ctrl+N을 눌러 일반 모드로 복귀할 수 있습니다. 기본 설정의 Vim은 `vim -u NONE -i NONE`으로 실행해 사용자 매핑·플러그인의 영향을 분리합니다. 기본 설정에서만 정상이라면 기존 Vim에서 `:verbose imap <Esc>`로 매핑 정의를 확인합니다. 원격 tmux 사용 여부도 함께 확인합니다. 원격 설정 파일이나 개인 인증을 자동 수정하지 않습니다.
+
+로컬 입력 전달 비교는 `py -3 -B tests/psmux-escape.py --wezterm`으로 수행합니다. 기존 psmux 3.3.8과 테스트 전용 .NET Framework 컴파일러를 사용하고 임시 namespace/data에만 테스트 서버를 만듭니다. 실제 SSH를 연결하거나 사용자 세션을 재설정하지 않습니다. 기본 PASS는 합성 modifier stress의 해결을 뜻하지 않으며 `--require-all`은 알려진 입력 유실도 실패로 노출합니다. GUI/IME·실제 원격 Vim 확인은 별도입니다.
+
+Windows Terminal 원본의 전송 바이트 검사는 다음처럼 실행합니다. `--encoded-escape`는 원본 settings.json의 Esc 액션을 직접 읽습니다.
+
+```powershell
+py -3 -B tests/psmux-escape.py --encoded-escape --require-all --require-escape-character --case client-Escape --case client-Escape-modifier --mode raw --mode keys --mode events
+py -3 -B tests/windows-psmux.py --encoded-escape
+```
+
+WezTerm의 VT 입력 경로는 이 전송 방식만으로 부족합니다. 실험용 수정본은 공식 [v3.3.8 source archive](https://github.com/psmux/psmux/archive/refs/tags/v3.3.8.zip)를 별도로 준비하고 `py -3 scripts/build-psmux-escape.py --source-archive <zip>`으로 빌드합니다. 원본 archive SHA256 `4de52692b7f13f886d13b2d507df8fde36bfda80491eebf865d73ed416d571a3`를 검증하며 기존 Rust/Cargo GNU toolchain과 GNU linker가 필요합니다. Cargo 의존성은 네트워크에서 `.local` 빌드 경로로 준비합니다. 컴파일러 자동 설치·전역 PATH 변경·설치본 교체·기본 mux 선택은 하지 않습니다.
+
+빌드된 `.local/psmux-escape-build/target/x86_64-pc-windows-gnu/release/psmux.exe`를 `--binary <exe>`로 지정해 동일한 검사에 비교할 수 있습니다. WezTerm형 검사는 `--wezterm --encoded-escape`를 함께 사용합니다. 이 실험용 빌드 도구만으로 실사용 mux나 WezTerm Esc 전달이 변경되지는 않습니다.
+
 ## PowerShell 7 프롬프트 streaming
 
 Windows PowerShell 7용 [테마 원본](../powershell/prompt.omp.json)은 oh-my-posh 31.8.0의 최초 설치 내장 기본 테마를 세션 캐시와 POSH_* 환경 변수까지 격리해 내보내고 `streaming: 100`만 추가한 것이다. 내장 기본 테마의 색상·세그먼트·Git 표시를 보존한다. 새 PowerShell 7 프로필은 설치 시 이 원본을 참조하고, 기존 oh-my-posh 초기화가 있으면 자동 교체하지 않는다. Windows PowerShell 5.1 초기화 방식은 유지한다. 이 원본은 Windows PowerShell 7용으로 사용하며 다른 환경에 자동 적용하지 않는다.

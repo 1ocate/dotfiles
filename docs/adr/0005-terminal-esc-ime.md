@@ -14,3 +14,5 @@ Windows Terminal에는 공식 키 액션으로 IME를 영어로 설정하는 기
 AutoHotkey v2는 선택 의존성이며 미실행 시 Esc 입력만 전달된다. 현재 원본을 재실행하면 기존 Alt/Windows 교환·Alt+Space·복사/붙여넣기 설정도 함께 로드되지만 그 내용은 변경하지 않는다. IME 제어 실패 시 영어 전환은 생략되며 Esc 원래 입력은 유지된다. 한글 조합·Neovim/mux/SSH의 물리 입력은 GUI 검증 전까지 미검증이다.
 
 근거: [Windows Terminal 액션](https://learn.microsoft.com/en-us/windows/terminal/customize-settings/actions), [WM_IME_CONTROL](https://learn.microsoft.com/en-us/windows/win32/intl/wm-ime-control).
+
+2026-10-20 후속 제안: [ADR 0009](0009-psmux-escape-build.md)는 AutoHotkey IME 역할을 유지하면서 Windows Terminal의 Esc 전송 방식을 보정한다. 채택 전에는 이 결정의 터미널 바인딩 없음 선택을 대체한 것으로 보지 않는다.
