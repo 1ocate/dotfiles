@@ -1,6 +1,7 @@
-# 0016: 장치 통합 읽기 전용 점검
+﻿# 0016: 장치 통합 읽기 전용 점검
 
-- 상태: 진행 중
+- 상태: 리뷰 대기
+- 관련 PR: https://github.com/1ocate/dotfiles/pull/27
 - 요청: 다른 장치의 Codex가 적용 전 상태를 한 번에 확인하도록 통합 읽기 전용 점검부터 구현한다.
 - 시작일: 2026-10-22
 - 기준: main a0d3ee0, feat/device-status
@@ -27,7 +28,7 @@
 
 ## 검증과 남은 일
 
-구현·자동 검사·현재 Windows 실제 점검·OS/독립 리뷰·PR 제출이 남았다.
+구현·자동 검사·현재 Windows 실제 점검·OS/독립 리뷰 후 Draft PR #27로 제출했다. PR 리뷰·다른 OS 실기기 확인·병합이 남았다. 자동 적용/상태 기록 갱신은 후속 범위다.
 
 2026-10-22 KST 구현·검증: wrapper는 bytecode 쓰기도 막고 새 구현은 플랫폼/파일/PATH만 조사한다. Windows root 체크아웃을 --repo로 지정한 실제 점검에서 34개 항목(present 17, reference-found 10, missing 3, mismatch 2, unknown 2)을 출력했다. root의 장치 진행 기록 불일치와 Terminal 독립 설정을 서로 구분했으며 프로필 내용·기록 전문은 출력하지 않았다. 이 결과를 기능 완료나 설정 적용으로 기록하지 않는다.
 
