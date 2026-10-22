@@ -1,6 +1,7 @@
-# ADR 0011: 공유 적용 명세와 장치 로컬 검증 기록으로 Codex 반영 절차 연결
+﻿# ADR 0011: 공유 적용 명세와 장치 로컬 검증 기록으로 Codex 반영 절차 연결
 
-- 상태: 제안
+- 상태: 채택
+- 채택 근거: [PR #26](https://github.com/1ocate/dotfiles/pull/26) 병합. 작업 0016 재개 시 상태 문구를 병합 이력과 맞췄으며 결정 내용은 유지한다.
 - 범위: common, Codex 협업 절차
 - 관련 작업: [작업 0015](../work/0015-codex-device-application.md)
 
