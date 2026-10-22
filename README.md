@@ -4,6 +4,8 @@
 
 공통 설정을 원본으로 유지하고 OS별 스크립트는 환경 차이만 연결합니다. 이후 작업 기준은 [공통 설정 가드레일](docs/setup-guardrails.md)과 [AGENTS.md](AGENTS.md)에 기록합니다. Windows 로컬 사전 점검은 `scripts/setup-windows.ps1 -Check`로 실행합니다.
 
+설치·설정 변경 없이 장치의 도구·원본 연결·PowerShell 프로필·로컬 기록을 한 번에 확인하려면 [통합 읽기 전용 점검](docs/device-status.md)을 사용합니다. Windows에서는 `py -3 -B scripts/device-status.py`를 실행합니다. 발견/참조와 실제 기능 검증을 구분하며 검사만으로 적용 완료를 기록하지 않습니다.
+
 Windows 감지는 사용 환경 선택과 구분합니다. 설치는 `.local/environment.json`의 이전 선택을 확인하고, 최초 PowerShell 사용 승인만 `-ApprovePowerShell`로 기록합니다. Neovim과 WezTerm도 현재 호스트의 저장된 값이 `windows-powershell`일 때만 해당 설정을 적용합니다. 기록이 없거나 WSL 선택이면 PowerShell로 자동 전환하지 않습니다.
 
 AI는 요청 범위의 분석·병렬 분담·수정·검증·PR 제출까지 자율적으로 진행하고 사용자는 최종 PR을 검토합니다. Codex 실행 옵션과 에이전트 역할은 [AI 작업 흐름](docs/ai-workflow.md#자율-진행과-병렬-분담)을 따릅니다.

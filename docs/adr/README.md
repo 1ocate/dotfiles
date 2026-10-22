@@ -14,3 +14,4 @@
 | 0009 | [Windows Esc 전달과 psmux modifier 보정](0009-psmux-escape-build.md) | [작업 0005](../work/0005-psmux-ssh-escape.md) |
 | 0010 | [PowerShell 편집기 별칭을 플랫폼 기준으로 적용](0010-powershell-alias-platform-scope.md) | [작업 0009](../work/0009-powershell-neovim-aliases.md) |
 | 0011 | [Codex 장치 반영의 공유 명세와 로컬 검증 기록](0011-codex-device-application.md) | [작업 0015](../work/0015-codex-device-application.md) |
+| 0012 | [외부 실행 없는 장치 상태 인벤토리](0012-readonly-device-inventory.md) | [작업 0016](../work/0016-readonly-device-status.md) |
