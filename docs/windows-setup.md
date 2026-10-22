@@ -80,6 +80,12 @@ powershell -NoProfile -File scripts/setup-powershell-aliases.ps1 -Check
 
 별칭 연결 결과·검증 시각·백업 경로는 장비 이름 없이 `.local/powershell-aliases.json`에 기록합니다. 기존 `.local/setup-state.json`은 읽거나 수정하지 않습니다. 예전 연결기의 `Alias setup-state belongs to another host/environment or is invalid` 오류가 발생했다면 이 변경이 포함된 원본으로 갱신한 뒤 위 별칭 전용 명령을 다시 실행합니다. 기존 설치 기록의 호스트 값을 수정하거나 삭제할 필요가 없습니다. 정책 결정은 [ADR 0010](adr/0010-powershell-alias-platform-scope.md)을 따릅니다.
 
+### k9s·kubectl의 기본 편집기
+
+`powershell/aliases.ps1`은 `nvim`이 PATH에 있을 때 비어 있는 `EDITOR`와 `KUBE_EDITOR`를 각각 `nvim`으로 설정합니다. k9s의 edit와 `kubectl edit`가 Neovim을 사용하도록 하며, 이미 지정된 환경변수는 각각 보존합니다. 명시적인 다른 편집기 설정이 있으면 해당 값을 직접 변경해야 합니다. Windows PowerShell 5.1과 PowerShell 7의 프로세스 환경에만 적용하며 User/Machine 환경변수는 변경하지 않습니다. `nvim`이 없으면 기본값도 지정하지 않습니다.
+
+기존 별칭 loader가 연결된 장비는 새 탭을 열고 k9s를 다시 시작합니다. 현재 탭에서는 저장소 루트에서 `. .\powershell\aliases.ps1`을 실행한 뒤 k9s를 다시 시작합니다. 확인은 `$env:EDITOR`, `$env:KUBE_EDITOR`, `Get-Command nvim`으로 합니다. loader가 없는 장비는 위 별칭 연결 절차를 사용합니다. 편집기를 따로 쓰려면 loader 뒤에서 `$env:KUBE_EDITOR = '원하는 편집기'`처럼 지정합니다. 환경변수 사용 근거는 [k9s 공식 안내](https://k9scli.io/topics/install/)입니다.
+
 ### Git 자동완성
 
 Git의 명령·브랜치 Tab 완성은 `posh-git` 1.1.0으로 제공합니다. 기본 세팅이 사용자 `Documents/WindowsPowerShell/Modules`에 모듈을 준비하고 5.1·7 프로필에 저장소의 `powershell/git-completion.ps1`을 읽는 loader를 추가합니다. 기존 프로필은 백업하고 인코딩·Oh My Posh 프롬프트를 보존합니다. 설치에는 PowerShell 7.4 이상 또는 `Save-PSResource`를 제공하는 PSResourceGet과 PSGallery 접근이 필요합니다. PSGallery 신뢰 설정은 전역으로 변경하지 않습니다.
