@@ -17,7 +17,7 @@ function Invoke-PowerShellAliasesSetup {
     $loader = ". '" + $runtimePath.Replace("'", "''") + "'"
     $profiles = @('WindowsPowerShell', 'PowerShell') | ForEach-Object { Join-Path $DocumentsPath "$_/Microsoft.PowerShell_profile.ps1" }
     if ($Plan) {
-        Write-Output 'Connect both PowerShell profiles to powershell/aliases.ps1: vi and vim launch Neovim; preserve and back up existing profiles.'
+        Write-Output 'Connect both PowerShell profiles to powershell/aliases.ps1: vi/vim launch Neovim; unset EDITOR/KUBE_EDITOR default to nvim; preserve and back up existing profiles.'
         return
     }
     if (-not (Get-Command nvim -CommandType Application -ErrorAction SilentlyContinue)) {

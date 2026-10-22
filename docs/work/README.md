@@ -14,3 +14,4 @@
 | 0011 | [PowerShell SSH 호스트 완성과 세로 선택기](0011-powershell-ssh-completion.md) | [ADR 0002](../adr/0002-native-windows-adapters.md) |
 | 0012 | [PowerShell 프롬프트의 현재 Kubernetes 클러스터](0012-kubernetes-prompt.md) | [ADR 0002](../adr/0002-native-windows-adapters.md) |
 | 0013 | [PowerShell Ctrl+R 히스토리 fzf 검색](0013-powershell-fzf-history.md) | [ADR 0002](../adr/0002-native-windows-adapters.md) |
+| 0014 | [PowerShell Kubernetes·기본 편집기를 Neovim으로 설정](0014-powershell-nvim-editor.md) | [ADR 0002](../adr/0002-native-windows-adapters.md)·[ADR 0010](../adr/0010-powershell-alias-platform-scope.md) |
