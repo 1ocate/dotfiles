@@ -1,6 +1,7 @@
 ﻿# 0014: PowerShell의 Kubernetes·기본 편집기를 Neovim으로 설정
 
-- 상태: 진행 중
+- 상태: 리뷰 대기
+- PR: https://github.com/1ocate/dotfiles/pull/25
 - 요청: k9s edit가 메모장 대신 Neovim을 열도록 로컬에 적용하고 PR을 제출한다.
 - 기준: main bb7871d, feat/powershell-nvim-editor.
 - 환경·범위: windows-powershell, Windows PowerShell 5.1·PowerShell 7의 기존 powershell/aliases.ps1 원본 로더. macOS/WSL/Linux는 미변경.
