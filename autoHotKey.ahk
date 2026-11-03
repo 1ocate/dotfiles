@@ -22,7 +22,7 @@ LWin::LAlt
 }
 
 ; 터미널 비밀 입력. Ctrl+Alt+P 비밀번호, Ctrl+Alt+O OTP. Shift를 더하면 등록·변경한다.
-; 값은 Windows 자격 증명 관리자에만 저장하며 Enter는 보내지 않는다.
+; 값은 Windows 자격 증명 관리자에만 저장한다. 비밀번호는 입력 후 Enter까지 보내고 OTP는 Enter를 보내지 않는다.
 ^!p::
 {
     try IME_SET_ENGLISH("A")
