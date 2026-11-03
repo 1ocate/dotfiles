@@ -17,3 +17,4 @@
 | 0014 | [PowerShell Kubernetes·기본 편집기를 Neovim으로 설정](0014-powershell-nvim-editor.md) | [ADR 0002](../adr/0002-native-windows-adapters.md)·[ADR 0010](../adr/0010-powershell-alias-platform-scope.md) |
 | 0015 | [Codex의 장치별 main 반영 절차 고정](0015-codex-device-application.md) | [ADR 0011](../adr/0011-codex-device-application.md) |
 | 0016 | [장치 통합 읽기 전용 점검](0016-readonly-device-status.md) | [ADR 0012](../adr/0012-readonly-device-inventory.md) |
+| 0017 | [터미널 비밀번호·OTP AutoHotkey 단축키](0017-autohotkey-terminal-secrets.md) | [ADR 0014](../adr/0014-autohotkey-terminal-secrets.md) |
