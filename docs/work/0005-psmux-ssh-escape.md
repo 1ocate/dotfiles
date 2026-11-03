@@ -1,6 +1,6 @@
 # 0005: Windows psmux의 SSH 원격 Vim Esc 전달 조사
 
-- 상태: 리뷰 대기 (로컬 수정 후보 검증, draft PR #12)
+- 상태: 진행 중 (2026-11-03 검색 Esc 유실 재현; 과거 조사 제출은 draft PR #12)
 - 요청·배경: Windows psmux에서 세로 분할 후 SSH로 원격 Vim을 열고 삽입 모드에서 Esc를 눌러도 종료되지 않으며 Ctrl+C로만 복귀한다.
 - 시작일: 2026-10-07
 - 기준: 최신 main `73bbe35`, `fix/psmux-ssh-escape`; 기존 사용자 `nvim/lazy-lock.json` 수정 보존. 작업 0004/PR #11은 별도 목표다.
@@ -36,11 +36,30 @@ Enter 검색 확정과 Ctrl+C 취소, 격리 서버 종료·사용자 lockfile �
 최종 plain raw/full Noice encoded 검사와 AST·대상 diff 공백 검사 통과, 독립 재리뷰 차단 문제 없음. 강화 전 plain encoded/full raw도 통과했으나 강화 후 네 조합 모두 재실행했다고 주장하지 않는다.
 사용자는 영문·한글 모두 검색 Esc가 실패한다고 확인했다. 5분 임시 제어키 관찰을 새로 시작했으나 중간 조회는 전체 입력 개수 0으로 실제 물리키 결과를 판단할 수 없었다. 사용자 검사 응답 대기이며 해결 완료로 표시하지 않는다.
 
+실사용 후속 관찰: 사용자는 mux 안에서만 한영 모두 검색 Esc가 실패하며, 현재 창의 두 번째 세션/pane에서도 발생한다고 확인했다.
+관찰 중 총 입력 44/mode=c이나 제어키 Esc 기록이 없는 상태였고, 같은 Neovim 검색줄에 API Esc 1회를 전달한 비교에서는 Esc(mode=c) 기록과 mode=n 복귀를 확인했다.
+이는 실제 사용자 증상과 격리 검사 결과가 다르다는 근거이며 모든 물리 Esc가 어떤 단계에서 유실되는지 확정한 trace는 아니다.
+이후 psmux CLI로 Esc 전달을 비교하는 두 명령이 사용자에 의해 중단됐고 부분 실행 가능성이 있다. 사용자는 의도하지 않은 Esc 동작을 보고했다.
+실사용 세션에 진단 입력을 보낸 것이 영향을 줄 수 있음을 설명하고 즉시 중단했다. 임시 on_key 관찰과 진단 변수를 RPC로 해제했으며 이후 실사용 세션의 키 전송·reload·재연결은 수행하지 않는다.
+추가 재현은 격리 세션에서만 진행한다. 런타임 수정·해결 완료를 주장하지 않는다.
+
+공식 upstream [#588](https://github.com/psmux/psmux/issues/588)은 `send-keys C-<letter>` 이후 ConPTY가 Win32 입력 모드로 latch되어 단독 ESC를 보류하는 결함을 설명한다.
+현재 OS build 26200에서 `python -B tests/psmux-search-escape.py --latch-control-key`로 검색줄 준비 뒤 `send-keys C-a`를 보내면 mode=c가 유지되어 ESC 취소 assertion이 실패했다. cleanup과 lockfile 보존은 통과했다.
+처음의 fresh-pane 성공과 이 선행 Ctrl 입력 후 실패를 구분한다. 이 결과는 현재 Ctrl+h/j/k/l 어댑터의 같은 send-keys C-* 경로와 일치하지만 모든 실제 키 경로를 trace한 것은 아니다.
+휠의 raw SGR 문자 입력과 명령 이력 이동은 공식 [#598](https://github.com/psmux/psmux/issues/598)·[#597](https://github.com/psmux/psmux/issues/597)과 일치한다.
+세 수정은 [v3.4.0](https://github.com/psmux/psmux/releases/tag/v3.4.0)에 포함되나 이후 [#860](https://github.com/psmux/psmux/issues/860) 등 입력 회귀 수정이 이어져 단순 버전 변경으로 해결을 보증하지 않는다. 설치본은 변경하지 않았다.
+
+최종 비교: 원본의 `--latch-control-key` raw/encoded 모두 검색 모드 유지로 실패했고 cleanup/lockfile 보존은 통과했다. `--config`로 private 설정의 ESC fallback만 Win32 encoded `send-keys -H`로 바꾸면 raw+latch의 `/ ? :` 취소·Enter 확정·Ctrl+C는 통과했다.
+이 private 경로에서는 기존 foreground marker ownership guard가 작동하지 않으므로 production 어댑터 전체 검증으로 보지 않는다.
+독립 소스 검토에서 이 우회를 전체 root fallback에 적용하면 다른 앱의 프로토콜·popup/copy-search·synchronized input 의미가 바뀔 수 있음을 확인해 런타임 수정 후보로 채택하지 않았다.
+진단의 결론은 새 pane baseline만으로 성공을 판단하면 안 되며, Ctrl/방향키 이후 ESC·마우스 등록·raw 입력 앱의 회귀를 함께 검증한 upstream 수정본이 필요하다는 것이다.
+이번 요청에서는 재현 검사와 원인 기록을 제출하며 실제 psmux 업데이트·설정 연결·실사용 세션 재시작은 수행하지 않는다. 작업 폴더 문제는 신규 세션 정상/기존 세션 재사용 구분까지만 확인했으며 사용자 생성 경로가 미확인이다.
+
 ### 2026-11-03 다른 장치 적용 명세
 
 이번 변경은 Windows 전용 격리 진단 검사와 조사 기록이며 런타임 동작을 바꾸지 않는다. 추가 설치·링크·설정 재로드는 불필요하다.
 기존 psmux 3.3.8·Neovim·Windows .NET 컴파일러가 있는 장치에서 `python -B tests/psmux-search-escape.py`로 plain 검사,
-`--encoded-escape`로 Terminal 원본 인코딩, `--full-config`로 이미 설치된 LazyVim/Noice를 검사한다. 도구가 없으면 설치하지 않고 중단한다.
+`--encoded-escape`로 Terminal 원본 인코딩, `--full-config`로 이미 설치된 LazyVim/Noice를 검사한다. `--latch-control-key`는 3.3.8의 알려진 실패를 재현하며 종료 코드 1이 예상된다. `--config`는 기존 private 후보 파일만 읽는다. 도구가 없으면 설치하지 않고 중단한다.
 private PSMUX_DATA_DIR에서만 세션을 만들고 종료하며 물리 키·IME·다른 OS 성공을 보증하지 않는다. 조사 결과는 해당 장치 로컬 기록과 이 작업 기록의 검증 한계로 구분한다.
 
 Windows psmux에는 Esc root binding이 있고 로컬 Neovim 삽입 모드에만 Ctrl+\ Ctrl+N 보정이 적용된다. SSH 뒤의 원격 Vim 모드는 Windows 로컬 marker로 알 수 없다. 일반 Escape 전달의 ConPTY 경로와 로컬 marker가 없는 편집기/SSH 입력을 검사한다. 사용자의 실제 원격 연결 정보나 서버 설정을 임의로 열거나 변경하지 않는다.

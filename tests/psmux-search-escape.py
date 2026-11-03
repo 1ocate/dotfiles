@@ -67,6 +67,10 @@ def alive(pid):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--encoded-escape', action='store_true')
+    parser.add_argument('--latch-control-key', action='store_true',
+                        help='Inject CLI Ctrl-A before Escape to probe pane ConPTY input-mode latch')
+    parser.add_argument('--config', type=Path,
+                        help='Trusted private test configuration; data-dir isolation does not sandbox config commands')
     parser.add_argument('--full-config', action='store_true',
                         help='Use existing LazyVim/Noice plugins offline; no installation or updates')
     args = parser.parse_args()
@@ -77,6 +81,9 @@ def main():
     csc = Path(os.environ['WINDIR']) / 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
     if not binary.is_file() or not nvim or not csc.is_file():
         parser.error('Existing psmux, Neovim and .NET compiler required')
+    config = (args.config or ROOT / 'tmux/psmux.conf').resolve()
+    if not config.is_file():
+        parser.error('Selected configuration does not exist')
     escape = b'\x1b'
     startup = ['-u', 'NONE']
     if args.full_config:
@@ -178,7 +185,7 @@ end))
 
         process = None
         try:
-            run('-f', str(ROOT / 'tmux/psmux.conf'), 'new-session', '-d', '-s', 'search',
+            run('-f', str(config), 'new-session', '-d', '-s', 'search',
                 '-x', '120', '-y', '30', '--', nvim, *startup, '-i', 'NONE', '-S', str(script))
             mode('n')
             startup = subprocess.STARTUPINFO()
@@ -204,6 +211,12 @@ end))
                     print('Screen:', repr(run('capture-pane', '-p')[-1000:]), flush=True)
                     print('Output:', repr((temp / 'conpty_out.bin').read_bytes()[-800:]), flush=True)
                     raise
+                if args.latch_control_key:
+                    # Intended as command-line editing input, Ctrl-A traverses
+                    # the pane ConPTY path implicated in #588. The pinned path
+                    # may instead append a literal control byte (reported on fail).
+                    run('send-keys', 'C-a')
+                    time.sleep(.2)
                 feed(escape)
                 try:
                     current = mode('n')
