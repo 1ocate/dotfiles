@@ -95,6 +95,7 @@ psmux 원본 확인 결과 `display-popup` 명령은 `pwsh -NoProfile -Command`�
 격리 3.4.0 결과: F→fzf 908/1058/1063ms(이전 1964ms), 프로젝트 F 선택·전환, 취소 시 popup만 닫히고 창 수 유지, D, reload 후 prefix·F/D popup·root C-h 유지, 다른 원본 거절 통과. 사용자 정의 `t`는 F/D에서 더 이상 읽지 않는다(현재 프로필에는 없음).
 사용자가 세션을 직접 닫고 다시 연 뒤 기능은 동작하나 속도가 비슷하다고 보고했다. 읽기 전용 확인 결과 `main`은 변경 전부터 열려 있던 탭의 옛 `mux` 함수로 만들어져 F가 프로필 새 창 방식이고 root C-h도 없었다. 새 `WORK` 세션만 popup F였다.
 추가로 폴더 열거·fzf를 `powershell/project-picker.ps1`로 분리해 popup에서 runtime 로드(첫 JSON 파싱 약 0.2초 포함) 전에 실행하게 했다. 격리 3.4.0에서 F→fzf 757/755/754ms, 프로젝트 F 선택·취소·D·reload·다른 원본 거절과 mock(7/5.1)·runtime 검사를 다시 통과했다.
+2026-11-03 KST 적용 상태 점검(읽기 전용): PR #30은 draft·open이고 head `bef256a`가 원격 브랜치와 같다. 실사용 원본 체크아웃(`C:\Users\locate\dotfiles`)의 psmux 관련 코드(`powershell`, `scripts`, `tmux`, `tests`)는 원격 브랜치와 같아 새 탭 `mux`와 popup은 최신 코드를 읽는다. 실행 중 3.4.0 세션 중 `WORK-c987440aa0f4`는 popup F·root C-h·`source-file -F` reload가 적용됐고, `main`은 옛 `mux` 함수가 만든 바인딩(new-window F, root C-h 없음)이 남아 있다. 실행 중 세션의 재로드·종료는 사용자 요청 없이 하지 않았다.
 
 다른 장치 적용 명세(windows-powershell, psmux 활성화 장치만): 이 PR은 psmux pin을 3.4.0으로 바꾸고 새 셸의 기본 데이터 경로를 버전별로 분리한다. macOS·WSL·Linux는 적용 대상이 아니다.
 1. 로컬 변경 보존·main 갱신 후 `.local/environment.json`의 host 일치 windows-powershell 승인과 `.local/psmux.json` 활성화를 확인한다. 승인이 없으면 적용하지 않는다.
@@ -132,7 +133,7 @@ Windows psmux에는 Esc root binding이 있고 로컬 Neovim 삽입 모드에만
 
 원인 재현, 수정·검증·리뷰·PR 제출. 실사용 서버 재로드와 실제 원격 확인은 별도 적용 범위다.
 
-2026-11-03 업그레이드 후: 새 탭 3.4.0 세션에서 물리 키 Esc·검색 취소·휠·IME와 실제 Codex 사용을 사용자가 확인한다. upstream 입력 회귀(#845/#860) 수정 버전은 별도 검토한다. 다른 Windows 장치는 아래 적용 명세에 따른다.
+2026-11-03 업그레이드 후: 새 탭 3.4.0 세션에서 물리 키 Esc·검색 취소·휠·IME와 실제 Codex 사용을 사용자가 확인한다. upstream 입력 회귀(#845/#860) 수정 버전은 별도 검토한다. 다른 Windows 장치는 아래 적용 명세에 따른다. 이 장치의 `main` 세션은 사용자가 닫고 새 PowerShell 탭의 `mux`로 다시 만들거나 재로드를 요청해야 popup F가 적용된다. 물리 확인 후 PR #30의 draft를 해제한다.
 ## 재현과 수정 방향
 
 - 2026-10-07 09:29 KST: 격리 attached ConPTY 검사에서 기본 raw ReadFile/Console.ReadKey/Event 소비자에는 Esc가 정상 전달됐다. WezTerm VT 입력에서 Esc 직후 문자 없는 Shift 이벤트를 동시 또는 5ms 간격으로 보내면 50ms pending Escape가 취소되어 후속 x만 도착했다. 실제 사용자 키/IME가 같은 이벤트를 만들었다고 확정하지 않는다.
