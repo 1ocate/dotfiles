@@ -26,7 +26,7 @@
 - 입력 담당은 기존 Windows 입력 원본 `autoHotKey.ahk`로 하고, 로직은 단축키가 없는 `autohotkey/credentials.ahk`로 분리해 단독 테스트가 Alt/Win 교환을 로드하지 않게 한다.
 - 비밀 값은 Windows 자격 증명 관리자의 일반 자격 증명에 `CRED_PERSIST_LOCAL_MACHINE`으로 저장한다. 로밍하지 않고 장치마다 등록한다. 새 외부 의존성은 추가하지 않는다.
 - TOTP는 Windows CNG(`bcrypt.dll`)의 HMAC으로 RFC 6238을 구현한다.
-- 단축키는 WezTerm·Windows Terminal 창에서만 `Ctrl+Alt+P`(비밀번호)·`Ctrl+Alt+O`(OTP), Shift를 더한 조합으로 등록한다. 저장소의 WezTerm·Windows Terminal·psmux·PSReadLine·Neovim 설정이 쓰지 않는 조합이며, 셸·Vim이 흔히 쓰는 단일 Alt·Ctrl 조합을 가리지 않는다. 비밀번호와 OTP 모두 입력 뒤 Enter를 보내 바로 제출한다(2026-11-03 사용자 요청으로 변경).
+- 단축키는 WezTerm·Windows Terminal 창에서만 입력은 `Shift+Alt+P`(비밀번호)·`Shift+Alt+O`(OTP), 등록·변경은 `Ctrl+Alt+Shift+P/O`로 한다(2026-11-03 사용자 요청으로 입력 조합을 Ctrl+Alt에서 변경). WezTerm·Windows Terminal 기본 키와 PSReadLine 기본 바인딩에도 Shift+Alt+P/O는 없다. 저장소의 WezTerm·Windows Terminal·psmux·PSReadLine·Neovim 설정이 쓰지 않는 조합이며, 셸·Vim이 흔히 쓰는 단일 Alt·Ctrl 조합을 가리지 않는다. 비밀번호와 OTP 모두 입력 뒤 Enter를 보내 바로 제출한다(2026-11-03 사용자 요청으로 변경).
 
 ## 영향과 재검토 조건
 
