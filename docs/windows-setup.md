@@ -188,7 +188,7 @@ WezTerm loader는 `%USERPROFILE%\.wezterm.lua`, Neovim junction은 `%LOCALAPPDAT
 setup-state 자동 저장·PowerShell 프로필 원본화·macOS 설치 통합과 tmux·프로젝트 전환의 WezTerm 이식은 아직 포함하지 않습니다. LSP·포맷 런타임과 외부 서비스의 회사 사용 허용 여부는 프로젝트별로 확인합니다. 구체적인 과거·현재 검증 결과와 후속 작업은 작업 0002에서만 누적합니다.
 ## psmux와 Neovim pane 이동
 
-Windows에서 tmux 대안으로 psmux 3.3.8을 선택적으로 사용합니다. PowerShell 7과 Windows x64가 필요합니다. 공식 portable 릴리스의 SHA256을 확인하며 최신 버전으로 자동 업데이트하지 않습니다. 원본은 [psmux.conf](../tmux/psmux.conf), 선택 이유는 [ADR 0003](adr/0003-windows-psmux.md), 검증은 [작업 0003](work/0003-windows-psmux.md)에 있습니다.
+Windows에서 tmux 대안으로 psmux 3.4.0을 선택적으로 사용합니다. PowerShell 7과 Windows x64가 필요합니다. 공식 portable 릴리스의 SHA256을 확인하며 최신 버전으로 자동 업데이트하지 않습니다. 원본은 [psmux.conf](../tmux/psmux.conf), 선택 이유는 [ADR 0003](adr/0003-windows-psmux.md), 업그레이드와 기존 세션 보존은 [ADR 0013](adr/0013-psmux-upgrade-isolation.md)와 [작업 0005](work/0005-psmux-ssh-escape.md)에 있습니다.
 
 ```powershell
 # 기존 PowerShell 환경 승인과 설치된 도구를 확인한 뒤 별도 적용
@@ -200,7 +200,18 @@ pwsh -NoProfile -File .\scripts\setup-psmux.ps1 -Check
 powershell -NoProfile -File .\scripts\setup-windows.ps1 -ApprovePowerShell -WithPsmux
 ```
 
-기존 장비의 유효한 `.local/environment.json`을 재사용합니다. 최초 장비에서는 앞의 환경 등록 절차로 PowerShell 선택을 먼저 저장합니다. psmux는 `%LOCALAPPDATA%\Programs\psmux\3.3.8`에 준비하며 기존 다른 버전이나 홈의 tmux/psmux 설정을 덮어쓰지 않습니다. 두 사용자 프로필에 저장소 `powershell/psmux.ps1`을 읽는 loader를 추가하며 기존 파일은 백업합니다. 사용자 PATH 변경 전 값은 `.local/path-before-psmux-*.txt`에 보관합니다. 호스트별 활성화 값 `.local/psmux.json`은 Git에 포함하지 않습니다.
+기존 장비의 유효한 `.local/environment.json`을 재사용합니다. 최초 장비에서는 앞의 환경 등록 절차로 PowerShell 선택을 먼저 저장합니다. psmux는 `%LOCALAPPDATA%\Programs\psmux\3.4.0`에 준비하며 기존 다른 버전이나 홈의 tmux/psmux 설정을 덮어쓰지 않습니다. 두 사용자 프로필에 저장소 `powershell/psmux.ps1`을 읽는 loader를 추가하며 기존 파일은 백업합니다. 사용자 PATH 변경 전 값은 `.local/path-before-psmux-*.txt`에 보관하고 새 버전 경로만 앞으로 옮깁니다. 호스트별 활성화 값 `.local/psmux.json`은 Git에 포함하지 않습니다.
+
+업그레이드 후 새 PowerShell 탭에서 `mux`를 시작합니다. 명시적 `PSMUX_DATA_DIR`가 없으면 새 세션은 `%LOCALAPPDATA%\psmux\3.4.0`의 별도 데이터 경로를 사용합니다. 사용자가 지정한 데이터 경로는 보존하되 다른 버전의 서버에는 연결하지 않습니다. 기존 3.3.8 세션은 종료하거나 옮기지 않으며, 그 안에서 새 셸을 열어도 실제 서버 실행 파일을 확인해 기존 버전을 유지합니다. 알 수 없는 서버나 다른 설정의 pane은 자동 채택하지 않습니다.
+
+`Get-DotfilesMuxStatus`의 `PinnedVersion`과 `ActiveVersion`으로 목표 버전과 현재 pane 버전을 구분합니다. 옛 세션이 새 목록에 보이지 않아도 삭제된 것은 아닙니다. 기존 기본 데이터 경로를 사용하던 3.3.8 세션은 새 외부 PowerShell에서 다음과 같이 다시 연결할 수 있습니다(명시적 데이터 경로를 사용했다면 원래 값을 지정합니다).
+
+```powershell
+# 이 셸 프로세스에서만 옛 기본 데이터 경로를 다시 선택합니다.
+Remove-Item Env:PSMUX_DATA_DIR -ErrorAction SilentlyContinue
+& "$env:LOCALAPPDATA\Programs\psmux\3.3.8\psmux.exe" list-sessions
+& "$env:LOCALAPPDATA\Programs\psmux\3.3.8\psmux.exe" attach-session -t '=main'
+```
 
 WezTerm을 새로 열면 `main` 세션을 만들거나 다시 연결합니다. named namespace 없이 기본 namespace와 저장소의 `-f` 설정을 사용합니다. `mux`·`t`는 유지합니다. 공식 psmux pane 신호와 `PSMUX_CONFIG_FILE` 원본 경로로 보정 대상을 확인하며, 다른 설정의 같은 이름 세션은 덮어쓰지 않습니다. 도구가 없거나 시작이 실패하면 PowerShell 셸로 돌아갑니다. pane의 프로필은 기존 prompt 내용과 오류 표시를 보존하며 이전 전경 상태를 초기화하고, tmux.exe를 PATH 앞에 두어 Neovim navigator가 psmux를 호출하도록 합니다. 기본 namespace에서 `tmux list-sessions` 등 일반 명령을 사용할 수 있습니다. 저장소 설정으로 처음 세션을 만들려면 아래 함수를 사용하거나 `-f`로 원본 설정을 명시합니다.
 
@@ -214,14 +225,14 @@ WezTerm을 새로 열면 `main` 세션을 만들거나 다시 연결합니다. n
 | `Ctrl+h/j/k/l` | 왼쪽·아래·위·오른쪽 이동; Neovim 삽입 모드는 종료 후 이동, fzf에는 키 전달 |
 | `Esc` | Neovim 삽입 모드 종료; 다른 모드와 셸에는 원래 Escape 전달 |
 | prefix 다음 `h/j/k/l`, `n/p`, `Space` | pane, 창, 직전 창 이동 |
-| prefix 다음 `r` | 현재 체크아웃 psmux 설정 다시 읽기 |
-| prefix 다음 `F` / `D` | `t`로 프로젝트 선택 / 이 체크아웃의 프로젝트 세션으로 이동 |
+| prefix 다음 `r` | `mux`가 기록한 체크아웃의 psmux 설정 다시 읽기 |
+| prefix 다음 `F` / `D` | popup에서 프로젝트 선택 / 이 체크아웃의 프로젝트 세션으로 이동 |
 | prefix 다음 `v`, 복사 모드 `v/q/y` | 복사 모드, 선택·블록 선택·Windows clipboard 복사 |
 | prefix 다음 `d`, 다시 `mux` | detach 후 세션 재연결 |
 
 프로젝트 목록을 따로 관리하려면 `.local/project-paths.txt`에 검색 루트를 한 줄에 하나씩 절대 경로로 적습니다. 공백·한글 경로를 지원하며 Unix `~/.project_path`의 공백 구분/eval 형식은 읽지 않습니다. 같은 폴더 이름도 전체 경로의 해시로 세션을 구분합니다. 기존 사용자 `mux`/`t` 명령이 있으면 보존하므로 `Invoke-DotfilesMux`/`Invoke-DotfilesProject` 전체 이름을 사용합니다.
 
-F/D는 프로필을 읽는 PowerShell에서 기존 `t`를 실행합니다. 선택 취소 후 셸은 남습니다. 세션 이름에는 영문·숫자·underscore·hyphen을 사용하되 `__`는 psmux namespace 구분자이므로 사용할 수 없습니다. 한글 프로젝트는 안전한 이름과 전체 경로 해시를 사용합니다. Unix `expr/grep/cut` 창 교환 `N/P`, `:!cat` 입력은 이 Windows 설정에 포함하지 않습니다.
+F/D는 psmux popup에서 프로필 없이 `scripts/psmux-project-popup.ps1`을 실행해 저장소 `Invoke-DotfilesProject`를 사용합니다. 사용자 프로필과 사용자 정의 `t`는 읽지 않으며, 선택하면 현재 클라이언트를 해당 세션으로 전환하고 취소하면 popup만 닫힙니다. `r`은 `mux`가 `@dotfiles_config`에 기록한 설정 경로를 다시 읽으므로 `mux`를 거치지 않은 세션에서는 동작하지 않습니다. 세션 이름에는 영문·숫자·underscore·hyphen을 사용하되 `__`는 psmux namespace 구분자이므로 사용할 수 없습니다. 한글 프로젝트는 안전한 이름과 전체 경로 해시를 사용합니다. Unix `expr/grep/cut` 창 교환 `N/P`, `:!cat` 입력은 이 Windows 설정에 포함하지 않습니다.
 
 Ctrl+H가 Ctrl+Backspace 이벤트로 전달되는 경로를 위해 두 입력을 같은 왼쪽 이동에 연결합니다. 표준 ConPTY helper의 raw 0x08은 modifier 없는 Backspace로도 해석되므로 자동 검사 결과를 모든 터미널의 물리 Ctrl+H 검증으로 간주하지 않습니다. 일반 Backspace는 유지되지만 Ctrl+Backspace의 단어 삭제는 psmux pane에서 사용할 수 없습니다.
 
@@ -263,7 +274,7 @@ Neovim은 승인된 Windows에서 이 체크아웃 설정을 사용하는 기본
 
 원격 Vim에서 임시로 Ctrl+\ 다음 Ctrl+N을 눌러 일반 모드로 복귀할 수 있습니다. 기본 설정의 Vim은 `vim -u NONE -i NONE`으로 실행해 사용자 매핑·플러그인의 영향을 분리합니다. 기본 설정에서만 정상이라면 기존 Vim에서 `:verbose imap <Esc>`로 매핑 정의를 확인합니다. 원격 tmux 사용 여부도 함께 확인합니다. 원격 설정 파일이나 개인 인증을 자동 수정하지 않습니다.
 
-로컬 입력 전달 비교는 `py -3 -B tests/psmux-escape.py --wezterm`으로 수행합니다. 기존 psmux 3.3.8과 테스트 전용 .NET Framework 컴파일러를 사용하고 임시 namespace/data에만 테스트 서버를 만듭니다. 실제 SSH를 연결하거나 사용자 세션을 재설정하지 않습니다. 기본 PASS는 합성 modifier stress의 해결을 뜻하지 않으며 `--require-all`은 알려진 입력 유실도 실패로 노출합니다. GUI/IME·실제 원격 Vim 확인은 별도입니다.
+로컬 입력 전달 비교는 `py -3 -B tests/psmux-escape.py --wezterm`으로 수행합니다. 설치된 psmux 3.4.0과 테스트 전용 .NET Framework 컴파일러를 사용하고 임시 namespace/data에만 테스트 서버를 만듭니다. `--binary`로 보존한 이전 버전이나 후보를 비교할 수 있습니다. 실제 SSH를 연결하거나 사용자 세션을 재설정하지 않습니다. 기본 PASS는 합성 modifier stress의 해결을 뜻하지 않으며 `--require-all`은 입력 유실도 실패로 노출합니다. 검색 취소는 `tests/psmux-search-escape.py --latch-control-key --encoded-escape --full-config`로 검사합니다. GUI/IME·실제 원격 Vim 확인은 별도입니다.
 
 Windows Terminal 원본의 전송 바이트 검사는 다음처럼 실행합니다. `--encoded-escape`는 원본 settings.json의 Esc 액션을 직접 읽습니다.
 

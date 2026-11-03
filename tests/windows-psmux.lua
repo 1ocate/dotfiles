@@ -1,7 +1,7 @@
 -- Headless navigator integration inside a real psmux ConPTY; no plugin downloads.
 local root=assert(vim.env.DOTFILES_PSMUX_ROOT)
 local mux=assert(vim.env.DOTFILES_PSMUX_EXE)
-local report={version='3.3.8', tmux=vim.env.TMUX, pane=vim.env.TMUX_PANE, tests={}}
+local report={version='3.4.0', tmux=vim.env.TMUX, pane=vim.env.TMUX_PANE, tests={}}
 local function command(args)
   local cmd={mux}; vim.list_extend(cmd,args)
   local out=vim.fn.system(cmd)

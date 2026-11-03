@@ -38,7 +38,7 @@ def main():
     METRICS.append(metrics)
     if os.name != 'nt':
         raise SystemExit('Requires approved native Windows psmux, pwsh and fzf; no installation.')
-    binary = Path(os.environ['LOCALAPPDATA']) / 'Programs/psmux/3.3.8/psmux.exe'
+    binary = Path(os.environ['LOCALAPPDATA']) / 'Programs/psmux/3.4.0/psmux.exe'
     pwsh = shutil.which('pwsh')
     assert binary.is_file() and pwsh and shutil.which('fzf')
     lock_before = (ROOT / 'nvim/lazy-lock.json').read_bytes()
@@ -99,10 +99,9 @@ def main():
             host = subprocess.Popen([str(host_exe), command], env=env,
                                     startupinfo=startup, creationflags=subprocess.CREATE_NEW_CONSOLE)
             until(lambda: attached(source_session), 'Source launcher failed to attach main')
-            assert 'PSMUX_CONFIG_FILE=' + str(ROOT / 'tmux/psmux.conf') in run('-t', source_session, 'show-environment')
+            assert 'PSMUX_CONFIG_FILE=' + str(ROOT / 'tmux/psmux.conf') in run('-t', source_session, 'show-environment') + run('-t', source_session, 'show-environment', '-g')
             keys = run('-t', source_session, 'list-keys')
-            assert ' F new-window ' in keys and ' D new-window ' in keys, keys
-            print('Direct path registered:',Path(pwsh).as_posix().lower() in keys.lower(),flush=True)
+            assert ' F display-popup ' in keys and ' D display-popup ' in keys and 'psmux-project-popup.ps1' in keys and ' -T root C-h ' in keys, keys  # mux must not reset config bindings
             print('PASS: source launcher creates and attaches unique fixture with source config and original F/D', flush=True)
             source_ready=temp/'source-ready.txt'
             send(("[IO.File]::WriteAllText('"+str(source_ready).replace("'","''")+"','ready')\r").encode('utf-8'))
@@ -114,7 +113,7 @@ def main():
             time.sleep(1)
             measurements=[]
             for variant in ('source-config',):
-                for sample in range(1):
+                for sample in range(3):
                     started=time.perf_counter()
                     offset=(input_dir/'conpty_out.bin').stat().st_size
                     send(b'\x02F')
@@ -133,11 +132,10 @@ def main():
             until(lambda: run('-t',source_session,'show-options','-g','prefix')=='prefix C-Space','Reload prefix failed')
             def restored_bindings():
                 keys = run('-t', source_session, 'list-keys')
-                executable = Path(pwsh).as_posix().lower()
-                return all(any(' ' + key + ' new-window ' in line and executable in line.lower()
+                return ' -T root C-h ' in keys and all(any(' ' + key + ' display-popup ' in line and 'psmux-project-popup.ps1' in line
                                and command in line for line in keys.splitlines())
-                           for key, command in (('F', '-Command t'), ('D', '-Command Invoke-DotfilesConfigProject')))
-            until(restored_bindings, 'Reload lost direct F/D executable paths')
+                           for key, command in (('F', ' -d '), ('D', ' -Path ')))
+            until(restored_bindings, 'Reload lost F/D popup bindings')
             run('-t',source_session,'set-option','-g','prefix','C-b')
             time.sleep(1)
             offset=(input_dir/'conpty_out.bin').stat().st_size
@@ -168,7 +166,7 @@ def main():
                     except (OSError, subprocess.TimeoutExpired):
                         host.kill()
                         host.wait(timeout=5)
-            until(lambda: not run('list-sessions'), 'Private sessions did not terminate')
+            until(lambda: not run('list-sessions', check=False), 'Private sessions did not terminate')
             assert not errors, errors
             assert (ROOT / 'nvim/lazy-lock.json').read_bytes() == lock_before
             assert (roots_file.read_bytes() if roots_file.exists() else None) == roots_before
