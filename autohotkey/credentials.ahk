@@ -222,7 +222,11 @@ DotfilesSendPassword() {
     }
     SendText(value)
     value := ""
-    ; 비밀번호 프롬프트에 바로 제출한다. 문자 입력이 터미널에 먼저 도착하도록 잠깐 기다린다.
+    DotfilesSubmit()
+}
+
+; 프롬프트에 바로 제출한다. 문자 입력이 터미널에 먼저 도착하도록 잠깐 기다린다.
+DotfilesSubmit() {
     Sleep(50)
     Send("{Enter}")
 }
@@ -283,8 +287,10 @@ DotfilesSendOtpEntry(hwnd, entry) {
         return
     }
     ; 코드를 만드는 사이 포커스가 바뀌었으면 다른 창에 입력하지 않는다.
-    if WinActive(hwnd)
+    if WinActive(hwnd) {
         SendText(code)
+        DotfilesSubmit()
+    }
 }
 
 DotfilesRegisterPassword() {

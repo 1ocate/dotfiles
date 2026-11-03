@@ -45,6 +45,7 @@
 | 2026-11-03 11:25 KST | 사용자가 반응이 없다고 보고해 진단 | 실행 중 스크립트에 네 단축키 등록·같은 세션·비관리자 권한 확인. 진단용 가상 Ctrl+Alt+P와 함수 직접 호출이 이미 등록된 비밀번호를 활성 Windows Terminal(Claude Code 입력줄)에 두 번 입력함. 전송(Enter) 없이 사용자에게 지우도록 안내. 활성 창에 실제 값을 보내는 진단은 이후 금지 | 원인: 비밀번호는 이미 등록돼 정상 동작 |
 | 2026-11-03 11:40 KST | 사용자가 OTP 두 개 사용을 요청, 선택 메뉴 방식 선택 | `Menu` 방식은 검사 창에서 선택 숫자가 코드와 함께 입력되거나 다른 항목이 선택되는 경우가 있어 ToolTip+InputHook 선택으로 변경. 기존 등록 OTP 대상을 슬롯 1로 유지(v1 형식 그대로 읽음), 슬롯 2 `otp-2` 추가 | 후속 PR·적용 |
 | 2026-11-03 15:10 KST | 사용자가 비밀번호 입력 뒤 Enter까지 보내도록 요청 | `feat/ahk-password-enter`(main e71e5c3 기반 worktree)에서 `DotfilesSendPassword`가 값 입력 후 50ms 뒤 Enter를 보내도록 변경. OTP는 Enter 없이 유지. ADR 0014·사용 문서의 Enter 설명과 오입력 위험을 갱신 | PR·사용자 반영 후 GUI 확인 |
+| 2026-11-03 15:30 KST | PR #31 병합·반영(원본 체크아웃 AHK 두 파일 교체·AutoHotkey 재실행) 후 사용자가 OTP도 Enter 제출과 Ctrl 대신 Shift 단축키 가능 여부 확인을 요청 | `feat/ahk-otp-enter`에서 OTP 입력 뒤에도 같은 `DotfilesSubmit`(50ms 뒤 Enter) 호출. 포커스가 바뀌면 코드·Enter 모두 보내지 않음. Shift+Alt+P/O 충돌 점검: 저장소 WezTerm·Windows Terminal·psmux·PowerShell·Neovim 설정, WezTerm 기본 키(`show-keys`), Windows Terminal 기본값(Alt+Shift는 `-`·`plus`·방향키만), PSReadLine 기본 바인딩에 없음. 입력 언어는 `ko` 하나라 Alt+Shift 언어 전환 영향 없음 | 사용자 단축키 선택·병합 |
 
 ## 검증 결과
 
@@ -57,8 +58,9 @@
 | 같은 diff | windows-powershell, 실제 실행(임시 GUI 창, 가짜 비밀키) | 임시 창에서 슬롯 선택 후 키 `2`·`1`·`Numpad2`·`Esc`·`3` 가상 입력 | 2·1·Numpad2는 해당 슬롯 코드만 입력되고 선택 숫자는 창에 전달되지 않음. Esc·3은 취소되어 입력 없음 |
 | 같은 diff | windows-powershell, 읽기 전용 | 실제 자격 증명의 슬롯 상태 조회(비밀키 미출력) | 슬롯 1: 기존 등록 OTP(이름 없음, `OTP 1`), 슬롯 2: 미등록 |
 | main e71e5c3 + 비밀번호 Enter diff | windows-powershell, 실제 실행(단축키 미로드)·정적 | 테스트 스크립트, `/Validate` | 48개 검사 통과, `/Validate` 종료 코드 0. 실제 비밀번호 Enter 제출은 활성 창 전송 금지 원칙에 따라 에이전트가 실행하지 않음(사용자 GUI 확인 필요) |
+| main 644c29b + OTP Enter diff | windows-powershell, 실제 실행(단축키 미로드)·정적 | 테스트 스크립트, `/Validate` | 48개 검사 통과, `/Validate` 종료 코드 0. 실제 OTP Enter 제출은 사용자 GUI 확인 필요 |
 
 ## 남은 일과 종료 근거
 
-- 사용자 장치에서 AutoHotkey Reload 후 등록·입력을 GUI로 확인한다. [PR #31](https://github.com/1ocate/dotfiles/pull/31)(비밀번호 Enter) 반영 후 터미널 비밀번호 프롬프트에서 Ctrl+Alt+P 한 번으로 제출되는지 확인한다.
+- 사용자 장치에서 AutoHotkey Reload 후 등록·입력을 GUI로 확인한다. [PR #31](https://github.com/1ocate/dotfiles/pull/31)(비밀번호 Enter) 반영 후 터미널 비밀번호·OTP 프롬프트에서 단축키 한 번으로 제출되는지 확인한다.
 - OTP 슬롯 후속 PR 병합·반영 후 사용자 GUI 확인을 거쳐 상태를 `완료`로 갱신한다.
