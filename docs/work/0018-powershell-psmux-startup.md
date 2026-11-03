@@ -12,7 +12,7 @@
   - 대상: `powershell/git-completion.ps1`, `powershell/history-fzf.ps1`, `powershell/ssh-fzf.ps1`, `tests/git-completion.ps1`, 사용 문서.
   - 비대상: Oh My Posh 초기화·streaming 설정, 사용자 프로필 loader, macOS·WSL.
 - 관련 ADR: 새 결정 없음. 같은 기능의 로드 시점과 psmux 표시 방식만 바꾸며 [ADR 0002](../adr/0002-native-windows-adapters.md)의 Windows 어댑터 범위 안이다.
-- 관련 PR: 제출 후 갱신
+- 관련 PR: [PR #33](https://github.com/1ocate/dotfiles/pull/33)(이 작업), [PR #30](https://github.com/1ocate/dotfiles/pull/30)(상태줄 표시·`psmux.ps1` 로드 단축)
 
 ## 분석과 미확인 사항
 
