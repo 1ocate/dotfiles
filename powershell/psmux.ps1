@@ -178,32 +178,13 @@ function global:Invoke-DotfilesMux {
     if ($LASTEXITCODE -ne 0) { throw 'Could not attach/switch to the psmux session.' }
 }
 
+. (Join-Path $PSScriptRoot 'project-picker.ps1')
+
 function global:Invoke-DotfilesProject {
     [CmdletBinding()]
     param([string]$Path)
     if (-not $Path) {
-        if (-not (Get-Command fzf -ErrorAction SilentlyContinue)) { throw 'fzf is required for project selection; use t <directory> instead.' }
-        $rootsFile = Join-Path $env:DOTFILES_ROOT '.local/project-paths.txt'
-        $roots = @((Get-Location).Path)
-        if (Test-Path -LiteralPath $rootsFile -PathType Leaf) {
-            $roots = @(Get-Content -LiteralPath $rootsFile -Encoding UTF8 | Where-Object { $_.Trim() -and -not $_.StartsWith('#') })
-        }
-        $directories = @($roots | ForEach-Object {
-            if (Test-Path -LiteralPath $_ -PathType Container) {
-                (Get-Item -LiteralPath $_).FullName
-                Get-ChildItem -LiteralPath $_ -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName }
-            }
-        } | Sort-Object -Unique)
-        $previousOutputEncoding = $OutputEncoding
-        $previousConsoleEncoding = [Console]::OutputEncoding
-        try {
-            $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
-            [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
-            $Path = $directories | & fzf --prompt 'Project> '
-        } finally {
-            $OutputEncoding = $previousOutputEncoding
-            [Console]::OutputEncoding = $previousConsoleEncoding
-        }
+        $Path = Select-DotfilesProjectPath -Repository $env:DOTFILES_ROOT
         if (-not $Path) { return }
     }
     $directory = Get-Item -LiteralPath $Path -ErrorAction Stop

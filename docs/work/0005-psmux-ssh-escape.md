@@ -93,6 +93,8 @@ psmux 원본 확인 결과 `display-popup` 명령은 `pwsh -NoProfile -Command`�
 검증 중 일부 바인딩만 담은 파일의 `source-file`이 3.3.8·3.4.0 모두 설정의 C-h·Esc·h/j/k/l·F/D 등 사용자 바인딩을 기본값으로 초기화함을 확인했다. 앞 커밋의 바인딩 파일 방식은 이 회귀를 일으켜 실사용 세션 5개에서 root C-h 바인딩이 없어진 것을 읽기 전용으로 확인했다.
 `mux`는 이제 바인딩을 바꾸지 않고 `@dotfiles_config`에 원본 경로만 기록하며, `r`은 원본 설정의 `source-file -F '#{@dotfiles_config}'`로 둔다. popup에는 `TMUX`가 없어 popup을 연 세션의 port로 `switch-client`를 보낸다.
 격리 3.4.0 결과: F→fzf 908/1058/1063ms(이전 1964ms), 프로젝트 F 선택·전환, 취소 시 popup만 닫히고 창 수 유지, D, reload 후 prefix·F/D popup·root C-h 유지, 다른 원본 거절 통과. 사용자 정의 `t`는 F/D에서 더 이상 읽지 않는다(현재 프로필에는 없음).
+사용자가 세션을 직접 닫고 다시 연 뒤 기능은 동작하나 속도가 비슷하다고 보고했다. 읽기 전용 확인 결과 `main`은 변경 전부터 열려 있던 탭의 옛 `mux` 함수로 만들어져 F가 프로필 새 창 방식이고 root C-h도 없었다. 새 `WORK` 세션만 popup F였다.
+추가로 폴더 열거·fzf를 `powershell/project-picker.ps1`로 분리해 popup에서 runtime 로드(첫 JSON 파싱 약 0.2초 포함) 전에 실행하게 했다. 격리 3.4.0에서 F→fzf 757/755/754ms, 프로젝트 F 선택·취소·D·reload·다른 원본 거절과 mock(7/5.1)·runtime 검사를 다시 통과했다.
 
 다른 장치 적용 명세(windows-powershell, psmux 활성화 장치만): 이 PR은 psmux pin을 3.4.0으로 바꾸고 새 셸의 기본 데이터 경로를 버전별로 분리한다. macOS·WSL·Linux는 적용 대상이 아니다.
 1. 로컬 변경 보존·main 갱신 후 `.local/environment.json`의 host 일치 windows-powershell 승인과 `.local/psmux.json` 활성화를 확인한다. 승인이 없으면 적용하지 않는다.

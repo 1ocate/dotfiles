@@ -26,5 +26,5 @@ popup에는 `TMUX`가 없고 psmux는 세션마다 서버를 두므로, 전환�
 
 ## 영향과 재검토 조건
 
-격리 측정에서 F→fzf 표시가 약 1.96초에서 0.9~1.06초로 줄었다. 남은 비용은 popup의 pwsh 시작과 runtime 로드(약 0.4초)이며 fzf 이후로 미룰 수 있다.
+폴더 열거·fzf는 runtime과 분리한 `powershell/project-picker.ps1`로 먼저 실행하고 mux runtime은 선택 후에 읽는다. 격리 측정에서 F→fzf 표시가 약 1.96초에서 0.75초로 줄었다. 남은 비용은 popup 생성과 psmux가 고정한 pwsh 시작이다.
 `mux`를 거치지 않고 만든 세션에서는 `r`이 동작하지 않는다. popup port 파일 구조는 psmux 내부 형식이므로 psmux 업그레이드 시 F 전환 검사로 재확인한다. macOS·WSL·Linux tmux 설정은 바꾸지 않는다.

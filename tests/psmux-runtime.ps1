@@ -11,6 +11,7 @@ New-Item -ItemType Directory -Path (Join-Path $testRoot 'powershell') -Force | O
 New-Item -ItemType Directory -Path (Join-Path $testRoot '.local') | Out-Null
 $runtime = Join-Path $testRoot 'powershell/psmux.ps1'
 Copy-Item -LiteralPath $source -Destination $runtime
+Copy-Item -LiteralPath (Join-Path (Split-Path -Parent $source) 'project-picker.ps1') -Destination (Split-Path -Parent $runtime)
 $selectionPath = Join-Path $testRoot '.local/environment.json'
 $featurePath = Join-Path $testRoot '.local/psmux.json'
 $selection = @{ schemaVersion=1; environment='windows-powershell'; host=[Environment]::MachineName; approved=$true }

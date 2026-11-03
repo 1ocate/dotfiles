@@ -8,6 +8,7 @@ $testRoot = Join-Path $env:TEMP ('dotfiles-psmux-routing-' + [guid]::NewGuid())
 $runtime = Join-Path $testRoot 'powershell/psmux.ps1'
 New-Item -ItemType Directory -Path (Split-Path -Parent $runtime),(Join-Path $testRoot '.local'),(Join-Path $testRoot 'tmux') -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $repo 'powershell/psmux.ps1') -Destination $runtime
+Copy-Item -LiteralPath (Join-Path $repo 'powershell/project-picker.ps1') -Destination (Split-Path -Parent $runtime)
 foreach ($version in @('3.3.8','3.4.0')) {
     $bin = Join-Path $testRoot "Programs/psmux/$version"
     New-Item -ItemType Directory -Path $bin -Force | Out-Null
