@@ -83,7 +83,7 @@ if (-not $SkipFonts) {
 
 $terminalSources = if ($Terminal -eq 'windows-terminal') { @('windows-terminal/settings.json', 'scripts/use-windows-terminal.ps1') } else { @('.wezterm.lua', 'environment.lua', 'scripts/use-wezterm.ps1') }
 $terminalSources += @('scripts/setup-powershell-aliases.ps1', 'powershell/aliases.ps1')
-foreach ($relativePath in ($terminalSources + @( 'autoHotKey.ahk', 'nvim/init.lua', 'nvim/lazy-lock.json', 'scripts/use-neovim.ps1', 'scripts/setup-neovim.lua', 'scripts/windows-environment.ps1', 'scripts/environment.py', 'scripts/setup-git-completion.ps1', 'powershell/git-completion.ps1'))) {
+foreach ($relativePath in ($terminalSources + @( 'autoHotKey.ahk', 'autohotkey/credentials.ahk', 'nvim/init.lua', 'nvim/lazy-lock.json', 'scripts/use-neovim.ps1', 'scripts/setup-neovim.lua', 'scripts/windows-environment.ps1', 'scripts/environment.py', 'scripts/setup-git-completion.ps1', 'powershell/git-completion.ps1'))) {
     if (-not (Test-Path -LiteralPath (Join-Path $repoPath $relativePath) -PathType Leaf)) {
         throw "Required file not found: $relativePath"
     }

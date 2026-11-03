@@ -33,7 +33,7 @@ Windows 설치·연결 명령과 의존성·복구 방법은 [Windows 네이티�
 | [`tmux/tmux.conf`](tmux/tmux.conf) | tmux 창 이동, 복사 모드, 세션 키맵 |
 | [`scripts/t`](scripts/t) | fzf로 디렉터리를 선택하고 tmux 세션 생성·전환 |
 | [`.hammerspoon/`](.hammerspoon/) | macOS 창 관리와 한글 입력 상태 표시·전환 |
-| [`autoHotKey.ahk`](autoHotKey.ahk) | Windows 키보드와 한글 입력 전환 |
+| [`autoHotKey.ahk`](autoHotKey.ahk), [`autohotkey/`](autohotkey/) | Windows 키보드와 한글 입력 전환, 터미널 비밀번호·OTP 입력 |
 | [`.gitconfig`](.gitconfig), [`.gitignore_global`](.gitignore_global) | 개인 Git 설정과 전역 제외 규칙 |
 | [`pyrightconfig.json`](pyrightconfig.json) | Python 분석에서 제외할 디렉터리 설정 |
 | [`install`](install), [`fish_package_install.fish`](fish_package_install.fish) | 설정 연결과 fish 플러그인 설치 스크립트 |

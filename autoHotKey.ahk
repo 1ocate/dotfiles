@@ -1,5 +1,6 @@
 ﻿#Requires AutoHotkey v2.0
 #SingleInstance Force
+#Include %A_ScriptDir%\autohotkey\credentials.ahk
 
 ; 왼쪽 Alt와 Windows 키의 위치를 교환한다.
 ; 변환된 키가 아래의 키보드 훅 단축키도 실행하도록 입력 레벨을 높인다.
@@ -19,6 +20,21 @@ LWin::LAlt
     }
     ; IME를 제어할 수 없는 창에서도 Esc 원래 입력은 그대로 전달된다.
 }
+
+; 터미널 비밀 입력. Ctrl+Alt+P 비밀번호, Ctrl+Alt+O OTP. Shift를 더하면 등록·변경한다.
+; 값은 Windows 자격 증명 관리자에만 저장하며 Enter는 보내지 않는다.
+^!p::
+{
+    try IME_SET_ENGLISH("A")
+    DotfilesSendPassword()
+}
+^!o::
+{
+    try IME_SET_ENGLISH("A")
+    DotfilesSendOtp()
+}
+^!+p::DotfilesRegisterPassword()
+^!+o::DotfilesRegisterOtp()
 #HotIf
 
 IME_SET_ENGLISH(winTitle) {
