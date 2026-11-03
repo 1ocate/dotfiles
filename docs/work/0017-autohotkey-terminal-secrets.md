@@ -56,7 +56,7 @@
 | main d0908cd + OTP 슬롯 미커밋 diff | windows-powershell, 실제 실행(단축키 미로드) | 테스트 스크립트, `/Validate` | 48개 검사 통과(v1·v2 형식, 이름의 `;`·`&`, 슬롯 대상), `/Validate` 종료 코드 0 |
 | 같은 diff | windows-powershell, 실제 실행(임시 GUI 창, 가짜 비밀키) | 임시 창에서 슬롯 선택 후 키 `2`·`1`·`Numpad2`·`Esc`·`3` 가상 입력 | 2·1·Numpad2는 해당 슬롯 코드만 입력되고 선택 숫자는 창에 전달되지 않음. Esc·3은 취소되어 입력 없음 |
 | 같은 diff | windows-powershell, 읽기 전용 | 실제 자격 증명의 슬롯 상태 조회(비밀키 미출력) | 슬롯 1: 기존 등록 OTP(이름 없음, `OTP 1`), 슬롯 2: 미등록 |
-| main e71e5c3 + 비밀번호 Enter diff | windows-powershell, 실제 실행(단축키 미로드)·정적 | 테스트 스크립트, `/Validate` | 48개 검사 통과, `/Validate` 종료 코드 0. 실제 비밀번호 Enter 제출은 활성 창 전송 금지 원칙에 따라 에이전트가 실행하지 않음(사용자 GUI 확인 필요) |
+| main e71e5c3 + 비밀번호 Enter diff | windows-powershell, 실제 실행(단축키 미로드)·정적 | 테스트 스크립트, `/Validate` | 48개 검사 통과, `/Validate` 종료 코드 0. 실제 비밀번호 Enter 제출은 활성 창 전송 금지 원칙에 따라 에이전트가 실행하지 않음(사용자 GUI 확인 필요) |
 
 ## 남은 일과 종료 근거
 
