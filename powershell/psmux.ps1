@@ -156,21 +156,24 @@ function global:Invoke-DotfilesMux {
         } catch { $owned = $false }
     }
     if (-not $owned) { throw "Session '$Session' uses another configuration. Choose an unused session name; existing sessions were not changed." }
-    # Explicit paths avoid psmux's extra profile-loading shell wrapper.
-    $projectShell = (Get-Command pwsh -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source.Replace('\', '/')
-    if ($projectShell.Contains("'") -or $muxConfig.Contains("'")) { throw 'Single quotes in the pwsh or config path are not supported by psmux bindings.' }
-    # CLI quoting differs between psmux versions (3.4.0 keeps quotes literally and
-    # splits on escaped separators), so bindings go through the config parser.
-    $pickerBinding = "bind-key -r F new-window -c '#{pane_current_path}' '$projectShell -NoLogo -NoExit -Command t'"
-    $configBinding = "bind-key -r D new-window '$projectShell -NoLogo -NoExit -Command Invoke-DotfilesConfigProject'"
-    $bindingLines = @($pickerBinding, $configBinding, "bind-key r source-file '$muxConfig' \; $pickerBinding \; $configBinding")
-    $bindingFile = Join-Path ([IO.Path]::GetTempPath()) ('dotfiles-psmux-bindings-' + [guid]::NewGuid().ToString('N') + '.conf')
-    try {
-        [IO.File]::WriteAllText($bindingFile, ($bindingLines -join "`n") + "`n", (New-Object Text.UTF8Encoding $false))
-        & $muxExe -t $Session source-file $bindingFile
-        if ($LASTEXITCODE -ne 0) { throw 'Could not configure the psmux project and reload bindings.' }
-    } finally { Remove-Item -LiteralPath $bindingFile -Force -ErrorAction SilentlyContinue }
+    # All bindings live in the source config; its reload key reads this path.
+    # (A partial source-file would reset the config's other bindings.)
+    & $muxExe -t $Session set-option -g '@dotfiles_config' $muxConfig
+    if ($LASTEXITCODE -ne 0) { throw 'Could not record the psmux config path for reload.' }
     if ($env:TMUX) { & $muxExe switch-client -t "=$Session" }
+    elseif ($env:PSMUX_POPUP -eq '1') {
+        # A popup has no TMUX. psmux runs one server per session and routes
+        # switch-client by the port in TMUX, so point it at the server of the
+        # session whose client opened the popup.
+        if ($env:PSMUX_SESSION -notmatch '^[a-zA-Z0-9_-]+$') { throw 'The popup does not identify its psmux session.' }
+        $dataRoot = if ($env:PSMUX_DATA_DIR) { $env:PSMUX_DATA_DIR } else { Join-Path $env:USERPROFILE '.psmux' }
+        $port = (Get-Content -LiteralPath (Join-Path $dataRoot "$env:PSMUX_SESSION.port") -Raw -ErrorAction Stop).Trim()
+        if ($port -notmatch '^\d+$') { throw 'The popup session has no valid psmux port.' }
+        try {
+            $env:TMUX = "popup,$port,0"
+            & $muxExe switch-client -t "=$Session"
+        } finally { $env:TMUX = $null }
+    }
     else { & $muxExe attach-session -t "=$Session" }
     if ($LASTEXITCODE -ne 0) { throw 'Could not attach/switch to the psmux session.' }
 }

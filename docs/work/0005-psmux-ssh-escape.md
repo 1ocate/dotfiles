@@ -87,6 +87,13 @@ Enter 검색 확정과 Ctrl+C 취소, 격리 서버 종료·사용자 lockfile �
 - 3.4.0은 서버가 없을 때 `list-sessions`가 오류로 끝나고, 대기 중인 셸 pane의 `pane_current_command`를 oh-my-posh로 보고할 수 있다. 검사 정리 확인과 취소 pane 판정만 이에 맞췄다. psmux.conf 분기는 nvim-insert·vim/fzf 이름만 보므로 셸 pane 동작은 같다.
 수정 후 `windows-psmux-projects.py`(F 선택·취소, D, reload, 다른 원본 거절)와 `windows-psmux-project-latency.py`(reload 후 F/D 경로 유지·F 실행)가 3.4.0에서 통과했다. `psmux-version-routing.ps1`에 전역 marker 채택·다른 원본 거절·바인딩 파일 내용/삭제 모의 검사를 추가했다. 검사 harness 시작 단계의 일시적 접근 거부 1회는 재실행으로 통과했다.
 
+2026-11-03 KST 후속 요청: 사용자가 `mux` 유지 필요성 재검토와 prefix+F의 느린 fzf 표시 개선 가능성 확인을 요청했다.
+측정(외부 PowerShell, 3회): 프로필 없는 pwsh 297~331ms, 프로필 pwsh 1895~2433ms, runtime만 읽은 pwsh 720~750ms, 프로젝트 11개 열거 4~26ms, fzf 시작 16~22ms. 지연의 대부분은 F 창이 읽는 사용자 프로필이다.
+psmux 원본 확인 결과 `display-popup` 명령은 `pwsh -NoProfile -Command`로 실행되고 서버 전역 환경을 받는다. F/D를 원본 설정의 popup으로 옮기고 `scripts/psmux-project-popup.ps1`이 runtime의 `Invoke-DotfilesProject`를 사용하게 했다([ADR 0015](../adr/0015-psmux-project-popup.md)).
+검증 중 일부 바인딩만 담은 파일의 `source-file`이 3.3.8·3.4.0 모두 설정의 C-h·Esc·h/j/k/l·F/D 등 사용자 바인딩을 기본값으로 초기화함을 확인했다. 앞 커밋의 바인딩 파일 방식은 이 회귀를 일으켜 실사용 세션 5개에서 root C-h 바인딩이 없어진 것을 읽기 전용으로 확인했다.
+`mux`는 이제 바인딩을 바꾸지 않고 `@dotfiles_config`에 원본 경로만 기록하며, `r`은 원본 설정의 `source-file -F '#{@dotfiles_config}'`로 둔다. popup에는 `TMUX`가 없어 popup을 연 세션의 port로 `switch-client`를 보낸다.
+격리 3.4.0 결과: F→fzf 908/1058/1063ms(이전 1964ms), 프로젝트 F 선택·전환, 취소 시 popup만 닫히고 창 수 유지, D, reload 후 prefix·F/D popup·root C-h 유지, 다른 원본 거절 통과. 사용자 정의 `t`는 F/D에서 더 이상 읽지 않는다(현재 프로필에는 없음).
+
 다른 장치 적용 명세(windows-powershell, psmux 활성화 장치만): 이 PR은 psmux pin을 3.4.0으로 바꾸고 새 셸의 기본 데이터 경로를 버전별로 분리한다. macOS·WSL·Linux는 적용 대상이 아니다.
 1. 로컬 변경 보존·main 갱신 후 `.local/environment.json`의 host 일치 windows-powershell 승인과 `.local/psmux.json` 활성화를 확인한다. 승인이 없으면 적용하지 않는다.
 2. `pwsh -NoProfile -File .\scripts\setup-psmux.ps1 -Check`로 현재 상태를 읽고, 사용자 승인 후 기존 설치 명령 `powershell -NoProfile -File .\scripts\setup-windows.ps1 -ApprovePowerShell -WithPsmux`로 3.4.0을 SHA256 검증·설치한다. 기존 3.3.8 설치본·프로필 loader는 보존되고 PATH는 3.4.0이 앞에 온다.

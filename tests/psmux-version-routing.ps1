@@ -199,8 +199,6 @@ try {
         @{ Label='missing marker'; Session=@(); Global=@(); Owned=$false })) {
         $global:DotfilesRoutingFixture = $fixture
         $global:DotfilesRoutingCliCommands = @()
-        $global:DotfilesRoutingBindingFile = $null
-        $global:DotfilesRoutingBindings = $null
         function global:Invoke-TestMuxCLI {
             $global:LASTEXITCODE = 0
             $global:DotfilesRoutingCliCommands += ($args -join ' ')
@@ -209,28 +207,21 @@ try {
                 if ($args -contains '-g') { return $global:DotfilesRoutingFixture.Global }
                 return $global:DotfilesRoutingFixture.Session
             }
-            if ($args -contains 'source-file') {
-                $global:DotfilesRoutingBindingFile = $args[-1]
-                $global:DotfilesRoutingBindings = [IO.File]::ReadAllText($args[-1])
-            }
         }
         $failure = $null
         try { Invoke-DotfilesMux -Session 'fixture' -Path $testRoot } catch { $failure = $_.Exception.Message }
         $attached = @($global:DotfilesRoutingCliCommands | Where-Object { $_ -match 'attach-session|switch-client' }).Count
-        $configured = @($global:DotfilesRoutingCliCommands | Where-Object { $_ -match 'bind-key|source-file' }).Count
+        $configured = @($global:DotfilesRoutingCliCommands | Where-Object { $_ -match 'bind-key|source-file|set-option' }).Count
         if ($fixture.Owned) {
             if ($failure -or $attached -ne 1 -or $configured -ne 1) { throw "Owned server rejected ($($fixture.Label)): $failure" }
-            $bindings = $global:DotfilesRoutingBindings
-            if ($bindings -notmatch "(?m)^bind-key -r F new-window -c '#\{pane_current_path\}' '[^']+ -NoLogo -NoExit -Command t'$" -or
-                $bindings -notmatch "(?m)^bind-key -r D new-window '[^']+ -Command Invoke-DotfilesConfigProject'$" -or
-                $bindings -notmatch "(?m)^bind-key r source-file '[^']+psmux\.conf' \\; bind-key -r F .+ \\; bind-key -r D .+$" -or
-                $bindings[0] -eq [char]0xFEFF) { throw "Binding file content is wrong ($($fixture.Label))." }
-            if (Test-Path -LiteralPath $global:DotfilesRoutingBindingFile) { throw 'Temporary binding file was left behind.' }
+            # All bindings come from the source config; only its reload path is recorded.
+            $expected = "-t fixture set-option -g @dotfiles_config " + (Join-Path $testRoot 'tmux/psmux.conf')
+            if (@($global:DotfilesRoutingCliCommands | Where-Object { $_ -ceq $expected }).Count -ne 1) { throw "Reload path was not recorded ($($fixture.Label))." }
         } elseif ($failure -notmatch 'another configuration' -or $attached -or $configured) {
             throw "Foreign server accepted or mutated ($($fixture.Label))."
         }
     }
-    Write-Output 'PASS: config ownership reads session or 3.4.0 global markers; owned servers get F/D/reload through one removed config file.'
+    Write-Output 'PASS: config ownership reads session or 3.4.0 global markers; owned servers only record the reload path without touching bindings.'
 } finally {
     foreach ($name in $environmentNames) { [Environment]::SetEnvironmentVariable($name,$savedEnvironment[$name],'Process') }
     Remove-Item Function:\global:Get-Process -ErrorAction SilentlyContinue

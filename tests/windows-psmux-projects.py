@@ -96,7 +96,7 @@ def main():
             until(lambda: attached('main'), 'Source launcher failed to attach main')
             assert 'PSMUX_CONFIG_FILE=' + str(ROOT / 'tmux/psmux.conf') in run('-t', 'main', 'show-environment') + run('-t', 'main', 'show-environment', '-g')
             keys = run('-t', 'main', 'list-keys')
-            assert ' F new-window ' in keys and ' D new-window ' in keys, keys
+            assert ' F display-popup ' in keys and ' D display-popup ' in keys and 'psmux-project-popup.ps1' in keys and ' -T root C-h ' in keys, keys  # mux must not reset config bindings
             print('PASS: source launcher creates and attaches default main with source config and F/D', flush=True)
             direct = temp / 'direct.ps1'
             direct.write_text("$ErrorActionPreference='Stop'\n. '" + str(ROOT / 'powershell/psmux.ps1').replace("'", "''") +
@@ -132,7 +132,9 @@ def main():
             send(b'\x02F')
             until(lambda: b'Project>' in (input_dir / 'conpty_out.bin').read_bytes()[picker_offset:],
                   'Second F did not start picker')
+            # The picker is a popup, not a pane: the active pane stays the main shell.
             cancelled_pane = run('-t', 'main', 'display-message', '-p', '#{pane_id}')
+            windows_before = run('-t', 'main', 'list-windows', '-F', '#{window_id}')
             send(b'\x03')
             cancelled_ready = temp / 'cancelled-ready.txt'
             time.sleep(0.5)
@@ -148,7 +150,8 @@ def main():
                 until(shell_pane, 'Cancelled picker did not keep its PowerShell pane')
             except AssertionError as error:
                 raise AssertionError(f'{error}: {cancelled_pane} missing in {panes()!r}') from None
-            print('PASS: real picker cancellation keeps session and shell', flush=True)
+            assert run('-t', 'main', 'list-windows', '-F', '#{window_id}') == windows_before, 'Picker left a window behind'
+            print('PASS: real picker cancellation closes the popup and keeps session, shell and windows', flush=True)
             send(b'\x02D')
             until(lambda: attached(session_name(ROOT)), 'D did not select source checkout')
             print('PASS: actual prefix+D selects source checkout', flush=True)
@@ -157,7 +160,8 @@ def main():
             send(b'\x02r')
             until(lambda: run('-t', checkout_session, 'show-options', '-g', 'prefix') == 'prefix C-Space',
                   'Reload key did not read the source config')
-            assert 'Invoke-DotfilesConfigProject' in run('-t', checkout_session, 'list-keys')
+            reloaded = run('-t', checkout_session, 'list-keys')
+            assert ' D display-popup ' in reloaded and ' -T root C-h ' in reloaded, reloaded
             print('PASS: actual reload dispatcher reads source and restores configured prefix', flush=True)
             run('-f', str(ROOT / 'tmux/psmux.conf'), 'new-session', '-d', '-s', 'foreign',
                 '--', pwsh, '-NoLogo', '-NoProfile', '-Command', 'Start-Sleep 120')

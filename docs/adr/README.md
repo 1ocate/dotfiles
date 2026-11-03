@@ -17,3 +17,4 @@
 | 0012 | [외부 실행 없는 장치 상태 인벤토리](0012-readonly-device-inventory.md) | [작업 0016](../work/0016-readonly-device-status.md) |
 | 0013 | [psmux 업그레이드의 실행 파일·세션 데이터 분리](0013-psmux-upgrade-isolation.md) | [작업 0005](../work/0005-psmux-ssh-escape.md) |
 | 0014 | [터미널 비밀번호·OTP 입력을 AutoHotkey와 자격 증명 관리자로 처리](0014-autohotkey-terminal-secrets.md) | [작업 0017](../work/0017-autohotkey-terminal-secrets.md) |
+| 0015 | [psmux 프로젝트 선택을 프로필 없는 popup으로 실행](0015-psmux-project-popup.md) | [작업 0005](../work/0005-psmux-ssh-escape.md) |

@@ -225,14 +225,14 @@ WezTerm을 새로 열면 `main` 세션을 만들거나 다시 연결합니다. n
 | `Ctrl+h/j/k/l` | 왼쪽·아래·위·오른쪽 이동; Neovim 삽입 모드는 종료 후 이동, fzf에는 키 전달 |
 | `Esc` | Neovim 삽입 모드 종료; 다른 모드와 셸에는 원래 Escape 전달 |
 | prefix 다음 `h/j/k/l`, `n/p`, `Space` | pane, 창, 직전 창 이동 |
-| prefix 다음 `r` | 현재 체크아웃 psmux 설정 다시 읽기 |
-| prefix 다음 `F` / `D` | `t`로 프로젝트 선택 / 이 체크아웃의 프로젝트 세션으로 이동 |
+| prefix 다음 `r` | `mux`가 기록한 체크아웃의 psmux 설정 다시 읽기 |
+| prefix 다음 `F` / `D` | popup에서 프로젝트 선택 / 이 체크아웃의 프로젝트 세션으로 이동 |
 | prefix 다음 `v`, 복사 모드 `v/q/y` | 복사 모드, 선택·블록 선택·Windows clipboard 복사 |
 | prefix 다음 `d`, 다시 `mux` | detach 후 세션 재연결 |
 
 프로젝트 목록을 따로 관리하려면 `.local/project-paths.txt`에 검색 루트를 한 줄에 하나씩 절대 경로로 적습니다. 공백·한글 경로를 지원하며 Unix `~/.project_path`의 공백 구분/eval 형식은 읽지 않습니다. 같은 폴더 이름도 전체 경로의 해시로 세션을 구분합니다. 기존 사용자 `mux`/`t` 명령이 있으면 보존하므로 `Invoke-DotfilesMux`/`Invoke-DotfilesProject` 전체 이름을 사용합니다.
 
-F/D는 프로필을 읽는 PowerShell에서 기존 `t`를 실행합니다. 선택 취소 후 셸은 남습니다. 세션 이름에는 영문·숫자·underscore·hyphen을 사용하되 `__`는 psmux namespace 구분자이므로 사용할 수 없습니다. 한글 프로젝트는 안전한 이름과 전체 경로 해시를 사용합니다. Unix `expr/grep/cut` 창 교환 `N/P`, `:!cat` 입력은 이 Windows 설정에 포함하지 않습니다.
+F/D는 psmux popup에서 프로필 없이 `scripts/psmux-project-popup.ps1`을 실행해 저장소 `Invoke-DotfilesProject`를 사용합니다. 사용자 프로필과 사용자 정의 `t`는 읽지 않으며, 선택하면 현재 클라이언트를 해당 세션으로 전환하고 취소하면 popup만 닫힙니다. `r`은 `mux`가 `@dotfiles_config`에 기록한 설정 경로를 다시 읽으므로 `mux`를 거치지 않은 세션에서는 동작하지 않습니다. 세션 이름에는 영문·숫자·underscore·hyphen을 사용하되 `__`는 psmux namespace 구분자이므로 사용할 수 없습니다. 한글 프로젝트는 안전한 이름과 전체 경로 해시를 사용합니다. Unix `expr/grep/cut` 창 교환 `N/P`, `:!cat` 입력은 이 Windows 설정에 포함하지 않습니다.
 
 Ctrl+H가 Ctrl+Backspace 이벤트로 전달되는 경로를 위해 두 입력을 같은 왼쪽 이동에 연결합니다. 표준 ConPTY helper의 raw 0x08은 modifier 없는 Backspace로도 해석되므로 자동 검사 결과를 모든 터미널의 물리 Ctrl+H 검증으로 간주하지 않습니다. 일반 Backspace는 유지되지만 Ctrl+Backspace의 단어 삭제는 psmux pane에서 사용할 수 없습니다.
 
