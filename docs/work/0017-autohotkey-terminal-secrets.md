@@ -7,7 +7,7 @@
 - 실행 환경: windows-powershell
 - 적용 범위·비대상: `autoHotKey.ahk`, 새 `autohotkey/credentials.ahk`, `tests/autohotkey-credentials.ahk`, `scripts/setup-windows.ps1`의 필수 원본 목록, 사용 문서. 비대상: macOS Hammerspoon, 실제 AutoHotkey 재시작·비밀 값 등록, 여러 계정·HOTP
 - 관련 ADR: [ADR 0014](../adr/0014-autohotkey-terminal-secrets.md)
-- 관련 PR: 제출 후 갱신
+- 관련 PR: [draft PR #28](https://github.com/1ocate/dotfiles/pull/28)
 
 ## 분석과 미확인 사항
 
