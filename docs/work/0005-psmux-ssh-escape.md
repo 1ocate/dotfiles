@@ -6,7 +6,7 @@
 - 기준: 최신 main `73bbe35`, `fix/psmux-ssh-escape`; 기존 사용자 `nvim/lazy-lock.json` 수정 보존. 작업 0004/PR #11은 별도 목표다.
 - 실행 환경·범위: `windows-powershell`. psmux 입력 전달과 격리 테스트·사용 지침. macOS/WSL tmux 설정, 원격 계정·설정, 도구 설치·업데이트와 실사용 서버 적용 제외.
 - 관련 ADR: [ADR 0003](../adr/0003-windows-psmux.md)에 따른 입력 어댑터 조사에서 재개했다. 2026-10-20 후속 Windows Terminal 전송·실험용 빌드 결정은 [ADR 0009](../adr/0009-psmux-escape-build.md)에 제안한다.
-- 관련 PR: [#12](https://github.com/1ocate/dotfiles/pull/12) (draft)
+- 관련 PR: [#12](https://github.com/1ocate/dotfiles/pull/12) (draft), [#30](https://github.com/1ocate/dotfiles/pull/30) (3.4.0 업그레이드, draft)
 
 ## 분석과 미확인 사항
 
