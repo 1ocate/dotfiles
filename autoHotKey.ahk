@@ -21,14 +21,14 @@ LWin::LAlt
     ; IME를 제어할 수 없는 창에서도 Esc 원래 입력은 그대로 전달된다.
 }
 
-; 터미널 비밀 입력. Ctrl+Alt+P 비밀번호, Ctrl+Alt+O OTP. Shift를 더하면 등록·변경한다.
-; 값은 Windows 자격 증명 관리자에만 저장한다. 비밀번호는 입력 후 Enter까지 보내고 OTP는 Enter를 보내지 않는다.
-^!p::
+; 터미널 비밀 입력. Shift+Alt+P 비밀번호, Shift+Alt+O OTP. Ctrl+Alt+Shift+P/O는 등록·변경한다.
+; 값은 Windows 자격 증명 관리자에만 저장한다. 비밀번호와 OTP 모두 입력 후 Enter까지 보낸다.
++!p::
 {
     try IME_SET_ENGLISH("A")
     DotfilesSendPassword()
 }
-^!o::
++!o::
 {
     try IME_SET_ENGLISH("A")
     DotfilesSendOtp()

@@ -222,7 +222,11 @@ DotfilesSendPassword() {
     }
     SendText(value)
     value := ""
-    ; 비밀번호 프롬프트에 바로 제출한다. 문자 입력이 터미널에 먼저 도착하도록 잠깐 기다린다.
+    DotfilesSubmit()
+}
+
+; 프롬프트에 바로 제출한다. 문자 입력이 터미널에 먼저 도착하도록 잠깐 기다린다.
+DotfilesSubmit() {
     Sleep(50)
     Send("{Enter}")
 }
@@ -239,15 +243,28 @@ DotfilesChooseSlot(entries, labelFn, title) {
         ToolTip(text, Max(w // 2 - 100, 0), h // 3)
     } catch
         ToolTip(text)
-    ih := InputHook("L1 T10", "{Esc}")
+    ; 문자 대신 키(VK)로 판정한다. Shift+Alt 단축키의 Shift를 누른 채 숫자를 눌러도(예: Shift+2) 슬롯을 고른다.
+    ih := InputHook("T10")
+    ih.KeyOpt("{All}", "NS")
+    ih.KeyOpt("{LShift}{RShift}{LCtrl}{RCtrl}{LAlt}{RAlt}{LWin}{RWin}", "-N -S")
+    ih.slot := 0
+    ih.OnKeyDown := DotfilesSlotKeyDown
     ih.Start()
     ih.Wait()
     ToolTip()
-    if (ih.EndReason = "Max")
-        for entry in entries
-            if (ih.Input = String(entry.slot))
-                return entry
+    for entry in entries
+        if (ih.slot = entry.slot)
+            return entry
     return false
+}
+
+; 숫자 줄 1-9(VK 0x31-0x39)와 숫자 패드 1-9(VK 0x61-0x69)를 슬롯으로, 그 밖의 키는 취소로 처리한다.
+DotfilesSlotKeyDown(ih, vk, sc) {
+    if (vk >= 0x31 && vk <= 0x39)
+        ih.slot := vk - 0x30
+    else if (vk >= 0x61 && vk <= 0x69)
+        ih.slot := vk - 0x60
+    ih.Stop()
 }
 
 DotfilesSendOtp() {
@@ -283,8 +300,10 @@ DotfilesSendOtpEntry(hwnd, entry) {
         return
     }
     ; 코드를 만드는 사이 포커스가 바뀌었으면 다른 창에 입력하지 않는다.
-    if WinActive(hwnd)
+    if WinActive(hwnd) {
         SendText(code)
+        DotfilesSubmit()
+    }
 }
 
 DotfilesRegisterPassword() {
@@ -304,7 +323,7 @@ DotfilesRegisterPassword() {
         MsgBox("저장하지 못했습니다: " e.Message, "dotfiles", "Iconx")
         return
     }
-    MsgBox("비밀번호를 저장했습니다. Ctrl+Alt+P로 입력합니다.", "dotfiles", "Iconi")
+    MsgBox("비밀번호를 저장했습니다. Shift+Alt+P로 입력합니다.", "dotfiles", "Iconi")
 }
 
 DotfilesRegisterOtp() {
@@ -356,5 +375,5 @@ DotfilesRegisterOtpSlot(entry) {
         MsgBox("저장하지 못했습니다: " e.Message, "dotfiles", "Iconx")
         return
     }
-    MsgBox("OTP " entry.slot "(" DotfilesOtpLabel({slot: entry.slot, otp: otp}) ")를 저장했습니다. Ctrl+Alt+O로 입력합니다.", "dotfiles", "Iconi")
+    MsgBox("OTP " entry.slot "(" DotfilesOtpLabel({slot: entry.slot, otp: otp}) ")를 저장했습니다. Shift+Alt+O로 입력합니다.", "dotfiles", "Iconi")
 }
