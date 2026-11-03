@@ -37,6 +37,8 @@ function Select-DotfilesSshHost {
     try {
         $env:FZF_DEFAULT_OPTS = ''
         $env:FZF_DEFAULT_OPTS_FILE = ''
+        # psmux picks the highest-PID child (often oh-my-posh serve) without a marker; name fzf so Ctrl+J/K stay in the list.
+        if ($env:TMUX -and $env:PSMUX_SESSION) { [Console]::Write([char]27 + ']133;C;cmdline_url=fzf' + [char]7) }
         $selected = @($Candidates | & $fzfCommand.Source --height=40% --layout=reverse --border --no-multi --no-sort '--prompt=SSH> ' ('--query=' + $Query))
         $selectorExit = $LASTEXITCODE
         if ($selectorExit -eq 130 -or $selectorExit -eq 1) {
@@ -48,6 +50,7 @@ function Select-DotfilesSshHost {
     } catch {
         # Optional selector failure must not disable normal completion.
     } finally {
+        if ($env:TMUX -and $env:PSMUX_SESSION) { [Console]::Write([char]27 + ']133;D' + [char]7) }
         $env:FZF_DEFAULT_OPTS = $savedOptions
         $env:FZF_DEFAULT_OPTS_FILE = $savedOptionsFile
     }

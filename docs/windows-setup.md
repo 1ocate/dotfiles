@@ -88,7 +88,7 @@ powershell -NoProfile -File scripts/setup-powershell-aliases.ps1 -Check
 
 ### Git 자동완성
 
-Git의 명령·브랜치 Tab 완성은 `posh-git` 1.1.0으로 제공합니다. 기본 세팅이 사용자 `Documents/WindowsPowerShell/Modules`에 모듈을 준비하고 5.1·7 프로필에 저장소의 `powershell/git-completion.ps1`을 읽는 loader를 추가합니다. 기존 프로필은 백업하고 인코딩·Oh My Posh 프롬프트를 보존합니다. 설치에는 PowerShell 7.4 이상 또는 `Save-PSResource`를 제공하는 PSResourceGet과 PSGallery 접근이 필요합니다. PSGallery 신뢰 설정은 전역으로 변경하지 않습니다.
+Git의 명령·브랜치 Tab 완성은 `posh-git` 1.1.0으로 제공합니다. 기본 세팅이 사용자 `Documents/WindowsPowerShell/Modules`에 모듈을 준비하고 5.1·7 프로필에 저장소의 `powershell/git-completion.ps1`을 읽는 loader를 추가합니다. 기존 프로필은 백업하고 인코딩·Oh My Posh 프롬프트를 보존합니다. 시작 시간을 줄이려고 모듈은 셸 시작 때가 아니라 처음 `git`/`tgit`/`gitk` 뒤에서 Tab을 누를 때 읽습니다(첫 완성만 약 0.4초 더 걸림). posh-git의 다른 명령(`Remove-GitBranch` 등)은 그 뒤부터 사용할 수 있습니다. 설치에는 PowerShell 7.4 이상 또는 `Save-PSResource`를 제공하는 PSResourceGet과 PSGallery 접근이 필요합니다. PSGallery 신뢰 설정은 전역으로 변경하지 않습니다.
 
 이미 세팅된 장비에서 Git 완성만 추가하려면 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-git-completion.ps1`을 실행합니다. 새 PowerShell 탭부터 적용됩니다. 모듈이 없으면 런타임에서 기능만 생략하며, 기본 세팅에서는 준비 실패를 알리고 프로필 연결 전에 중단합니다. `-SkipGitCompletion`은 일반 세팅의 해당 설치·연결·점검을 생략하고 기존 연결을 제거하지 않습니다. `-SkipPackages`는 모듈 다운로드도 생략하므로 이미 모듈이 있거나 `-SkipGitCompletion`을 함께 사용해야 합니다. standalone의 `-Plan`·`-Check`는 읽기 전용이며 `-SkipInstall`은 기존 모듈만 사용합니다.
 
@@ -295,7 +295,7 @@ streaming은 세션별 백그라운드 프로세스를 재사용하며 느린 �
 
 ### Ctrl+R 명령 히스토리 검색
 
-기존 `powershell/tab-completion.ps1` 로더가 연결된 PowerShell은 새 세션부터 `Ctrl+R`로 fzf 히스토리 검색을 엽니다. 아직 연결하지 않은 세션에서만 사용하려면 저장소 루트에서 `. ./powershell/tab-completion.ps1`을 실행합니다. 별도 PowerShell 모듈은 필요 없으며 `fzf.exe`가 선택 의존성입니다.
+기존 `powershell/tab-completion.ps1` 로더가 연결된 PowerShell은 새 세션부터 `Ctrl+R`로 fzf 히스토리 검색을 엽니다. 아직 연결하지 않은 세션에서만 사용하려면 저장소 루트에서 `. ./powershell/tab-completion.ps1`을 실행합니다. 별도 PowerShell 모듈은 필요 없으며 `fzf.exe`가 선택 의존성입니다. psmux pane 안에서는 히스토리·SSH fzf가 열려 있는 동안 psmux에 fzf 실행 중임을 알려(OSC 133), Ctrl+J/K가 pane 이동 대신 목록 이동으로 전달됩니다.
 
 입력 중인 내용이 초기 검색어가 됩니다. 기록은 최신순으로 중복을 제거해 표시하며, 여러 줄 명령은 검색 목록에서 한 줄로 보이고 선택하면 원문으로 복원합니다. fzf에서 Enter는 입력줄에 넣기만 하며 실행하려면 PowerShell에서 Enter를 다시 누릅니다. Esc 또는 Ctrl+C로 취소하면 기존 입력이 유지됩니다. fzf가 없거나 실패하면 기본 역방향 히스토리 검색을 사용합니다. Tab의 SSH 검색은 유지합니다.
 
