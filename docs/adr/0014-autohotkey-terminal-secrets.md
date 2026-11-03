@@ -1,10 +1,10 @@
 # 0014: 터미널 비밀번호·OTP 입력을 AutoHotkey와 Windows 자격 증명 관리자로 처리
 
-- 상태: 제안
+- 상태: 채택
 - 작성일: 2026-11-03
 - 적용 범위: windows-powershell (Windows 호스트의 WezTerm·Windows Terminal 창). windows-wsl은 같은 Windows 호스트 AutoHotkey를 공유하지만 별도 검증 전까지 미검증. macOS·linux 비대상
 - 관련 작업·PR: [작업 0017](../work/0017-autohotkey-terminal-secrets.md)
-- 채택·기각 근거: 미결정
+- 채택·기각 근거: [PR #28](https://github.com/1ocate/dotfiles/pull/28) 병합
 - 대체 관계: 없음. [ADR 0005](0005-terminal-esc-ime.md)의 AutoHotkey 입력 담당·터미널 창 한정 범위를 따른다.
 
 ## 배경과 문제
@@ -38,3 +38,5 @@
 ## 상태 변경·정정
 
 2026-11-03 10:55 KST: 제안으로 작성.
+
+2026-11-03 11:40 KST: PR #28 병합으로 채택. 사용자가 OTP 두 개를 쓴다고 요청해 같은 결정 범위에서 OTP를 두 슬롯(기존 대상 이름을 슬롯 1로 유지)으로 확장했다. 슬롯 선택은 포커스를 옮기는 메뉴 대신 ToolTip과 InputHook으로 다음 키 하나를 가로챈다. 메뉴 방식은 검사에서 선택 숫자가 창에 함께 입력되는 경우가 있어 채택하지 않았다. 저장 위치·단축키·범위 결정은 바뀌지 않는다.
