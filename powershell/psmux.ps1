@@ -201,8 +201,22 @@ function global:Invoke-DotfilesProject {
 
 # No nested shell quoting is needed for the source-checkout project key.
 function global:Invoke-DotfilesConfigProject { & t $env:DOTFILES_ROOT }
-if (-not (Get-Command mux -ErrorAction SilentlyContinue)) { Set-Alias -Name mux -Value Invoke-DotfilesMux -Scope Global }
-if (-not (Get-Command t -ErrorAction SilentlyContinue)) { Set-Alias -Name t -Value Invoke-DotfilesProject -Scope Global }
+# Preserve a user's own mux/t. A missed Get-Command searches every module (~55ms each),
+# so check functions, aliases and PATH executables/scripts directly.
+$muxCommandExists = {
+    param([string]$Name)
+    if ((Test-Path -LiteralPath "Function:\$Name") -or (Test-Path -LiteralPath "Alias:\$Name")) { return $true }
+    $extensions = @(($env:PATHEXT -split ';') + '.ps1' | Where-Object { $_ })
+    foreach ($directory in ($env:Path -split ';')) {
+        if (-not $directory) { continue }
+        foreach ($extension in $extensions) {
+            try { if ([IO.File]::Exists([IO.Path]::Combine($directory, $Name + $extension))) { return $true } } catch { }
+        }
+    }
+    $false
+}
+if (-not (& $muxCommandExists 'mux')) { Set-Alias -Name mux -Value Invoke-DotfilesMux -Scope Global }
+if (-not (& $muxCommandExists 't')) { Set-Alias -Name t -Value Invoke-DotfilesProject -Scope Global }
 
 if ((Test-DotfilesMuxPane) -and (Get-Command prompt -ErrorAction SilentlyContinue)) {
     $originalMuxPrompt = (Get-Item Function:\prompt).ScriptBlock
