@@ -33,7 +33,7 @@ def session_name(path):
 def main():
     if os.name != 'nt':
         raise SystemExit('Requires approved native Windows psmux, pwsh and fzf; no installation.')
-    binary = Path(os.environ['LOCALAPPDATA']) / 'Programs/psmux/3.3.8/psmux.exe'
+    binary = Path(os.environ['LOCALAPPDATA']) / 'Programs/psmux/3.4.0/psmux.exe'
     pwsh = shutil.which('pwsh')
     assert binary.is_file() and pwsh and shutil.which('fzf')
     lock_before = (ROOT / 'nvim/lazy-lock.json').read_bytes()
@@ -94,7 +94,7 @@ def main():
             host = subprocess.Popen([str(host_exe), command], env=env,
                                     startupinfo=startup, creationflags=subprocess.CREATE_NEW_CONSOLE)
             until(lambda: attached('main'), 'Source launcher failed to attach main')
-            assert 'PSMUX_CONFIG_FILE=' + str(ROOT / 'tmux/psmux.conf') in run('-t', 'main', 'show-environment')
+            assert 'PSMUX_CONFIG_FILE=' + str(ROOT / 'tmux/psmux.conf') in run('-t', 'main', 'show-environment') + run('-t', 'main', 'show-environment', '-g')
             keys = run('-t', 'main', 'list-keys')
             assert ' F new-window ' in keys and ' D new-window ' in keys, keys
             print('PASS: source launcher creates and attaches default main with source config and F/D', flush=True)
@@ -139,8 +139,15 @@ def main():
             send(("[IO.File]::WriteAllText('" + str(cancelled_ready).replace("'", "''") + "','ready')\r").encode('utf-8'))
             until(lambda: cancelled_ready.exists(), 'Cancelled picker did not restore its shell')
             assert attached('main'), 'Cancellation moved the client'
-            until(lambda: cancelled_pane + ' pwsh' in run('-t', 'main', 'list-panes', '-a', '-F', '#{pane_id} #{pane_current_command}'),
-                  'Cancelled picker did not keep its PowerShell pane')
+            panes = lambda: run('-t', 'main', 'list-panes', '-a', '-F', '#{pane_id} #{pane_current_command}')
+            # psmux 3.4.0 may report the oh-my-posh prompt helper as the idle shell's
+            # foreground command; the ready file above already proved the shell runs.
+            shell_pane = lambda: any(line.split(' ', 1) in ([cancelled_pane, 'pwsh'], [cancelled_pane, 'oh-my-posh'])
+                                     for line in panes().splitlines())
+            try:
+                until(shell_pane, 'Cancelled picker did not keep its PowerShell pane')
+            except AssertionError as error:
+                raise AssertionError(f'{error}: {cancelled_pane} missing in {panes()!r}') from None
             print('PASS: real picker cancellation keeps session and shell', flush=True)
             send(b'\x02D')
             until(lambda: attached(session_name(ROOT)), 'D did not select source checkout')
@@ -186,7 +193,7 @@ def main():
                     except (OSError, subprocess.TimeoutExpired):
                         host.kill()
                         host.wait(timeout=5)
-            until(lambda: not run('list-sessions'), 'Private sessions did not terminate')
+            until(lambda: not run('list-sessions', check=False), 'Private sessions did not terminate')
             assert not errors, errors
     assert (ROOT / 'nvim/lazy-lock.json').read_bytes() == lock_before
     assert (roots_file.read_bytes() if roots_file.exists() else None) == roots_before

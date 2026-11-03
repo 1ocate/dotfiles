@@ -1,6 +1,6 @@
 # 0005: Windows psmux의 SSH 원격 Vim Esc 전달 조사
 
-- 상태: 진행 중 (2026-11-03 검색 Esc 유실 재현; 과거 조사 제출은 draft PR #12)
+- 상태: 진행 중 (2026-11-03 psmux 3.4.0 업그레이드 적용·격리 검증, PR 리뷰 대기; 과거 조사 제출은 draft PR #12)
 - 요청·배경: Windows psmux에서 세로 분할 후 SSH로 원격 Vim을 열고 삽입 모드에서 Esc를 눌러도 종료되지 않으며 Ctrl+C로만 복귀한다.
 - 시작일: 2026-10-07
 - 기준: 최신 main `73bbe35`, `fix/psmux-ssh-escape`; 기존 사용자 `nvim/lazy-lock.json` 수정 보존. 작업 0004/PR #11은 별도 목표다.
@@ -57,7 +57,43 @@ Enter 검색 확정과 Ctrl+C 취소, 격리 서버 종료·사용자 lockfile �
 
 ### 2026-11-03 다른 장치 적용 명세
 
-이번 변경은 Windows 전용 격리 진단 검사와 조사 기록이며 런타임 동작을 바꾸지 않는다. 추가 설치·링크·설정 재로드는 불필요하다.
+업그레이드 검토 요청: 사용자가 psmux 업그레이드 고려를 요청했다. 공식 3.4.0 공개 portable 후보를 체크섬 검증해 `.local/`에만 준비하고 선택 가능한 `--binary`로 기존 3.3.8과 같은 격리 검사를 비교한다.
+설치본 교체·PATH·프로필·설정 버전 변경·실사용 세션 재시작은 승인 범위에 포함하지 않는다. #588/#597/#598 수정 포함 여부와 출시 후 #845/#860 회귀를 구분하며 후보 실패 시 버전만 올리지 않는다.
+완료 조건은 후보별 ESC baseline/Ctrl 선행·Noice 검색 취소·raw key reader·마우스/작업 폴더 검사와 미검증 범위를 기록하는 것이다. 아직 버전 선택 결정을 하지 않아 새 ADR은 작성하지 않는다.
+
+공식 portable 3.4.0 (`20aa1d7`, 2026-10-13)을 공개 릴리스 asset digest와 대조했다. ZIP SHA256 `a66b6be7c13c6fa0dc3660a267b9e34eaa91a4eb7f07fbd55a0468018bd0f721` 일치, `.local/` 후보 디렉터리에만 전개했다.
+같은 원본 config의 `--binary` 후보 검사에서 Ctrl-A 선행 후 raw/encoded 및 full Noice encoded 검색 검사 세 조합 모두 통과했다. 기존 3.3.8은 같은 선행 Ctrl 조건에서 실패했다.
+기존 raw/events reader의 encoded ESC 단독·동시 modifier·지연 modifier 6사례도 후보에서 통과했다. 실제 keydown의 VK27/char0x1b와 후속 일반 x 입력을 확인했다.
+마우스 미등록 fullscreen raw reader에 같은 SGR wheel up/down을 보내면 3.3.8은 raw 보고 두 개를 입력으로 받았고 후보는 0바이트였다. 두 버전 모두 후속 x 입력은 정상 도착했다.
+이는 물리 휠·장시간 등록 회복·실제 Codex 기능 검증은 아니다. 지정 한글·공백 폴더에서 후보 기본 프로필 셸/명시 pwsh 세션의 실제 Get-Location 일치도 확인했다.
+확장 navigator 검사에서는 후보의 headless 8검사와 초기 attached pane 이동은 통과했으나 삽입 모드 준비 단계가 실패했다. fixture 문제인지 후보 회귀인지 추가 확인 전 전체 통과로 기록하지 않는다.
+모든 검사는 별도 데이터 경로/세션이며 종료와 lockfile 보존을 확인했다. 실제 3.3.8 설치·PATH·프로필·실사용 세션은 유지했다.
+
+사용자가 이후 3.4.0 실제 업그레이드를 명시 요청했다. 기존 host 일치 windows-powershell 승인과 psmux 활성화를 확인했다. 설치본을 버전별로 보존하고 새 기본 데이터 root를 분리하며, 기존 pane은 실제 서버 PID의 실행 경로를 기준으로 유지한다([ADR 0013](../adr/0013-psmux-upgrade-isolation.md)).
+구현 순서는 공통 Windows pin/loader·설치 스크립트 갱신 → 모의/격리 검사 → 검증된 portable의 새 버전 경로 설치 → 기존 loader 보존·PATH/feature 갱신 → 새 외부 PowerShell과 새 서버 버전 확인 → 로컬 상태 갱신이다. 기존 세션 종료·실사용 키 전송은 하지 않는다.
+
+2026-11-03 KST 적용 결과: `%LOCALAPPDATA%\Programs\psmux\3.4.0`에 portable을 설치했고 두 실행 파일이 `3.4.0 (20aa1d7)`을 보고한다. 기존 두 프로필 loader는 그대로 재사용해 프로필 hash가 적용 전 백업과 같다.
+사용자 PATH는 3.4.0을 3.3.8 앞에 두고 변경 전 값을 `.local/`에 보관했다. `setup-psmux.ps1 -Check`, 새 외부 PowerShell의 `Get-DotfilesMuxStatus`(Ready, Pinned/Active 3.4.0, 데이터 `%LOCALAPPDATA%\psmux\3.4.0`)와 새 서버 버전 확인을 통과했다.
+이후 사용자가 기존 세션 정리를 명시 요청해 3.3.8 실행 파일의 `kill-server`로 옛 기본 데이터 경로의 `main`·프로젝트 세션을 종료했다. 3.3.8 설치본과 옛 데이터 경로는 복구용으로 남겼다.
+
+격리 검사(3.4.0 설치본, 임시 데이터 경로, lockfile 보존 확인): `psmux-search-escape.py` plain과 `--latch-control-key --encoded-escape --full-config`, `windows-psmux.py` 기본·`--full-config`, `psmux-version-routing.ps1`(PowerShell 7·5.1), `psmux-runtime.ps1`(PowerShell 7), `environment-isolation.lua`(origin/main baseline)를 통과했다.
+`environment-isolation.lua`의 실행 파일 mock이 3.3.8 경로에 남아 이 장치의 실제 3.4.0 파일을 읽는 문제를 발견해 3.4.0 경로로 고쳤다. `psmux-runtime.ps1`의 5.1 실행은 한글 경로 literal 인코딩으로 실패하며 origin/main에서도 같은 실패를 확인해 이번 변경과 분리한다.
+`psmux-escape.py --encoded-escape`(Windows Terminal 경로)는 일반 단독 ESC와 modifier stress 30/30이 도착했다. 실패는 인코딩 ESC 뒤 raw `\x1b`를 보내는 `client-double-Escape`(두 번째가 다음 키와 함께 도착)와 ESC 두 레코드를 보내는 `client-Escape-unicode0`의 기대값 1로, 검사 조합의 구조적 기대값 문제이며 3.4.0 회귀로 판단하지 않는다.
+`--wezterm` 전체 실행은 raw·encoded 모두 앞선 modifier stress 이후 keys/events 단독 ESC가 유실됐다. 같은 사례만 실행하면 3.4.0·3.3.8 모두 통과하고, 3.3.8 전체 실행도 동일하게 실패해 3.4.0 회귀가 아닌 기존 WezTerm VT 경로의 순서 의존 현상으로 기록한다. 주 터미널(Windows Terminal) 경로와 분리한다.
+
+적용 후 사용자가 새 탭의 `mux`에서 `Session 'main' uses another configuration`을 보고했다. 격리 3.4.0 서버 대조로 다음 동작 차이를 확인하고 수정했다.
+- 세션 `show-environment`에 `PSMUX_CONFIG_FILE`이 없고 서버 전역(`show-environment -g`)에만 있다. 세션 값이 없을 때만 전역 값을 읽도록 했다. 다른 원본·marker 없음은 계속 거절한다.
+- CLI 인수의 감싼 따옴표를 3.3.8은 한 단계 벗기지만 3.4.0은 그대로 저장해 prefix+F/D가 깨진 명령을 실행한다. 3.4.0 CLI는 `\;`·`;`에서 명령을 나눠 reload 연쇄도 `source-file`만 남는다. F/D/reload 바인딩을 임시 conf 파일로 쓰고 `source-file`로 읽은 뒤 삭제하도록 바꿨다. 두 버전에서 저장 결과가 같음을 확인했다.
+- 3.4.0은 서버가 없을 때 `list-sessions`가 오류로 끝나고, 대기 중인 셸 pane의 `pane_current_command`를 oh-my-posh로 보고할 수 있다. 검사 정리 확인과 취소 pane 판정만 이에 맞췄다. psmux.conf 분기는 nvim-insert·vim/fzf 이름만 보므로 셸 pane 동작은 같다.
+수정 후 `windows-psmux-projects.py`(F 선택·취소, D, reload, 다른 원본 거절)와 `windows-psmux-project-latency.py`(reload 후 F/D 경로 유지·F 실행)가 3.4.0에서 통과했다. `psmux-version-routing.ps1`에 전역 marker 채택·다른 원본 거절·바인딩 파일 내용/삭제 모의 검사를 추가했다. 검사 harness 시작 단계의 일시적 접근 거부 1회는 재실행으로 통과했다.
+
+다른 장치 적용 명세(windows-powershell, psmux 활성화 장치만): 이 PR은 psmux pin을 3.4.0으로 바꾸고 새 셸의 기본 데이터 경로를 버전별로 분리한다. macOS·WSL·Linux는 적용 대상이 아니다.
+1. 로컬 변경 보존·main 갱신 후 `.local/environment.json`의 host 일치 windows-powershell 승인과 `.local/psmux.json` 활성화를 확인한다. 승인이 없으면 적용하지 않는다.
+2. `pwsh -NoProfile -File .\scripts\setup-psmux.ps1 -Check`로 현재 상태를 읽고, 사용자 승인 후 기존 설치 명령 `powershell -NoProfile -File .\scripts\setup-windows.ps1 -ApprovePowerShell -WithPsmux`로 3.4.0을 SHA256 검증·설치한다. 기존 3.3.8 설치본·프로필 loader는 보존되고 PATH는 3.4.0이 앞에 온다.
+3. mux 밖의 새 PowerShell 탭에서 `Get-DotfilesMuxStatus`가 Ready·ActiveVersion 3.4.0인지 확인하고 `mux`로 새 세션을 연다. 기존 3.3.8 세션은 자동 종료되지 않으며 정리는 사용자가 요청할 때만 `windows-setup.md`의 옛 경로로 수행한다.
+4. 장치 결과는 해당 장치 `.local/setup-state.json`의 psmux 구성요소에만 기록한다.
+
+아래 두 문단은 이전 검색 ESC 진단 검사 커밋 당시의 명세다. 그 커밋 자체는 런타임 동작을 바꾸지 않았다.
 기존 psmux 3.3.8·Neovim·Windows .NET 컴파일러가 있는 장치에서 `python -B tests/psmux-search-escape.py`로 plain 검사,
 `--encoded-escape`로 Terminal 원본 인코딩, `--full-config`로 이미 설치된 LazyVim/Noice를 검사한다. `--latch-control-key`는 3.3.8의 알려진 실패를 재현하며 종료 코드 1이 예상된다. `--config`는 기존 private 후보 파일만 읽는다. 도구가 없으면 설치하지 않고 중단한다.
 private PSMUX_DATA_DIR에서만 세션을 만들고 종료하며 물리 키·IME·다른 OS 성공을 보증하지 않는다. 조사 결과는 해당 장치 로컬 기록과 이 작업 기록의 검증 한계로 구분한다.
@@ -86,6 +122,8 @@ Windows psmux에는 Esc root binding이 있고 로컬 Neovim 삽입 모드에만
 ## 남은 일
 
 원인 재현, 수정·검증·리뷰·PR 제출. 실사용 서버 재로드와 실제 원격 확인은 별도 적용 범위다.
+
+2026-11-03 업그레이드 후: 새 탭 3.4.0 세션에서 물리 키 Esc·검색 취소·휠·IME와 실제 Codex 사용을 사용자가 확인한다. upstream 입력 회귀(#845/#860) 수정 버전은 별도 검토한다. 다른 Windows 장치는 아래 적용 명세에 따른다.
 ## 재현과 수정 방향
 
 - 2026-10-07 09:29 KST: 격리 attached ConPTY 검사에서 기본 raw ReadFile/Console.ReadKey/Event 소비자에는 Esc가 정상 전달됐다. WezTerm VT 입력에서 Esc 직후 문자 없는 Shift 이벤트를 동시 또는 5ms 간격으로 보내면 50ms pending Escape가 취소되어 후속 x만 도착했다. 실제 사용자 키/IME가 같은 이벤트를 만들었다고 확정하지 않는다.

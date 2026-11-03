@@ -114,7 +114,7 @@ if selected_environment == 'windows-powershell' then
         if ok and type(feature) == 'table' and feature.schemaVersion == 1
             and feature.enabled == true and type(feature.host) == 'string'
             and feature.host:lower() == (os.getenv('COMPUTERNAME') or ''):lower() then
-            local mux_bin = (os.getenv('LOCALAPPDATA') or '') .. '/Programs/psmux/3.3.8/psmux.exe'
+            local mux_bin = (os.getenv('LOCALAPPDATA') or '') .. '/Programs/psmux/3.4.0/psmux.exe'
             local binary = io.open(mux_bin, 'rb')
             if binary and executable_path then
                 binary:close()

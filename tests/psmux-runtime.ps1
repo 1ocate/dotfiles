@@ -1,6 +1,10 @@
 #Requires -Version 5.1
 # Runtime approval, alias preservation, PATH order and project naming without installs.
 $ErrorActionPreference = 'Stop'
+$env:TMUX = $null
+$env:PSMUX_SESSION = $null
+$env:PSMUX_CONFIG_FILE = $null
+$env:PSMUX_DATA_DIR = $null
 $source = Join-Path (Split-Path -Parent $PSScriptRoot) 'powershell/psmux.ps1'
 $testRoot = Join-Path $env:TEMP ('dotfiles-psmux-runtime-' + [guid]::NewGuid())
 New-Item -ItemType Directory -Path (Join-Path $testRoot 'powershell') -Force | Out-Null
@@ -10,7 +14,7 @@ Copy-Item -LiteralPath $source -Destination $runtime
 $selectionPath = Join-Path $testRoot '.local/environment.json'
 $featurePath = Join-Path $testRoot '.local/psmux.json'
 $selection = @{ schemaVersion=1; environment='windows-powershell'; host=[Environment]::MachineName; approved=$true }
-$feature = @{ schemaVersion=1; host=[Environment]::MachineName; enabled=$true; version='3.3.8' }
+$feature = @{ schemaVersion=1; host=[Environment]::MachineName; enabled=$true; version='3.4.0' }
 function Save-TestStates {
     $selection | ConvertTo-Json | Set-Content -LiteralPath $selectionPath -Encoding UTF8
     $feature | ConvertTo-Json | Set-Content -LiteralPath $featurePath -Encoding UTF8
@@ -53,9 +57,14 @@ if ($status.Status -ne 'Ready' -or -not $status.PsmuxPresent -or -not $status.Tm
 if ($stateBefore[0] -ne (Get-FileHash $selectionPath).Hash -or $stateBefore[1] -ne (Get-FileHash $featurePath).Hash) { throw 'Diagnostics wrote approval records.' }
 if ((t) -ne 'user-project-command' -or (mux) -ne 'user-mux-command') { throw 'Existing user commands were overwritten.' }
 if ((Invoke-DotfilesConfigProject) -ne 'user-project-command') { throw 'Source-checkout project key replaced the user t command.' }
-$expectedTmux = Join-Path $env:LOCALAPPDATA 'Programs/psmux/3.3.8/tmux.exe'
+$expectedTmux = Join-Path $env:LOCALAPPDATA 'Programs/psmux/3.4.0/tmux.exe'
 if ((Get-Command tmux).Source -ne $expectedTmux) { throw 'Pinned tmux.exe is not first on PATH.' }
 # The default server is ours only when the pane uses this checkout's config.
+function Get-Process {
+    param([int]$Id)
+    if ($Id -ne 123) { throw 'Unexpected fixture process.' }
+    [pscustomobject]@{Path=(Join-Path $env:LOCALAPPDATA 'Programs/psmux/3.4.0/psmux.exe')}
+}
 $env:TMUX='/tmp/psmux-123/default,1,0'
 $env:PSMUX_SESSION='probe'
 $env:PSMUX_CONFIG_FILE=Join-Path $testRoot 'tmux/psmux.conf'

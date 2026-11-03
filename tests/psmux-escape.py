@@ -64,10 +64,10 @@ def main():
         if len(bindings) != 1:
             parser.error('Expected exactly one Escape sendInput binding in terminal source')
         win32_escape = bindings[0].encode('ascii')
-    binary = (args.binary or (Path(os.environ['LOCALAPPDATA']) / 'Programs/psmux/3.3.8/psmux.exe')).resolve()
+    binary = (args.binary or (Path(os.environ['LOCALAPPDATA']) / 'Programs/psmux/3.4.0/psmux.exe')).resolve()
     csc = Path(os.environ['WINDIR']) / 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
     if (not args.direct and not binary.is_file()) or not csc.is_file():
-        raise SystemExit('Existing psmux 3.3.8 and .NET Framework compiler required.')
+        raise SystemExit('Selected psmux and existing .NET Framework compiler required.')
     lock = ROOT / 'nvim/lazy-lock.json'
     before = lock.read_bytes()
     namespace = 'dotfiles-escape-' + uuid.uuid4().hex[:8]

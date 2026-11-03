@@ -71,16 +71,18 @@ def main():
                         help='Inject CLI Ctrl-A before Escape to probe pane ConPTY input-mode latch')
     parser.add_argument('--config', type=Path,
                         help='Trusted private test configuration; data-dir isolation does not sandbox config commands')
+    parser.add_argument('--binary', type=Path,
+                        help='Existing candidate psmux executable; never installs or selects it for live sessions')
     parser.add_argument('--full-config', action='store_true',
                         help='Use existing LazyVim/Noice plugins offline; no installation or updates')
     args = parser.parse_args()
     if os.name != 'nt':
         parser.error('Native Windows required; nothing installed')
-    binary = Path(os.environ['LOCALAPPDATA']) / 'Programs/psmux/3.3.8/psmux.exe'
+    binary = (args.binary or Path(os.environ['LOCALAPPDATA']) / 'Programs/psmux/3.4.0/psmux.exe').resolve()
     nvim = shutil.which('nvim')
     csc = Path(os.environ['WINDIR']) / 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
     if not binary.is_file() or not nvim or not csc.is_file():
-        parser.error('Existing psmux, Neovim and .NET compiler required')
+        parser.error('Selected psmux executable, existing Neovim and .NET compiler required')
     config = (args.config or ROOT / 'tmux/psmux.conf').resolve()
     if not config.is_file():
         parser.error('Selected configuration does not exist')

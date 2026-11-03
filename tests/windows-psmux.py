@@ -26,7 +26,7 @@ def until(predicate, description, timeout=25):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--full-config', action='store_true', help='Load current LazyVim config offline; disable bytecode cache and tool downloads.')
-    parser.add_argument('--binary', type=Path, help='Use this psmux executable instead of installed psmux 3.3.8.')
+    parser.add_argument('--binary', type=Path, help='Use this psmux executable instead of installed psmux 3.4.0.')
     parser.add_argument('--encoded-escape', action='store_true', help='Send standalone Escape using Windows Terminal Win32 input encoding.')
     args = parser.parse_args()
     if os.name != 'nt':
@@ -41,7 +41,7 @@ def main():
         assert isinstance(escape_command, dict) and escape_command.get('action') == 'sendInput', \
             'Windows Terminal Escape binding must use sendInput'
         encoded_escape = escape_command['input'].encode('ascii')
-    binary = (args.binary or Path(os.environ['LOCALAPPDATA']) / 'Programs/psmux/3.3.8/psmux.exe').resolve()
+    binary = (args.binary or Path(os.environ['LOCALAPPDATA']) / 'Programs/psmux/3.4.0/psmux.exe').resolve()
     nvim = shutil.which('nvim')
     pwsh = shutil.which('pwsh')
     plugin = Path(os.environ['LOCALAPPDATA']) / 'nvim-data/lazy/nvim-tmux-navigation'
@@ -75,6 +75,7 @@ def main():
             if key.startswith('PSMUX_'):
                 env.pop(key)
         env.update(PSMUX_DATA_DIR=str(temp / 'runtime'), PSMUX_NO_WARM='1',
+                   NVIM_LOG_FILE=str(temp / 'nvim.log'),
                    DOTFILES_ROOT=str(ROOT), DOTFILES_PSMUX_ROOT=str(ROOT),
                    DOTFILES_PSMUX_FULL='1' if args.full_config else '0',
                    DOTFILES_PSMUX_EXE=str(binary), DOTFILES_PSMUX_WAIT=str(temp / 'wait.ps1'),
@@ -157,6 +158,8 @@ def main():
             live_script = temp / 'live.lua'
             live_script.write_text("""
 local root=assert(vim.env.DOTFILES_PSMUX_ROOT)
+-- Ephemeral fixture buffers need no recovery files in user swap directories.
+vim.opt.swapfile=false
 if vim.env.DOTFILES_PSMUX_FULL == '1' then
   require('lazy').load({plugins={'nvim-tmux-navigation'}})
 else

@@ -38,7 +38,7 @@ def main():
     METRICS.append(metrics)
     if os.name != 'nt':
         raise SystemExit('Requires approved native Windows psmux, pwsh and fzf; no installation.')
-    binary = Path(os.environ['LOCALAPPDATA']) / 'Programs/psmux/3.3.8/psmux.exe'
+    binary = Path(os.environ['LOCALAPPDATA']) / 'Programs/psmux/3.4.0/psmux.exe'
     pwsh = shutil.which('pwsh')
     assert binary.is_file() and pwsh and shutil.which('fzf')
     lock_before = (ROOT / 'nvim/lazy-lock.json').read_bytes()
@@ -99,7 +99,7 @@ def main():
             host = subprocess.Popen([str(host_exe), command], env=env,
                                     startupinfo=startup, creationflags=subprocess.CREATE_NEW_CONSOLE)
             until(lambda: attached(source_session), 'Source launcher failed to attach main')
-            assert 'PSMUX_CONFIG_FILE=' + str(ROOT / 'tmux/psmux.conf') in run('-t', source_session, 'show-environment')
+            assert 'PSMUX_CONFIG_FILE=' + str(ROOT / 'tmux/psmux.conf') in run('-t', source_session, 'show-environment') + run('-t', source_session, 'show-environment', '-g')
             keys = run('-t', source_session, 'list-keys')
             assert ' F new-window ' in keys and ' D new-window ' in keys, keys
             print('Direct path registered:',Path(pwsh).as_posix().lower() in keys.lower(),flush=True)
@@ -168,7 +168,7 @@ def main():
                     except (OSError, subprocess.TimeoutExpired):
                         host.kill()
                         host.wait(timeout=5)
-            until(lambda: not run('list-sessions'), 'Private sessions did not terminate')
+            until(lambda: not run('list-sessions', check=False), 'Private sessions did not terminate')
             assert not errors, errors
             assert (ROOT / 'nvim/lazy-lock.json').read_bytes() == lock_before
             assert (roots_file.read_bytes() if roots_file.exists() else None) == roots_before

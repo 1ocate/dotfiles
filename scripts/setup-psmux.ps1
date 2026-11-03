@@ -5,8 +5,8 @@ $ErrorActionPreference = 'Stop'
 if ($InstallOnly -and $Disable) { throw 'InstallOnly and Disable cannot be combined.' }
 if ($env:OS -ne 'Windows_NT') { throw 'psmux setup requires native Windows.' }
 $repoPath = Split-Path -Parent $PSScriptRoot
-$version = '3.3.8'
-$zipHash = '1AD127BA937194A890B933A73D9B023E297BD73DC742ABD841BF159984C2EFFE'
+$version = '3.4.0'
+$zipHash = 'A66B6BE7C13C6FA0DC3660A267B9E34EAA91A4EB7F07FBD55A0468018BD0F721'
 $installPath = Join-Path $env:LOCALAPPDATA "Programs/psmux/$version"
 $runtimePath = Join-Path $repoPath 'powershell/psmux.ps1'
 $featurePath = Join-Path $repoPath '.local/psmux.json'
@@ -21,7 +21,7 @@ if (-not $documentsPath -or -not $env:LOCALAPPDATA -or -not [System.IO.Path]::Is
 if ($Plan) {
     Write-WindowsSelectionStatus -RepoPath $repoPath
     Write-Output "Optional windows-powershell: pinned psmux $version x64 portable release (SHA256 checked) in $installPath."
-    Write-Output 'Link both user profiles to the runtime source; add tmux.exe directory to user PATH; enable WezTerm launcher in host-local state.'
+    Write-Output 'Link both user profiles to the runtime source; put the selected tmux.exe directory first in user PATH; preserve older PATH entries and sessions; enable WezTerm launcher in host-local state.'
     Write-Output 'Disable only changes the feature marker; sessions and backed-up user files remain intact.'
     return
 }
@@ -73,7 +73,7 @@ if (-not (Test-Path -LiteralPath $installPath -PathType Container)) {
 foreach ($binary in @('psmux.exe', 'tmux.exe')) {
     if (-not (Test-Path (Join-Path $installPath $binary) -PathType Leaf)) { throw "Existing install lacks $binary; preserve it and repair separately. No profiles were changed." }
     $reportedVersion = & (Join-Path $installPath $binary) -V
-    if ($LASTEXITCODE -ne 0 -or ($reportedVersion -join ' ') -notmatch 'tmux 3\.3\.8') { throw "Unexpected $binary version. No profiles were changed." }
+    if ($LASTEXITCODE -ne 0 -or ($reportedVersion -join ' ') -notmatch 'tmux 3\.4\.0') { throw "Unexpected $binary version. No profiles were changed." }
 }
 if ($InstallOnly) {
     Write-Output 'Pinned psmux binaries verified; profiles, PATH and feature state unchanged.'
@@ -96,10 +96,22 @@ foreach ($folder in @('WindowsPowerShell', 'PowerShell')) {
     [System.IO.File]::WriteAllText($profilePath, $existing + "`r`n" + $loader + "`r`n", $encoding)
 }
 $userPath = [string][Environment]::GetEnvironmentVariable('Path', 'User')
-if (($userPath -split ';') -notcontains $installPath) {
+$normalizeMuxPath = {
+    param([string]$Entry)
+    [Environment]::ExpandEnvironmentVariables($Entry.Trim().Trim('"')).Replace('/', '\').TrimEnd('\')
+}
+$normalizedInstallPath = & $normalizeMuxPath $installPath
+$retainedPathEntries = @()
+if ($userPath) {
+    $retainedPathEntries = @($userPath -split ';' | Where-Object {
+        -not [string]::Equals((& $normalizeMuxPath $_), $normalizedInstallPath, [StringComparison]::OrdinalIgnoreCase)
+    })
+}
+$newUserPath = (@($installPath) + $retainedPathEntries) -join ';'
+if ($newUserPath -cne $userPath) {
     [System.IO.File]::WriteAllText((Join-Path $repoPath ('.local/path-before-psmux-' + (Get-Date -Format 'yyyyMMdd-HHmmss-fff') + '.txt')), [string]$userPath)
-    [Environment]::SetEnvironmentVariable('Path', $userPath.TrimEnd(';') + ';' + $installPath, 'User')
+    [Environment]::SetEnvironmentVariable('Path', $newUserPath, 'User')
 }
 $state = [ordered]@{ schemaVersion = 1; host = [Environment]::MachineName; enabled = $true; version = $version }
 $state | ConvertTo-Json | Set-Content -LiteralPath $featurePath -Encoding UTF8
-Write-Output 'psmux prepared and source profile loaders connected. Reopen WezTerm to enter the main session.'
+Write-Output 'psmux prepared and source profile loaders connected. Open a new PowerShell tab to use the selected version; existing processes and sessions were preserved.'

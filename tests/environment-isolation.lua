@@ -99,7 +99,7 @@ local function select_scenario(scenario)
       local content = scenario.mux_corrupt and 'invalid-json' or real_vim.json.encode(scenario.mux)
       return { read = function() return content end, close = function() end }
     end
-    if path:match('/Programs/psmux/3%.3%.8/psmux%.exe$') then
+    if path:match('/Programs/psmux/3%.4%.0/psmux%.exe$') then
       assert(scenario.id == 'windows-powershell', 'Unix checked a Windows executable')
       return scenario.binary and { close = function() end } or nil
     end
@@ -156,7 +156,7 @@ for _, feature in ipairs({
   local scenario = { id = 'windows-powershell', triple = 'x86_64-pc-windows-msvc',
     choice = 'windows-powershell', binary = feature.binary, mux_corrupt = feature.corrupt,
     mux = { schemaVersion = feature.schema or 1, host = feature.host or 'fixture-host',
-      enabled = feature.enabled, version = '3.3.8' } }
+      enabled = feature.enabled, version = '3.4.0' } }
   select_scenario(scenario)
   local terminal = wezterm_config(root, scenario)
   local launched = terminal.default_prog[4] == '-File'
