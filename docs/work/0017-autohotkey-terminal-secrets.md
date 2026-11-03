@@ -7,7 +7,7 @@
 - 실행 환경: windows-powershell
 - 적용 범위·비대상: `autoHotKey.ahk`, 새 `autohotkey/credentials.ahk`, `tests/autohotkey-credentials.ahk`, `scripts/setup-windows.ps1`의 필수 원본 목록, 사용 문서. 비대상: macOS Hammerspoon, 실제 AutoHotkey 재시작·비밀 값 등록, 여러 계정·HOTP
 - 관련 ADR: [ADR 0014](../adr/0014-autohotkey-terminal-secrets.md)
-- 관련 PR: [PR #28](https://github.com/1ocate/dotfiles/pull/28)(병합), [PR #29](https://github.com/1ocate/dotfiles/pull/29)(병합, OTP 슬롯), 비밀번호 Enter 후속 PR
+- 관련 PR: [PR #28](https://github.com/1ocate/dotfiles/pull/28)(병합), [PR #29](https://github.com/1ocate/dotfiles/pull/29)(병합, OTP 슬롯), [PR #31](https://github.com/1ocate/dotfiles/pull/31)(비밀번호 Enter)
 
 ## 분석과 미확인 사항
 
@@ -60,5 +60,5 @@
 
 ## 남은 일과 종료 근거
 
-- 사용자 장치에서 AutoHotkey Reload 후 등록·입력을 GUI로 확인한다. 비밀번호 Enter 후속 PR 반영 후 터미널 비밀번호 프롬프트에서 Ctrl+Alt+P 한 번으로 제출되는지 확인한다.
+- 사용자 장치에서 AutoHotkey Reload 후 등록·입력을 GUI로 확인한다. [PR #31](https://github.com/1ocate/dotfiles/pull/31)(비밀번호 Enter) 반영 후 터미널 비밀번호 프롬프트에서 Ctrl+Alt+P 한 번으로 제출되는지 확인한다.
 - OTP 슬롯 후속 PR 병합·반영 후 사용자 GUI 확인을 거쳐 상태를 `완료`로 갱신한다.
