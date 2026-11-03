@@ -10,6 +10,39 @@
 
 ## 분석과 미확인 사항
 
+2026-11-03 KST 재개: 기준 main `c6b271a`, `fix/psmux-search-escape`, windows-powershell.
+사용자는 mux의 휠이 PowerShell 이력 이동/Codex 문자 입력으로 동작하고, 로컬 Neovim `/` 검색에서도 Esc로 나올 수 없다고 보고했다.
+기존 사용자 문서·lockfile·폰트 파일 변경을 보존한다. 실제 Terminal Esc 계약 검사와 단독 encoded Esc raw/events 격리 검사는 통과했으나 검색 모드 검증은 없었다.
+계획은 attached ConPTY 검사에 `/`, `?`, `:` 취소와 검색 확정 보존을 추가해 raw/encoded 경로를 비교하고, 재현 근거에 한정해 기존 ADR 0003/0009의 Windows 어댑터를 보완하는 것이다.
+실사용 서버 재로드·연결·설치·SSH와 다른 OS 적용은 제외한다. 휠 원인은 아직 전경 판정/외부 마우스 모드 후보이며 ESC와 같은 원인으로 확정하지 않는다.
+GitHub CLI가 현재 PATH에서 발견되지 않아 열린 PR 상태 조회는 실행하지 못했다. 로컬 검증과 PR 본문 준비까지 진행한다.
+
+추가 보고: 작업 폴더를 지정한 세션이 사용자 홈에서 열린다. `Invoke-DotfilesMux`의 신규 `-c` 전달과 기존 세션 재사용을 구분한다.
+격리된 실제 기본 셸/현재 프로필 세션과 명시 pwsh 세션 모두 한글·공백 작업 폴더의 실제 `Get-Location`이 지정 경로와 일치했다.
+기존 세션은 위치를 재설정하지 않는 구현이며 사용자가 어떤 생성 경로를 사용했는지는 확인 대기다.
+
+검증 진행: `python -X utf8 -B tests/windows-psmux.py --encoded-escape`는 기존 headless navigator의 Ctrl-h 외부 pane 이동 단계에서 실패해 새 검색 assertion까지 도달하지 못했다.
+이를 검색 ESC 실패 재현으로 간주하지 않는다. 별도의 `tests/psmux-search-escape.py`로 attached-client 검색 취소 검사를 분리한다.
+
+검색 전용 검사는 plain Neovim과 기존 LazyVim/Noice를 오프라인 로드한 구성 모두에서 raw/Windows Terminal encoded Esc로 `/`, `?`, `:` 취소가 통과했다.
+Enter 검색 확정과 Ctrl+C 취소, 격리 서버 종료·사용자 lockfile 바이트 보존도 확인했다. 키를 한 덩어리로 보내면 psmux 붙여넣기 감지가 개입하므로 최종 검사는 키별 200ms 입력으로 분리한다(80ms는 host의 100ms 폴링에서 병합될 수 있어 보강).
+기존 통합 검사에 잠시 추가한 중복 검색 검사는 제거하고 전용 검사만 유지한다. 물리 키보드·IME 증상은 아직 재현하지 못했다.
+실제 Neovim의 읽기 전용 RPC 조회에서는 mode=n, 검색 Esc 별도 키맵 없음, timeoutlen=300/ttimeoutlen=50이었다. 실제 설정 junction도 저장소 원본을 가리킨다.
+사용자는 Ctrl+C로 검색을 닫을 수 있음을 확인했다. 물리 ESC/IME 구분을 위해 ESC/Ctrl+C 종류와 모드만 임시 관찰하고 일반 문자·검색어는 기록하지 않는다. 관찰은 120초 뒤 자동 종료하며 실제 키 결과는 사용자 응답 대기다.
+독립 리뷰는 실제 stdpath와 고정 사전 검사 경로 차이로 bootstrap 가능성을 지적했고 다운로드 차단 가드를 보강한다. 현재 사용자 설정·설치 binary·실사용 세션은 수정하지 않았다.
+
+독립 리뷰 후 최종 검사: 실제 stdpath lazy 존재를 init 이전에 검증하고 없으면 cquit 2로 종료한다. NVIM_APPNAME/XDG_DATA_HOME이 다른 missing-lazy 환경에서 종료 코드 2·init sentinel 미실행·bootstrap 디렉터리 미생성을 확인했다.
+상태/캐시/로그는 임시 경로에 두고 기존 설치 데이터만 참조한다. Ex 취소는 sentinel 미실행, Enter 확정은 다른 패턴 `another`와 커서 `[2,0]`으로 강화했다.
+최종 plain raw/full Noice encoded 검사와 AST·대상 diff 공백 검사 통과, 독립 재리뷰 차단 문제 없음. 강화 전 plain encoded/full raw도 통과했으나 강화 후 네 조합 모두 재실행했다고 주장하지 않는다.
+사용자는 영문·한글 모두 검색 Esc가 실패한다고 확인했다. 5분 임시 제어키 관찰을 새로 시작했으나 중간 조회는 전체 입력 개수 0으로 실제 물리키 결과를 판단할 수 없었다. 사용자 검사 응답 대기이며 해결 완료로 표시하지 않는다.
+
+### 2026-11-03 다른 장치 적용 명세
+
+이번 변경은 Windows 전용 격리 진단 검사와 조사 기록이며 런타임 동작을 바꾸지 않는다. 추가 설치·링크·설정 재로드는 불필요하다.
+기존 psmux 3.3.8·Neovim·Windows .NET 컴파일러가 있는 장치에서 `python -B tests/psmux-search-escape.py`로 plain 검사,
+`--encoded-escape`로 Terminal 원본 인코딩, `--full-config`로 이미 설치된 LazyVim/Noice를 검사한다. 도구가 없으면 설치하지 않고 중단한다.
+private PSMUX_DATA_DIR에서만 세션을 만들고 종료하며 물리 키·IME·다른 OS 성공을 보증하지 않는다. 조사 결과는 해당 장치 로컬 기록과 이 작업 기록의 검증 한계로 구분한다.
+
 Windows psmux에는 Esc root binding이 있고 로컬 Neovim 삽입 모드에만 Ctrl+\ Ctrl+N 보정이 적용된다. SSH 뒤의 원격 Vim 모드는 Windows 로컬 marker로 알 수 없다. 일반 Escape 전달의 ConPTY 경로와 로컬 marker가 없는 편집기/SSH 입력을 검사한다. 사용자의 실제 원격 연결 정보나 서버 설정을 임의로 열거나 변경하지 않는다.
 
 ## 계획과 완료 조건
