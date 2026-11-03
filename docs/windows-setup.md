@@ -138,7 +138,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\use-wezterm.ps1
 | `scripts/use-wezterm.ps1`, `scripts/use-neovim.ps1` | 사용자 설정을 loader·junction으로 체크아웃 원본에 연결 |
 | `scripts/setup-windows.ps1` | Windows 전용 패키지·프로필·글꼴·도구 준비와 연결 |
 | `scripts/setup-neovim.lua` | 승인된 Windows PowerShell에서 parser·Mason 도구 준비 및 완료 검사 |
-| `autoHotKey.ahk` | Windows 키·IME 처리. macOS Hammerspoon은 그대로 유지 |
+| `autoHotKey.ahk`, `autohotkey/credentials.ahk` | Windows 키·IME 처리와 터미널 비밀번호·OTP 입력. macOS Hammerspoon은 그대로 유지 |
 
 Neovim과 WezTerm은 Windows에서 현재 호스트의 저장된 선택을 읽습니다. 승인된 PowerShell 선택에만 해당 셸·도메인·Windows yank 처리를 적용하며 부재·손상·불일치에서는 안내하고 공통 설정을 사용합니다. Unix 프로세스는 Windows 선택 파일을 읽지 않습니다.
 
@@ -149,6 +149,24 @@ Windows 호스트가 명시적으로 WSL을 선택했다면 WezTerm은 발견한
 - Neovim의 yank는 승인된 PowerShell 환경에서 Windows 클립보드로 전달하고 F9로 연동을 켜거나 끕니다.
 - 내부 셸은 PowerShell 7을 우선 사용하고 Windows 실행 별칭을 처리합니다.
 - Copilot·CopilotChat은 비활성화 상태를 유지합니다. 향후 활성화하더라도 Windows의 선택적인 `make tiktoken` 빌드는 생략합니다.
+
+### 터미널 비밀번호·OTP 입력
+
+WezTerm과 Windows Terminal 창에서만 동작합니다. Alt는 `Alt+C/V`와 같은 교환 후 Alt입니다.
+
+| 키 | 동작 |
+| --- | --- |
+| `Ctrl+Alt+P` | 등록한 비밀번호를 입력. Enter는 보내지 않음 |
+| `Ctrl+Alt+O` | 현재 TOTP 코드를 입력. 남은 시간이 2초 이하이면 다음 코드를 기다림 |
+| `Ctrl+Alt+Shift+P` | 비밀번호 등록·변경. 가려진 입력창에서 두 번 입력 |
+| `Ctrl+Alt+Shift+O` | OTP 등록·변경. Base32 비밀키 또는 `otpauth://totp/...` URI를 받고, 현재 코드를 보여 준 뒤 인증 앱과 같을 때만 저장 |
+
+값은 저장소나 파일이 아니라 Windows 자격 증명 관리자의 일반 자격 증명(`dotfiles/autohotkey/password`, `dotfiles/autohotkey/otp`)에 현재 사용자·이 장치 범위로 저장합니다. 다른 장치에는 각각 등록합니다. 삭제는 `cmdkey /delete:dotfiles/autohotkey/password`, `cmdkey /delete:dotfiles/autohotkey/otp`로 합니다. 입력 전에 IME를 영문으로 맞춥니다.
+
+- 비밀번호 프롬프트가 아닌 곳(셸 명령줄 등)에서 누르면 비밀번호가 화면과 셸 히스토리에 남습니다. 포커스와 프롬프트를 확인한 뒤 사용합니다.
+- OTP 비밀키를 비밀번호와 같은 PC에 두면 2단계 인증의 분리가 약해집니다. 회사 계정은 보안 정책이 허용하는 경우에만 사용합니다.
+- TOTP는 SHA1·SHA256·SHA512, 6~8자리, 임의 주기를 지원하며 시스템 시계에 의존합니다. HOTP와 여러 계정 선택은 지원하지 않습니다.
+- 단축키는 AutoHotkey가 터미널보다 먼저 처리합니다. 현재 저장소의 WezTerm·Windows Terminal·psmux·PSReadLine 설정은 이 조합을 쓰지 않습니다. 결정 근거는 [ADR 0014](adr/0014-autohotkey-terminal-secrets.md), 검증은 [작업 0017](work/0017-autohotkey-terminal-secrets.md)에 기록합니다.
 
 ## 연결 보존과 복구
 
@@ -163,6 +181,8 @@ WezTerm loader는 `%USERPROFILE%\.wezterm.lua`, Neovim junction은 `%LOCALAPPDAT
 `py -3 tests/check_environment.py`는 fetch된 main 파일을 임시 경로에 추출하고 Neovim·WezTerm API를 모의하여 Unix 결과와 Windows 분기·선택 격리를 검사합니다. Git·Neovim이 PATH에 필요하며 플러그인 다운로드와 외부 셸 실행은 차단합니다.
 
 `powershell -NoProfile -ExecutionPolicy Bypass -File tests/windows-selection.ps1`는 임시 상태로 최초 승인·재사용·호스트·환경 불일치와 비Windows 거부를 검사합니다. 이 검사와 Plan/Check는 실제 설치·GUI 기능 검증을 대신하지 않습니다.
+
+`AutoHotkey64.exe /ErrorStdOut testsutohotkey-credentials.ahk`는 단축키를 로드하지 않고 RFC 6238·4226 벡터, Base32·otpauth 해석, 자격 증명 관리자 임시 항목의 저장·조회·삭제를 검사합니다. 임시 항목은 검사 후 삭제합니다. `AutoHotkey64.exe /ErrorStdOut /Validate autoHotKey.ahk`는 실행 없이 전체 스크립트 문법을 확인합니다.
 
 setup-state 자동 저장·PowerShell 프로필 원본화·macOS 설치 통합과 tmux·프로젝트 전환의 WezTerm 이식은 아직 포함하지 않습니다. LSP·포맷 런타임과 외부 서비스의 회사 사용 허용 여부는 프로젝트별로 확인합니다. 구체적인 과거·현재 검증 결과와 후속 작업은 작업 0002에서만 누적합니다.
 ## psmux와 Neovim pane 이동
