@@ -4,7 +4,8 @@
 ; 비밀 값은 Windows 자격 증명 관리자(현재 사용자, 이 장치 한정)에만 저장하고 저장소에는 두지 않는다.
 
 DOTFILES_CRED_PASSWORD := "dotfiles/autohotkey/password"
-DOTFILES_CRED_OTP := "dotfiles/autohotkey/otp"
+; OTP 슬롯. 1번은 기존 단일 OTP 대상 이름을 그대로 사용한다.
+DOTFILES_OTP_TARGETS := ["dotfiles/autohotkey/otp", "dotfiles/autohotkey/otp-2"]
 DOTFILES_CRED_TYPE_GENERIC := 1
 DOTFILES_CRED_PERSIST_LOCAL_MACHINE := 2
 DOTFILES_ERROR_NOT_FOUND := 1168
@@ -140,7 +141,7 @@ DotfilesUnixTime() {
 ; Base32 비밀키 또는 otpauth://totp/... URI를 받아 검증한 설정 객체를 돌려준다.
 DotfilesParseOtpInput(text) {
     text := Trim(text)
-    otp := {secret: text, digits: 6, period: 30, algorithm: "SHA1"}
+    otp := {secret: text, digits: 6, period: 30, algorithm: "SHA1", name: ""}
     if RegExMatch(text, "i)^otpauth://([^/]+)/[^?]*\?(.*)$", &uri) {
         if (StrLower(uri[1]) != "totp")
             throw ValueError("Only TOTP is supported")
@@ -167,15 +168,36 @@ DotfilesParseOtpInput(text) {
     return otp
 }
 
+; v2;알고리즘;자릿수;주기;비밀키;이름. 이름은 마지막 필드라 `;`를 포함할 수 있다. v1은 이름 없는 이전 형식.
 DotfilesOtpSerialize(otp) {
-    return "v1;" otp.algorithm ";" otp.digits ";" otp.period ";" otp.secret
+    return "v2;" otp.algorithm ";" otp.digits ";" otp.period ";" otp.secret ";" otp.name
 }
 
 DotfilesOtpDeserialize(stored) {
-    parts := StrSplit(stored, ";")
-    if (parts.Length != 5 || parts[1] != "v1")
+    parts := StrSplit(stored, ";", , 6)
+    if (parts.Length = 5 && parts[1] = "v1")
+        name := ""
+    else if (parts.Length = 6 && parts[1] = "v2")
+        name := parts[6]
+    else
         throw ValueError("Unknown stored OTP format")
-    return {algorithm: parts[2], digits: Integer(parts[3]), period: Integer(parts[4]), secret: parts[5]}
+    return {algorithm: parts[2], digits: Integer(parts[3]), period: Integer(parts[4]), secret: parts[5], name: name}
+}
+
+; 슬롯 목록. 각 항목은 {slot, target, otp(미등록이면 false)}.
+DotfilesOtpSlots() {
+    slots := []
+    for i, target in DOTFILES_OTP_TARGETS {
+        entry := {slot: i, target: target, otp: false}
+        if DotfilesCredRead(target, &stored)
+            entry.otp := DotfilesOtpDeserialize(stored)
+        slots.Push(entry)
+    }
+    return slots
+}
+
+DotfilesOtpLabel(entry) {
+    return (entry.otp && entry.otp.name != "") ? entry.otp.name : "OTP " entry.slot
 }
 
 DotfilesCurrentOtp(otp, &remaining := 0) {
@@ -202,24 +224,64 @@ DotfilesSendPassword() {
     value := ""
 }
 
-DotfilesSendOtp() {
+; 슬롯 선택. 포커스를 옮기지 않고 안내를 띄운 뒤 다음 키 하나를 가로챈다(터미널에 전달하지 않음).
+DotfilesChooseSlot(entries, labelFn, title) {
+    text := title
+    for entry in entries
+        text .= "`n" entry.slot "   " labelFn(entry)
+    text .= "`nEsc 취소"
+    CoordMode("ToolTip", "Client")
     try {
-        if !DotfilesCredRead(DOTFILES_CRED_OTP, &stored) {
-            MsgBox("등록된 OTP가 없습니다. Ctrl+Alt+Shift+O로 등록하세요.", "dotfiles", "Icon!")
-            return
-        }
-        otp := DotfilesOtpDeserialize(stored)
-        code := DotfilesCurrentOtp(otp, &remaining)
+        WinGetClientPos(, , &w, &h, "A")
+        ToolTip(text, Max(w // 2 - 100, 0), h // 3)
+    } catch
+        ToolTip(text)
+    ih := InputHook("L1 T10", "{Esc}")
+    ih.Start()
+    ih.Wait()
+    ToolTip()
+    if (ih.EndReason = "Max")
+        for entry in entries
+            if (ih.Input = String(entry.slot))
+                return entry
+    return false
+}
+
+DotfilesSendOtp() {
+    hwnd := WinExist("A")
+    try {
+        registered := []
+        for entry in DotfilesOtpSlots()
+            if entry.otp
+                registered.Push(entry)
+    } catch Error as e {
+        MsgBox("OTP를 읽지 못했습니다: " e.Message, "dotfiles", "Iconx")
+        return
+    }
+    if (registered.Length = 0) {
+        MsgBox("등록된 OTP가 없습니다. Ctrl+Alt+Shift+O로 등록하세요.", "dotfiles", "Icon!")
+        return
+    }
+    entry := registered.Length = 1 ? registered[1] : DotfilesChooseSlot(registered, DotfilesOtpLabel, "입력할 OTP")
+    if entry
+        DotfilesSendOtpEntry(hwnd, entry)
+}
+
+DotfilesSendOtpEntry(hwnd, entry) {
+    try {
+        code := DotfilesCurrentOtp(entry.otp, &remaining)
         ; 만료 직전 코드는 입력 도중 바뀔 수 있으므로 다음 코드까지 기다린다.
         if (remaining <= 2) {
             Sleep(remaining * 1000 + 200)
-            code := DotfilesCurrentOtp(otp)
+            code := DotfilesCurrentOtp(entry.otp)
         }
     } catch Error as e {
         MsgBox("OTP를 만들지 못했습니다: " e.Message, "dotfiles", "Iconx")
         return
     }
-    SendText(code)
+    ; 코드를 만드는 사이 포커스가 바뀌었으면 다른 창에 입력하지 않는다.
+    if WinActive(hwnd)
+        SendText(code)
 }
 
 DotfilesRegisterPassword() {
@@ -243,24 +305,53 @@ DotfilesRegisterPassword() {
 }
 
 DotfilesRegisterOtp() {
-    input := InputBox("OTP 비밀키(Base32) 또는 otpauth://totp/... URI를 입력하세요.`n이 장치의 Windows 자격 증명 관리자에 저장됩니다.", "dotfiles OTP 등록", "Password w420 h150")
-    if (input.Result != "OK" || Trim(input.Value) = "")
+    try slots := DotfilesOtpSlots()
+    catch Error as e {
+        MsgBox("OTP를 읽지 못했습니다: " e.Message, "dotfiles", "Iconx")
+        return
+    }
+    if entry := DotfilesChooseSlot(slots, DotfilesOtpSlotStateLabel, "등록할 OTP 슬롯")
+        DotfilesRegisterOtpSlot(entry)
+}
+
+DotfilesOtpSlotStateLabel(entry) {
+    return entry.otp ? DotfilesOtpLabel(entry) " (등록됨)" : "(비어 있음)"
+}
+
+DotfilesRegisterOtpSlot(entry) {
+    title := "dotfiles OTP " entry.slot " 등록"
+    nameBox := InputBox("이 OTP의 이름을 입력하세요. 비워 두면 'OTP " entry.slot "'입니다.", title, "w360 h130"
+        , entry.otp ? entry.otp.name : "")
+    if (nameBox.Result != "OK")
+        return
+    name := Trim(RegExReplace(nameBox.Value, "[\r\n]"))
+    prompt := "OTP 비밀키(Base32) 또는 otpauth://totp/... URI를 입력하세요.`n이 장치의 Windows 자격 증명 관리자에 저장됩니다."
+    if entry.otp
+        prompt .= "`n비워 두면 기존 비밀키를 유지하고 이름만 바꿉니다."
+    input := InputBox(prompt, title, "Password w420 h170")
+    if (input.Result != "OK")
         return
     try {
-        otp := DotfilesParseOtpInput(input.Value)
+        if (Trim(input.Value) = "") {
+            if !entry.otp
+                return
+            otp := entry.otp.Clone()
+        } else
+            otp := DotfilesParseOtpInput(input.Value)
+        otp.name := name
         code := DotfilesCurrentOtp(otp, &remaining)
     } catch Error as e {
         MsgBox("OTP 비밀키를 확인하세요: " e.Message, "dotfiles", "Iconx")
         return
     }
-    answer := MsgBox("현재 코드: " code " (" remaining "초 남음)`n인증 앱의 코드와 같으면 저장합니다.", "dotfiles OTP 등록", "YesNo Iconi")
+    answer := MsgBox("현재 코드: " code " (" remaining "초 남음)`n인증 앱의 코드와 같으면 저장합니다.", title, "YesNo Iconi")
     if (answer != "Yes")
         return
     try {
-        DotfilesCredWrite(DOTFILES_CRED_OTP, DotfilesOtpSerialize(otp))
+        DotfilesCredWrite(entry.target, DotfilesOtpSerialize(otp))
     } catch Error as e {
         MsgBox("저장하지 못했습니다: " e.Message, "dotfiles", "Iconx")
         return
     }
-    MsgBox("OTP를 저장했습니다. Ctrl+Alt+O로 입력합니다.", "dotfiles", "Iconi")
+    MsgBox("OTP " entry.slot "(" DotfilesOtpLabel({slot: entry.slot, otp: otp}) ")를 저장했습니다. Ctrl+Alt+O로 입력합니다.", "dotfiles", "Iconi")
 }

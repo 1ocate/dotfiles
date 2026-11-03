@@ -7,7 +7,7 @@
 - 실행 환경: windows-powershell
 - 적용 범위·비대상: `autoHotKey.ahk`, 새 `autohotkey/credentials.ahk`, `tests/autohotkey-credentials.ahk`, `scripts/setup-windows.ps1`의 필수 원본 목록, 사용 문서. 비대상: macOS Hammerspoon, 실제 AutoHotkey 재시작·비밀 값 등록, 여러 계정·HOTP
 - 관련 ADR: [ADR 0014](../adr/0014-autohotkey-terminal-secrets.md)
-- 관련 PR: [draft PR #28](https://github.com/1ocate/dotfiles/pull/28)
+- 관련 PR: [PR #28](https://github.com/1ocate/dotfiles/pull/28)(병합), OTP 슬롯 후속 PR
 
 ## 분석과 미확인 사항
 
@@ -32,7 +32,7 @@
 | 변경 종류 | 원본 갱신만. 새 설치·연결 없음 |
 | 사전 확인·적용 | main 갱신 후 실행 중인 저장소 AutoHotkey를 다시 실행(트레이 아이콘 Reload 또는 `AutoHotkey64.exe autoHotKey.ahk`, `#SingleInstance Force`로 교체). 비밀 값은 장치마다 `Ctrl+Alt+Shift+P/O`로 사용자가 직접 등록하며 자동 복제하지 않음 |
 | 검증·완료 판정 | 정적: `AutoHotkey64.exe /ErrorStdOut /Validate autoHotKey.ahk` 종료 코드 0, `AutoHotkey64.exe /ErrorStdOut tests\autohotkey-credentials.ahk` 통과. 실기기: 등록 시 표시 코드가 인증 앱과 일치, 터미널 비밀번호 프롬프트에서 `Ctrl+Alt+P/O` 입력 확인. GUI 필요 |
-| 복구·로컬 기록 | `cmdkey /delete:dotfiles/autohotkey/password`, `cmdkey /delete:dotfiles/autohotkey/otp`로 값 삭제, 이전 커밋의 `autoHotKey.ahk`로 되돌림. 적용 결과는 해당 장치 `.local/setup-state.json`에만 기록하고 비밀 값은 기록하지 않음 |
+| 복구·로컬 기록 | `cmdkey /delete:dotfiles/autohotkey/password`, `cmdkey /delete:dotfiles/autohotkey/otp`(슬롯 2는 `otp-2`)로 값 삭제, 이전 커밋의 `autoHotKey.ahk`로 되돌림. 적용 결과는 해당 장치 `.local/setup-state.json`에만 기록하고 비밀 값은 기록하지 않음 |
 
 ## 진행 로그
 
@@ -41,6 +41,9 @@
 | 2026-11-03 10:20 KST | 기능 존재 확인 | 저장소·`.local/` 사본·문서에 비밀번호·OTP 기능 없음 | 사용자 진행 요청 |
 | 2026-11-03 10:40 KST | 기존 사용자 변경이 있는 체크아웃을 보존하려고 `.local/worktrees/ahk-credentials`에서 구현 | 함수 파일·테스트 작성. BOM 누락과 `;`·`round` 이름 충돌을 테스트에서 발견해 수정 | 문서·PR |
 | 2026-11-03 10:55 KST | 문서·ADR 작성, 검증 | 아래 검증 결과 | 실기기 GUI 확인 |
+| 2026-11-03 11:13 KST | 사용자 요청으로 PR #28 병합·현재 장치 반영 | 루트 체크아웃이 psmux 작업 브랜치여서 사용자 선택에 따라 AHK 두 파일만 main 내용으로 작업 트리에 반영(미stage), `/Validate` 후 재실행 | 사용자 GUI 확인 |
+| 2026-11-03 11:25 KST | 사용자가 반응이 없다고 보고해 진단 | 실행 중 스크립트에 네 단축키 등록·같은 세션·비관리자 권한 확인. 진단용 가상 Ctrl+Alt+P와 함수 직접 호출이 이미 등록된 비밀번호를 활성 Windows Terminal(Claude Code 입력줄)에 두 번 입력함. 전송(Enter) 없이 사용자에게 지우도록 안내. 활성 창에 실제 값을 보내는 진단은 이후 금지 | 원인: 비밀번호는 이미 등록돼 정상 동작 |
+| 2026-11-03 11:40 KST | 사용자가 OTP 두 개 사용을 요청, 선택 메뉴 방식 선택 | `Menu` 방식은 검사 창에서 선택 숫자가 코드와 함께 입력되거나 다른 항목이 선택되는 경우가 있어 ToolTip+InputHook 선택으로 변경. 기존 등록 OTP 대상을 슬롯 1로 유지(v1 형식 그대로 읽음), 슬롯 2 `otp-2` 추가 | 후속 PR·적용 |
 
 ## 검증 결과
 
@@ -49,8 +52,11 @@
 | 미커밋 diff (main c6b271a 기준) | windows-powershell, 실제 실행(단축키 미로드) | `AutoHotkey64.exe /ErrorStdOut tests\autohotkey-credentials.ahk` | 42개 검사 통과: RFC 6238 SHA1/256/512 18개, RFC 4226 10개, Base32·otpauth·저장 형식, 자격 증명 임시 항목 저장·덮어쓰기·조회·삭제. 실행 후 `cmdkey /list`에 남은 항목 없음 |
 | 같은 diff | windows-powershell, 정적 | `AutoHotkey64.exe /ErrorStdOut /Validate autoHotKey.ahk` | 종료 코드 0. 오류 파일로 `/Validate`가 문법 오류를 보고함을 별도 확인 |
 | 같은 diff | 미검증 | 물리 키·GUI 등록 대화상자·터미널 전달·SSH·psmux | 사용자 적용 후 확인 필요. 실행 중인 사용자 AutoHotkey는 재시작하지 않음 |
+| main d0908cd + OTP 슬롯 미커밋 diff | windows-powershell, 실제 실행(단축키 미로드) | 테스트 스크립트, `/Validate` | 48개 검사 통과(v1·v2 형식, 이름의 `;`·`&`, 슬롯 대상), `/Validate` 종료 코드 0 |
+| 같은 diff | windows-powershell, 실제 실행(임시 GUI 창, 가짜 비밀키) | 임시 창에서 슬롯 선택 후 키 `2`·`1`·`Numpad2`·`Esc`·`3` 가상 입력 | 2·1·Numpad2는 해당 슬롯 코드만 입력되고 선택 숫자는 창에 전달되지 않음. Esc·3은 취소되어 입력 없음 |
+| 같은 diff | windows-powershell, 읽기 전용 | 실제 자격 증명의 슬롯 상태 조회(비밀키 미출력) | 슬롯 1: 기존 등록 OTP(이름 없음, `OTP 1`), 슬롯 2: 미등록 |
 
 ## 남은 일과 종료 근거
 
 - 사용자 장치에서 AutoHotkey Reload 후 등록·입력을 GUI로 확인한다.
-- PR 병합 후 상태를 `완료`로 갱신한다.
+- OTP 슬롯 후속 PR 병합·반영 후 사용자 GUI 확인을 거쳐 상태를 `완료`로 갱신한다.
